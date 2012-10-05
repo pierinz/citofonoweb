@@ -16,7 +16,7 @@ $cms=new cms("Input/Output");
 	<tbody>
 <?php
 
-$pins=array(18,23,24);
+$pins=array(4,17,18,21,22,23,24,25);
 foreach ($pins as $pin){
 ?>
 		<tr>
