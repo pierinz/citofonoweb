@@ -8,7 +8,7 @@ $cms=new cms("Input/Output",$head);
 ?>
 <h1>Input/Output</h1>
 <?php
-if ($_GET['pin']>3 && $_GET['pin']<26)
+if (in_array($_GET['pin'],array(4,17,18,21,22,23,24,25)))
 	$pin=$_GET['pin'];
 else
 	die('Invalid pin number');
