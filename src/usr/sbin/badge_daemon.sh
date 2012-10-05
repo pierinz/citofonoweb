@@ -2,9 +2,11 @@
 parser="/usr/sbin/badge_open.php"
 pidfile="/var/run/badge_daemon.pid"
 
+ledpin=`grep statusled /var/www/CitofonoWeb/config.inc.php | egrep -o '[0-9]+'`
+
 #Accendi il led di stato
-gpio -g mode 17 out
-gpio -g write 17 1
+gpio -g mode $ledpin out
+gpio -g write $ledpin 1
 
 if [ -f "$pidfile" ]; then
 	pid=`cat $pidfile`
@@ -25,7 +27,7 @@ fi
 
 #Errore! Notifica via mail o altro
 #Spegni il led di stato
-gpio -g write 17 0
+gpio -g write $ledpin 0
 
 rm -f "$pidfile"
 

@@ -31,6 +31,8 @@ class config{
 	const redled='23';
 	const redledtime=3;
 	
+	const statusled='17';
+	
 	const buttonpin='21';
 	
 	const buzzer='18';
