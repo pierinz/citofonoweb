@@ -4,6 +4,7 @@
 		if (utils::inGroup($_SERVER['PHP_AUTH_USER'])=='admin'){
 			$menu=array('HOME'=>array(
 					'Status'=>'index.php',
+					'Extended status'=>'info.php',
 					'Schedulation'=>'sched.php',
 					'I/O'=>'io.php'
 				),
@@ -29,6 +30,7 @@
 			$menu=array(
 				'HOME'=>array(
 					'Status'=>'index.php',
+					'Extended status'=>'info.php',
 					'Schedulation'=>'sched.php'
 				),
 				'LOGS'=>array(

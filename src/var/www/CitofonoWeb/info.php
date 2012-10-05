@@ -33,6 +33,24 @@ EOF;
 
 $cms=new cms("Home page",$head);
 
+$df=`LC_ALL=C df -h`;
+$df=str_replace('File system','Filesystem',$df);
+$df=str_replace('Mounted on','Mountpoint',$df);
+$df=preg_replace('/\ +/',' ',$df);
+
+$table='<table border="1" cellspacing="1" cellpadding="5">';
+$row=explode("\n",$df);
+foreach ($row as $i){
+	if (trim($i)){
+		$table.='<tr>';
+		$field=explode(' ',$i);
+		foreach ($field as $f)
+				$table.='<td>'.$f.'</td>';
+		$table.='</tr>';
+	}
+}
+$table.='</table>';
+
 $free=`LC_ALL=C free -h`;
 $free=str_replace('-/+ buffers/cache:', '-/+&nbsp;buffers/cache:', $free);
 $free=preg_replace('/\ +/',' ',$free);
@@ -61,6 +79,7 @@ $tablem.='</table>';
 
 <h2>Info</h2>
 <p><?php echo `uname -a`; ?></p>
+<p><?php echo `lsb_release -a`; ?></p>
 <p><?php echo `uptime`; ?></p>
 
 <h2>Service status</h2>
@@ -74,3 +93,13 @@ else
 
 <h2>Memory usage</h2>
 <?php echo $tablem; ?>
+
+<h2>Disk usage</h2>
+<?php echo $table; ?>
+<br/>
+
+<h2>USB Peripherals</h2>
+<?php echo tools::exec("lsusb -t"); ?>
+
+<h2>Running processes</h2>
+<?php echo str_replace(' ', '&nbsp;', tools::exec("pstree")); ?>
