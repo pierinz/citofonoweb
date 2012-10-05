@@ -289,6 +289,37 @@ EOF;
 		$page.=tools::exec("/etc/init.d/ssh restart");
 		$page.='The keys have been regenerated.';
 	break;
+	
+	case 'chbinding':
+		$head='';
+		$page="<h1>Change bindings</h1>";
+
+		$conf=file_get_contents(dirname(__FILE__).'/config.inc.php');
+		
+		if (in_array($_POST['statusled'],array(4,17,18,21,22,23,24,25)))
+			$conf=preg_replace('/^(\s+const =)(.*)$/m', '${1}'."'".$_POST['statusled']."';", $conf);
+		else
+			$page.='<p>Status LED invalid.</p>';
+		if (in_array($_POST['doorpin'],array(4,17,18,21,22,23,24,25)))
+			$conf=preg_replace('/^(\s+const =)(.*)$/m', '${1}'."'".$_POST['doorpin']."';", $conf);
+		else
+			$page.='<p>Door pin invalid.</p>';
+		if (in_array($_POST['buzzer'],array(4,17,18,21,22,23,24,25)))
+			$conf=preg_replace('/^(\s+const =)(.*)$/m', '${1}'."'".$_POST['buzzer']."';", $conf);
+		else
+			$page.='<p>Buzzer pin invalid.</p>';
+		if (in_array($_POST['redled'],array(4,17,18,21,22,23,24,25)))
+			$conf=preg_replace('/^(\s+const =)(.*)$/m', '${1}'."'".$_POST['redled']."';", $conf);
+		else
+			$page.='<p>Red LED invalid.</p>';
+		if (in_array($_POST['buttonpin'],array(4,17,18,21,22,23,24,25)))
+			$conf=preg_replace('/^(\s+const =)(.*)$/m', '${1}'."'".$_POST['buttonpin']."';", $conf);
+		else
+			$page.='<p>Button pin invalid.</p>';
+		
+		file_put_contents(dirname(__FILE__).'/config.inc.php', $conf);
+		$page.='<p>Configuration changed</p><h2>Restart the service to apply the new bindings</h2>';
+	break;
 		
 	default:
 		die('<h1>Unknown request</h1><p><a href="'.utils::webroot().'">Back to homepage</a></p>');
