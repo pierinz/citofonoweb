@@ -1,0 +1,14 @@
+Source: citofonoweb
+Section: admin,web
+Priority: extra
+Maintainer: Gabriele Martino <g.martino@osai-as.it>
+Build-Depends: debhelper (>= 7)
+Standards-Version: 3.7.3
+Homepage: 
+
+Package: citofonoweb
+Architecture: any
+Depends: lighttpd, php5-cgi, php5-cli, php5-sqlite, git-core, rsync, lsb-release, usbutils, binutils, gpio, at, psmisc, diffutils, ntpdate, sqlite3
+Description: CitofonoWeb binaries and webgui
+ CitofonoWeb is a low-cost system to control doors with some hardware authentication module (MSR, RFID, etc...)
+

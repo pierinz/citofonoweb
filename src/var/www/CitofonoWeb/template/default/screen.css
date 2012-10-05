@@ -1,0 +1,207 @@
+@CHARSET "UTF-8";
+div#header{
+	position: absolute;
+	margin: 0px 0px 5px 0px;
+	top: 0px;
+	left: 0px;
+	width: 100%;
+	height: 130px;
+	text-align: left;
+	background-image: url(resources/fillhead.png);
+	background-repeat: repeat-x;
+	background-color: white;
+	background-position: top center;
+	z-index: 11;
+}
+img#logo{
+	margin-top: 10px;
+	margin-left: 30px;
+}
+
+img{
+	border-style: none;
+}
+
+div#page{
+	position: absolute;
+	top: 130px;
+	margin: 0px;
+	left: 0px;
+	min-height: 100%;
+}
+
+div#menubar{
+	position: absolute;
+	width: 180px;
+	margin: 0px;
+	background-color: #b3d3ff;
+	z-index: 10;
+	overflow: auto;
+	height: 100%;
+}
+
+div#menubar p{
+	margin-bottom: 5px;
+	margin-left: 2px;
+}
+
+div#menubar ul{
+	margin-top: 0px;
+	padding-left: 0px;
+}
+div#menubar ul li{
+	margin-left: 8px;
+	margin-right: 15px;
+	list-style-type: none;
+}
+div#menubar ul li a{
+	text-decoration: none;
+	font-weight: bold;
+	color: blue;
+}
+div#menubar ul li a:hover{
+	text-decoration: none;
+	font-weight: bold;
+	color: red;
+}
+
+div#content{
+	margin: 0px 0px 0px 0px;
+	padding-left: 190px;
+	height: 100%;
+}
+
+form#login{
+	text-align: right;
+	float: right;
+	margin-top: 25px;
+	margin-right: 20px;
+	width: 180px;
+}
+form#login p{
+	height:19px;
+	margin: 5px 0px;
+}
+
+form#login input{
+	height: 12px;
+	float: right;
+	text-align: right;
+	width: 100px;
+	margin-right: 3px;
+}
+
+
+form.better{
+	padding: 0px 0px 5px 0px;
+	background-image: url("resources/form-bg.png");
+	background-repeat: repeat-y;
+	border-color: #87b6d9;
+	border-style: dashed;
+	border-width: 1px;
+	text-indent: 15px;
+	width: 500px;
+}
+form.better p{
+	height: 22px;
+}
+
+form.better input{
+	float: right;
+	text-align: right;
+	width: 200px;
+	margin-right: 3px;
+}
+
+form.better select{
+	float: right;
+	text-align: right;
+	width: 206px;
+	margin-right: 3px;
+}
+
+form.better input[type=file]{
+	float: right;
+	text-align: right;
+	width: 120px;
+	margin-right: 116px;
+}
+
+form.better textarea{
+	display: block;
+	text-align: left;
+	width: 95%;
+	height: 14px;
+	margin-left: auto;
+	margin-right: 0;
+}
+
+form.better input[type=button], form.better input[type=submit]{
+	float: none;
+	text-align: center;
+	width: auto;
+}
+
+div#filter{
+	padding: 0px 0px 5px 0px;
+	background-image: url("resources/form-bg.png");
+	background-repeat: repeat-y;
+	border-color: #87b6d9;
+	border-style: dashed;
+	border-width: 1px;
+	text-indent: 15px;
+	width: 500px;
+}
+div#filter p{
+	height: 22px;
+}
+
+div#filter input{
+	float: right;
+	text-align: right;
+	width: 200px;
+	margin-right: 3px;
+}
+
+div#filter select{
+	float: right;
+	text-align: right;
+	width: 206px;
+	margin-right: 3px;
+}
+
+div#filter textarea{
+	display: block;
+	text-align: left;
+	width: 95%;
+	height: 14px;
+	margin-left: auto;
+	margin-right: 0;
+}
+
+div#filter input[type=button], form.better input[type=submit]{
+	float: none;
+	text-align: center;
+	width: auto;
+}
+
+p.log{
+	color: black;
+	font-family: "Courier New", Courier, monospace;
+	border-style:inset;
+	border-width: 2px;
+	height: 390px;
+	width: 710px;
+	overflow: scroll;
+	white-space: nowrap;
+}
+
+.fakelink {
+	text-decoration: underline;
+	color: #0000ff;
+	cursor: pointer;
+}
+.fakelink:hover {
+	color: #ff0000;
+	cursor: pointer;
+}

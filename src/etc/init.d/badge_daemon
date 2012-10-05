@@ -1,0 +1,73 @@
+#! /bin/sh
+### BEGIN INIT INFO
+# Provides:			badge_daemon
+# Required-Start:	$syslog $mysql $remote_fs $network $time $mysql
+# Required-Stop:	$syslog $mysql $remote_fs $network $time $mysql
+# Default-Start:	3 4 5
+# Default-Stop:	 	0 1 2 6
+# Short-Description:	Start badge_daemon service
+### END INIT INFO
+
+
+PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin
+
+. /lib/init/vars.sh
+. /lib/lsb/init-functions
+
+DAEMON="/usr/sbin/badge_daemon.sh &"
+pidfile="/var/run/badge_daemon.pid"
+
+if [ -f "$pidfile" ]; then
+	pid=`cat $pidfile`
+else
+	pid=''
+fi
+
+do_start() {
+	if [ -z "$pid" ]; then
+		[ "$VERBOSE" != no ] && log_begin_msg "Starting badge_daemon..."
+		$DAEMON > /dev/null 2>&1 >> /var/log/badge_daemon.log &
+		ES=$?
+	else
+		if `kill -0 $pid`; then
+			echo 'The daemon is already running.'
+			exit 3
+		else
+			[ "$VERBOSE" != no ] && log_begin_msg "Starting badge_daemon..."
+			$DAEMON > /dev/null 2>&1 >> /var/log/badge_daemon.log &
+			ES=$?
+		fi
+	fi
+	[ "$VERBOSE" != no ] && log_end_msg $ES
+	return $ES
+}
+
+do_stop() {
+	if [ -n "$pid" ]; then
+		kill $pid
+	else
+		log_begin_msg 'The daemon is not running.'
+	fi
+}
+
+case "$1" in
+    start)
+		do_start
+	;;
+    restart)
+		do_stop
+		sleep 2
+		do_start
+	;;
+	reload|force-reload)
+        echo "Error: argument '$1' not supported" >&2
+        exit 3
+       ;;
+    stop)
+		do_stop
+	;;
+    *)
+        echo "Usage: $0 start|stop|restart" >&2
+        exit 3
+        ;;
+esac

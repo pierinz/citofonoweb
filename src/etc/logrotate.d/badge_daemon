@@ -1,0 +1,12 @@
+/var/log/badge_daemon.log {
+	weekly
+	missingok
+	rotate 12
+	compress
+	delaycompress
+	notifempty
+	nocreate
+	sharedscripts
+	prerotate "kill -SIGHUP `cat /var/run/badge_daemon.pid`"
+	endscript
+}
