@@ -4,7 +4,7 @@
 if (@$_SERVER['PHP_AUTH_USER']){
 ?>
 	<form id="login" action="<?php echo utils::webroot(); ?>logout.php" method="post">
-		<p>Benvenuto, <?php echo $_SERVER['PHP_AUTH_USER'] ?></p>
+		<p>Welcome, <?php echo $_SERVER['PHP_AUTH_USER'] ?></p>
 		<p><button type="submit" style="float: right;">Logout</button></p>
 	</form>
 <?php 
@@ -12,8 +12,8 @@ if (@$_SERVER['PHP_AUTH_USER']){
 else{
 ?>
 	<form id="login">
-		<p>Errore di configurazione server</p>
-		<p>È necessario autenticarsi per vedere questa pagina</p>
+		<p>Server configuration error</p>
+		<p>You are required to log in to view this page.</p>
 	</form>
 <?php
 }
