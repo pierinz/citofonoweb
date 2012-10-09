@@ -320,6 +320,18 @@ EOF;
 		file_put_contents(dirname(__FILE__).'/config.inc.php', $conf);
 		$page.='<p>Configuration changed</p><h2>Restart the service to apply the new bindings</h2>';
 	break;
+	
+	case 'chbinding':
+		$head='';
+		$page="<h1>Change Device Name</h1>";
+
+		$conf=file_get_contents(dirname(__FILE__).'/config.inc.php');
+		
+		$conf=preg_replace('/^(\s+const =)(.*)$/m', '${1}'."'".addslashes($_POST['devname'])."';", $conf);
+		
+		file_put_contents(dirname(__FILE__).'/config.inc.php', $conf);
+		$page.='<p>Configuration changed</p>';
+	break;
 		
 	default:
 		die('<h1>Unknown request</h1><p><a href="'.utils::webroot().'">Back to homepage</a></p>');

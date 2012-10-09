@@ -16,7 +16,7 @@
 					'Badge daemon'=>'badgelog.php'
 				),
 				'MAINTENANCE'=>array(
-					'Remote Management'=>'management.php',
+					'Board Management'=>'management.php',
 					'Service Management'=>'service.php',
 					'Password'=>'passwd.php',
 					'Date/Time'=>'datetime.php',

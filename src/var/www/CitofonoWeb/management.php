@@ -10,9 +10,16 @@ function remkey(key){
 </script>
 EOF;
 
-$cms=new cms("Remote Management",$head);
+$cms=new cms("Board Management",$head);
 ?>
-<h1>Remote Management</h1>
+<h1>Board Management</h1>
+
+<form action="controller.php" method="post">
+	<p>Device name: <input name="devname" value="<?php echo config::name; ?>"/></p>
+	<p><input type="hidden" name="act" value="chname" /><input type="submit" value="Change device name"/></p>
+</form>
+
+<h2>Remote Management</h2>
 <p>If you have a central administration panel, you should add it there to allow management of this device.</p>
 
 <h2>Authorized keys</h2>

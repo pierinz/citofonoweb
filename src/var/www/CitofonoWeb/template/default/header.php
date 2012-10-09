@@ -1,5 +1,6 @@
 <div id="header">
 <a href="<?php echo utils::webroot(); ?>"><img id="logo" src="<?php echo $this->themepath(); ?>resources/logo.png" alt="Logo" /></a>
+<span id="devname"><?php echo config::name; ?></span>
 <?php
 if (@$_SERVER['PHP_AUTH_USER']){
 ?>
