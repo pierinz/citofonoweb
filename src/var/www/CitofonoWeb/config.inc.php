@@ -1,40 +1,47 @@
 <?php
 class config{
-	#Template predefinito
+	#Default template
 	const template='default';
 	
+	#Network interface
 	const iface='eth0';
-
+	#Comma-separated list of ntp servers
 	const ntpservers='192.168.0.2,192.168.0.1,0.debian.pool.ntp.org';
 
+	#HID device to monitor
 	const device='/dev/input/by-id/usb-ID_TECH_ID_TECH_OMNI_TM3_USB-HID_KB_CONVERTER-event-kbd';
-	#garbage before badge code
+	#garbage before badge code (regexp)
 	const preamble='ò11121200';
-	#garbage after badge code
+	#garbage after badge code (regexp)
 	const following='0000000000\-*Shift\-*';
 	#Debounce time (s): ignore same input for specified time
 	const debouncetime=2;
 	
-	#Database locale sqlite
+	#Description of this device
+	const name='Citofonoweb #1';
+	
+	#Local db (sqlite3)
 	const localdb='/var/lib/citofonoweb/citofonoweb.db';
-	
-	#Utente sola lettura db locale
-	const readeruser='citofonoweb';
-	const readerpwd='citofonoweb';
-	
-	#Percorso log
+	#Log path
 	const logname='/var/log/badge_daemon.log';
 	
+	#GPIO number connected to the door
 	const doorpin='24';
+	#Pulse duration
 	const doortime=1;
 	
+	#GPIO number connected to the red led
 	const redled='23';
+	#Pulse duration
 	const redledtime=3;
 	
+	#GPIO number connected to the status led
 	const statusled='17';
 	
+	#GPIO number connected to the input button
 	const buttonpin='21';
 	
+	#GPIO number connected to the buzzer
 	const buzzer='18';
 }
 ?>
