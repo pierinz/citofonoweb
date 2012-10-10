@@ -15,6 +15,17 @@ $following=config::following;
 $terminate=array('Return','KP_Enter');
 $device=config::device;
 
+$verbose=false;
+//Parse options
+$options = getopt("vd::k::");
+
+if (isset($options['d']))
+	$device=$options['d'];
+if (isset($options['k']))
+	$keymap=file_get_contents($options['k']);
+if (isset($options['k']) && $options['k'])
+	$verbose=true;
+
 // signal handler function
 function clean_close(){
 	global $logger, $listener, $stdin, $link;
@@ -52,8 +63,9 @@ function rotate(){
 }
 
 function parseline($line){
-	global $link, $logger, $preamble, $following;
-	echo "line = $line \n";
+	global $link, $logger, $preamble, $following, $options;
+	if ($options['v'])
+		echo "line = $line \n";
 	fwrite($logger,date('Y-m-d H:i:s')." - line = $line \n");
 	$line=preg_replace("/^$preamble/",'',$line);
 	$line=preg_replace("/$following$/m",'',$line);
@@ -73,31 +85,34 @@ function parseline($line){
 		if ($row['allowed']){
 			$json=json_decode($row['sched'],1);
 			if (date('His')>$json[date('N')]['start'] && date('His')<$json[date('N')]['end']){
-				echo "Door open\n";
+				if ($options['v'])
+					echo "Door open\n";
 				tools::door_open();
 				fwrite($logger,"badge $line => door open \n");
 				usleep(500000);
 			}
 			else{
-				echo "Unauthorized access\n";
+				if ($options['v'])
+					echo "Unauthorized access\n";
 				tools::door_deny();
 				fwrite($logger,"badge $line => unauthorized access \n");
 			}
 		}
 		else{
-			echo "Unauthorized access\n";
+			if ($options['v'])
+				echo "Unauthorized access\n";
 			tools::door_deny();
 			fwrite($logger,"badge $line => unauthorized access \n");
 		}
 		$i++;
 	}
 	if ($i==0){
-		echo "Unknown badge\n";
+		if ($options['v'])
+			echo "Unknown badge\n";
 		tools::door_unknown();
 		fwrite($logger,"badge $line => unknown \n");
 	}
 }
-
 
 function parsecode($code){
 	global $keymap;
