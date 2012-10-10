@@ -322,16 +322,15 @@ EOF;
 	break;
 	
 	case 'chname':
+		$head='';
 		$page="<h1>Change Device Name</h1>";
 
 		$conf=file_get_contents(dirname(__FILE__).'/config.inc.php');
-		$conf=preg_replace('/^(\s+const name=)(.*)$/m', '${1}'."'".addslashes($_POST['devname'])."';", $conf);
+		
+		$conf=preg_replace('/^(\s+const =)(.*)$/m', '${1}'."'".addslashes($_POST['devname'])."';", $conf);
+		
 		file_put_contents(dirname(__FILE__).'/config.inc.php', $conf);
-		
-		#Reload configuration
-		include(dirname(__FILE__).'/config.inc.php');
-		
-		$page.='<p>Configuration changed.</p>';
+		$page.='<p>Configuration changed</p>';
 	break;
 		
 	default:
