@@ -327,7 +327,7 @@ EOF;
 
 		$conf=file_get_contents(dirname(__FILE__).'/config.inc.php');
 		
-		$conf=preg_replace('/^(\s+const =)(.*)$/m', '${1}'."'".addslashes($_POST['devname'])."';", $conf);
+		$conf=preg_replace('/^(\s+const name=)(.*)$/m', '${1}'."'".addslashes($_POST['devname'])."';", $conf);
 		
 		file_put_contents(dirname(__FILE__).'/config.inc.php', $conf);
 		$page.='<p>Configuration changed. The new name is: '.$_POST['devname'].'</p>';
