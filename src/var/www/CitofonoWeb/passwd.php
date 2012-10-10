@@ -21,7 +21,7 @@ $cms=new cms("Change password",$head);
 </form>
 
 <?php
-if ($cms->user=='root'){
+if (utils::inGroup($cms->user)=='admin'){
 	$users=explode("\n",`cat /etc/lighttpd/lighttpd-plain.user | cut -d':' -f1`);
 	
 	$opts='';

@@ -34,12 +34,13 @@
 					'Schedulation'=>'sched.php'
 				),
 				'LOGS'=>array(
-					'Syslog'=>'syslog.php'
+					'Badge daemon'=>'badgelog.php'
 				),
 				'MAINTENANCE'=>array(
 					'Service status'=>'service.php',
 					'Password'=>'passwd.php',
-					'Date/Time'=>'datetime.php'
+					'Date/Time'=>'datetime.php',
+					'Restart'=>'shutdown.php'
 				)
 			);
 		}

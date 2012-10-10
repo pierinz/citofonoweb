@@ -4,6 +4,7 @@ require_once ("functions.php");
 
 $update=file_get_contents('/var/log/syslog');
 $cms=new cms('System log','');
+$cms->ACL('admin');
 ?>
 <h1>Syslog</h1>
 <p class="log">

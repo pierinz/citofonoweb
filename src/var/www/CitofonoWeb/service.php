@@ -3,8 +3,7 @@ include_once 'framework.php';
 require_once ("functions.php");
 
 $cms=new cms("Service management",$head);
-
-
+$cms->ACL('admin');
 ?>
 <h1>Service Status</h1>
 <p>The service is <?php 
@@ -16,7 +15,7 @@ else
 .</p>
 
 <?php
-if ($cms->user=='root'){
+if (utils::inGroup($cms->user)=='admin'){
 ?>
 <h2>Service management</h2>
 <form action="controller.php" method="post">

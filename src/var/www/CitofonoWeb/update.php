@@ -3,6 +3,7 @@ require_once ("framework.php");
 require_once ("functions.php");
 
 $cms=new cms("Update");
+$cms->ACL('admin');
 ?>
 
 <h1>Updates</h1>

@@ -13,6 +13,7 @@ form#net p input{
 </style>';
 
 $cms=new cms("LAN Settings",$head);
+$cms->ACL('admin');
 ?>
 <h1>Edit network configuration</h1>
 

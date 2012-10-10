@@ -1,7 +1,7 @@
 <?php
 include_once 'framework.php';
 
-if ($_REQUEST['l']=='syslog')
+if ($_REQUEST['l']=='syslog' && (utils::inGroup($_SERVER['PHP_AUTH_USER'])=='admin'))
 	$log=file_get_contents('/var/log/syslog');
 elseif ($_REQUEST['l']=='badge_daemon')
 	$log=file_get_contents('/var/log/badge_daemon.log');

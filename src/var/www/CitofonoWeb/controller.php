@@ -8,6 +8,22 @@ function checkIP($x){
 
 $head='<meta http-equiv="refresh" content="3; url='.$_SERVER['HTTP_REFERER'].'" />';
 
+$rootactions=array(
+	'net-if','net-dns',
+	'dateset','ntpset',
+	'shutdown',
+	'pkgupdate','pkgupgrade',
+	'fwupdate','fwscript',
+	'inputedit','service',
+	'addkey','remkey','regenerate',
+	'chbinding','chname'
+);
+
+if (in_array($_REQUEST['act'],$rootactions)){
+	$cms=new cms("Settings");
+	$cms->ACL('admin');
+}
+
 switch ($_REQUEST['act']){
 	case 'net-if':
 		if (!checkIP($_POST['ip']))
@@ -82,8 +98,14 @@ EOF;
 		if ($_POST['pw']==$_POST['rpw']){
 			if (trim(@$_POST['user'])=='')
 				$user=$_SERVER['PHP_AUTH_USER'];
-			else
-				$user=$_POST['user'];
+			else{
+				if (utils::inGroup($cms->user)=='admin')
+					$user=$_POST['user'];
+				else{
+					$page.="You can't change other users' password";
+					break;
+				}
+			}
 				
 			$file=`cat /etc/lighttpd/lighttpd-plain.user | egrep -v '^$user:'`;
 			$file.="$user:".$_POST['pw']."\n";

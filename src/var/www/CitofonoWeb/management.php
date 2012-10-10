@@ -11,6 +11,7 @@ function remkey(key){
 EOF;
 
 $cms=new cms("Board Management",$head);
+$cms->ACL('admin');
 ?>
 <h1>Board Management</h1>
 

@@ -3,6 +3,7 @@ require_once ("framework.php");
 require_once ("functions.php");
 
 $cms=new cms("Input/Output");
+$cms->ACL('admin');
 ?>
 <h1>Input/Output</h1>
 

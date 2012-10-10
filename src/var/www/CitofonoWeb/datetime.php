@@ -28,17 +28,20 @@ $cms=new cms("Date/Time",$head);
 	<input type="submit" value="Get date/time from NTP Server" /></p>
 </form>
 
+<?php
+if (utils::inGroup($cms->user)=='admin'){
+?>
 <p>NTP Servers: </p>
 <form class="indented" action="controller.php" method="post">
 <?php
-$ntp=explode(',',config::ntpservers);
-$i=1;
-foreach ($ntp as $n){
-	echo "<p>NTP Server #$i: ".'<input name="ntp'.$i.'" value="'.$n.'"/>'."</p>";
-	$i++;
-	if ($i>3)
-		break;
-}
+	$ntp=explode(',',config::ntpservers);
+	$i=1;
+	foreach ($ntp as $n){
+		echo "<p>NTP Server #$i: ".'<input name="ntp'.$i.'" value="'.$n.'"/>'."</p>";
+		$i++;
+		if ($i>3)
+			break;
+	}
 ?>
 	<p><input type="hidden" name="act" value="ntpset"/><input type="submit" value="Change" /><p>
 </form>
@@ -52,12 +55,15 @@ foreach ($ntp as $n){
 	<p>Timezone:
 		<select name="timezone">
 <?php
-echo '<option>'.date_default_timezone_get().'</option>';
-foreach ($timezone as $t){
-	echo '<option>'.str_replace('/usr/share/zoneinfo/','',$t).'</option>';
-}
+	echo '<option>'.date_default_timezone_get().'</option>';
+	foreach ($timezone as $t){
+		echo '<option>'.str_replace('/usr/share/zoneinfo/','',$t).'</option>';
+	}
 ?>
 		</select>
 	</p>
 	<p><input type="submit" value="Change" /></p>
 </form>
+<?php
+}
+?>

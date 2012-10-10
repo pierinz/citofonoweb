@@ -5,6 +5,7 @@ require_once ("functions.php");
 $head='<meta http-equiv="refresh" content="3; url='.$_SERVER['HTTP_REFERER'].'" />';
 
 $cms=new cms("Input/Output",$head);
+$cms->ACL('admin');
 ?>
 <h1>Input/Output</h1>
 <?php

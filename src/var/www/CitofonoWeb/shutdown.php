@@ -4,7 +4,7 @@ require_once ("functions.php");
 
 $cms=new cms("Shutdown/Restart",'');
 
-if ($cms->user=='root'){
+if (utils::inGroup($cms->user)=='admin'){
 ?>
 <h1>Restart device</h1>
 <form action="controller.php" method="post">

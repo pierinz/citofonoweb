@@ -207,13 +207,12 @@ class cms{
 		$this->pf=config::prefix;
 	}
 	
-	
 	function ACL($group){
 		if (utils::inGroup($_SERVER['PHP_AUTH_USER'])!=$group){
 			if ($this->lite)
-				die('Non hai i privilegi necessari per visualizzare questa pagina.');
+				die("This page is restricted to group '$group'.");
 			else
-				die('<h1>Non hai i privilegi necessari per visualizzare questa pagina.</h2>');
+				die("<h1>Access denied</h1><p>This page is restricted to group '$group'.</p>");
 		}
 	}
 	

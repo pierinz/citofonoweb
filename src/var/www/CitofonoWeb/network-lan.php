@@ -2,6 +2,19 @@
 require_once ("framework.php");
 require_once ("functions.php");
 
+$head='<style type="text/css">
+div.net p{
+	width: 350px;
+}
+div.net p span{
+	float: right;
+}
+</style>';
+
+$cms=new cms("LAN Status",$head);
+$cms->ACL('admin');
+
+
 $iface=config::iface;
 $ifconfig=`ifconfig $iface | grep inet`;
 preg_match('/[^0-9]([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})[^0-9].*[^0-9]([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})[^0-9].*[^0-9]([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})([^0-9]|$)/',$ifconfig,$matches);
@@ -29,17 +42,6 @@ foreach (file('/etc/resolv.conf') as $row){
 	if (preg_match('/^search (.*)/',$row,$m))
 		$search=$m[1];
 }
-
-$head='<style type="text/css">
-div.net p{
-	width: 350px;
-}
-div.net p span{
-	float: right;
-}
-</style>';
-
-$cms=new cms("LAN Status",$head);
 ?>
 
 <h1>LAN Configuration</h1>
