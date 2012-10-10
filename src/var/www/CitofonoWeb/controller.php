@@ -321,7 +321,7 @@ EOF;
 		$page.='<p>Configuration changed</p><h2>Restart the service to apply the new bindings</h2>';
 	break;
 	
-	case 'chbinding':
+	case 'chname':
 		$head='';
 		$page="<h1>Change Device Name</h1>";
 
