@@ -319,23 +319,23 @@ EOF;
 		$conf=file_get_contents(dirname(__FILE__).'/config.inc.php');
 		
 		if (in_array($_POST['statusled'],array(4,17,18,21,22,23,24,25)))
-			$conf=preg_replace('/^(\s+const =)(.*)$/m', '${1}'."'".$_POST['statusled']."';", $conf);
+			$conf=preg_replace('/^(\s+const statusled=)(.*)$/m', '${1}'."'".$_POST['statusled']."';", $conf);
 		else
 			$page.='<p>Status LED invalid.</p>';
 		if (in_array($_POST['doorpin'],array(4,17,18,21,22,23,24,25)))
-			$conf=preg_replace('/^(\s+const =)(.*)$/m', '${1}'."'".$_POST['doorpin']."';", $conf);
+			$conf=preg_replace('/^(\s+const doorpin=)(.*)$/m', '${1}'."'".$_POST['doorpin']."';", $conf);
 		else
 			$page.='<p>Door pin invalid.</p>';
 		if (in_array($_POST['buzzer'],array(4,17,18,21,22,23,24,25)))
-			$conf=preg_replace('/^(\s+const =)(.*)$/m', '${1}'."'".$_POST['buzzer']."';", $conf);
+			$conf=preg_replace('/^(\s+const buzzer=)(.*)$/m', '${1}'."'".$_POST['buzzer']."';", $conf);
 		else
 			$page.='<p>Buzzer pin invalid.</p>';
 		if (in_array($_POST['redled'],array(4,17,18,21,22,23,24,25)))
-			$conf=preg_replace('/^(\s+const =)(.*)$/m', '${1}'."'".$_POST['redled']."';", $conf);
+			$conf=preg_replace('/^(\s+const redled=)(.*)$/m', '${1}'."'".$_POST['redled']."';", $conf);
 		else
 			$page.='<p>Red LED invalid.</p>';
 		if (in_array($_POST['buttonpin'],array(4,17,18,21,22,23,24,25)))
-			$conf=preg_replace('/^(\s+const =)(.*)$/m', '${1}'."'".$_POST['buttonpin']."';", $conf);
+			$conf=preg_replace('/^(\s+const buttonpin=)(.*)$/m', '${1}'."'".$_POST['buttonpin']."';", $conf);
 		else
 			$page.='<p>Button pin invalid.</p>';
 		
