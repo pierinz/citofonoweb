@@ -182,13 +182,13 @@ class cms{
 			#Se non è presente la configurazione, abortisci
 			clearstatcache();
 			if (!file_exists(dirname(__FILE__).'/config.inc.php'))
-				die('Configurazione mancante. Installa il CMS e riprova.');
+				die('Missing configuration. Reinstall this software and retry.');
 
 			$this->template=new template($title,$head,$menubar);
 		}
 
 		if (!isset($_SERVER['PHP_AUTH_USER'])){
-			die('Configurazione server errata: questa cartella deve essere protetta da password');
+			die('Invalid configuration: this folder must be password-protected.');
 		}
 		$this->user=$_SERVER['PHP_AUTH_USER'];
 	}
@@ -202,7 +202,7 @@ class cms{
 		#Se non è presente la configurazione, abortisci
 		clearstatcache();
 		if (!file_exists(dirname(__FILE__).'/config.inc.php'))
-			die('Configurazione mancante. Installa il CMS e riprova.');
+			die('Missing configuration. Reinstall this software and retry.');
 		
 		$this->pf=config::prefix;
 	}
