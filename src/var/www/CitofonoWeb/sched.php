@@ -49,7 +49,7 @@ $cms=new cms("Schedulation",$head);
 
 try{
 	$link = new PDO('sqlite:'.config::localdb);
-	$query="select badge_code, allowed, sched from acl";
+	$query="select badge_code, allowed, sched from acl order by badge_code asc";
 	$rx=$link->query($query);
 	
 	if (count($rx)==0)
