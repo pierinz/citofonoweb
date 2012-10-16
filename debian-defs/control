@@ -1,7 +1,7 @@
 Source: citofonoweb
 Section: admin,web
 Priority: extra
-Maintainer: Gabriele Martino <g.martino@osai-as.it>
+Maintainer: Gabriele Martino <g.martino@ogmx.com>
 Build-Depends: debhelper (>= 7)
 Standards-Version: 3.7.3
 Homepage: 
