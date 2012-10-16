@@ -6,7 +6,7 @@ class config{
 	#Network interface
 	const iface='eth0';
 	#Comma-separated list of ntp servers
-	const ntpservers='192.168.0.2,192.168.0.1,0.debian.pool.ntp.org';
+	const ntpservers='0.debian.pool.ntp.org,1.debian.pool.ntp.org,2.debian.pool.ntp.org';
 
 	#HID device to monitor
 	const device='/dev/input/by-id/usb-ID_TECH_ID_TECH_OMNI_TM3_USB-HID_KB_CONVERTER-event-kbd';
