@@ -12,18 +12,25 @@ It uses a daemon that monitors a HID device: if an allowed sequence is received,
 Installation
 ===============
 
-[A step-by-step guide will be posted on the website]
-This release comes with precompiled binaries for the Raspberry Pi, armel softfloat. If you are running Raspbian you might need the toolchain to recompile the daemon (the source is in src/usr/src).
+[A step-by-step guide will be posted on the wiki]
 Before you start dowloading, make sure you have all needed hardware & software.
 - Hardware: a Raspberry Pi, a HID device, the board with relay (more info on the website)
 - Software: you need a web server running as root, and the web interface should be protected with (at least) basic auth.
 I'm quite happy with lighttpd, but you are free to use what you like. Note that apache2 complains if you configure it to run as root (and usually refuses to start).
-Other dependencies are listed in debian-defs/control file.
+
+Install dependencies (on Debian with Lighttpd):
+- apt-get install lighttpd php5-cgi php5-cli php5-sqlite git-core rsync lsb-release usbutils binutils at psmisc diffutils ntpdate sqlite3
+- you need also the "gpio" command from https://projects.drogon.net/raspberry-pi/wiringpi/download-and-install/
+
+Now, just cd in the source folder and launch "make && make install".
 
 Usage
 =======
 
-The "src" folder contains all the files needed. Copy them on the root of your linux device, configure lighttpd, configure badge_daemon to be run at startup and test the web interface.
+- Configure lighttpd (see lighttpd.conf.example in examples folder)
+- configure badge_daemon to be run at startup (on debian: "insserv -d badge_daemon")
+- Test the web interface.
+
 On the web interface, login as user "root":
 - MAINTENANCE -> Service management: choose the HID device to monitor.
 - MAINTENANCE -> Service management: start the service.
