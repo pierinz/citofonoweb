@@ -14,7 +14,7 @@ PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin
 . /lib/init/vars.sh
 . /lib/lsb/init-functions
 
-DAEMON="/usr/sbin/badge_daemon.sh &"
+DAEMON="badge_daemon.sh &"
 pidfile="/var/run/badge_daemon.pid"
 
 if [ -f "$pidfile" ]; then

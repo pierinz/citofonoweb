@@ -1,8 +1,9 @@
 #!/bin/bash
-parser="/usr/sbin/badge_open.php"
+parser="`dirname($0)`/badge_open.php"
 pidfile="/var/run/badge_daemon.pid"
+webpath="/var/www"
 
-ledpin=`grep statusled /var/www/CitofonoWeb/config.inc.php | egrep -o '[0-9]+'`
+ledpin=`grep statusled "$webpath/CitofonoWeb/config.inc.php" | egrep -o '[0-9]+'`
 
 #Accendi il led di stato
 gpio -g mode $ledpin out

@@ -32,8 +32,9 @@ void perror_exit (char *error)
 int main (int argc, char *argv[])
 {
 	setbuf(stdout, NULL);
-	struct input_event event;
-	int fd, rd, value, size = sizeof (struct input_event);
+	//struct input_event event;
+	int fd = sizeof (struct input_event);
+	//int rd, value, size = sizeof (struct input_event);
 	char name[256] = "Unknown";
 	char *device = NULL;
 

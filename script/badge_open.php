@@ -1,7 +1,8 @@
 #!/usr/bin/php
 <?php
-require_once('/var/www/CitofonoWeb/config.inc.php');
-require_once('/var/www/CitofonoWeb/functions.php');
+$wwwdir='/var/www';
+require_once($wwwdir.'/CitofonoWeb/config.inc.php');
+require_once($wwwdir.'/CitofonoWeb/functions.php');
 
 #Configurazioni predefinite
 @date_default_timezone_set(str_replace("\n",'',`cat /etc/timezone`));
@@ -9,7 +10,7 @@ setlocale(LC_TIME, 'it_IT.utf8');
 setlocale(LC_NUMERIC, 'en_US');
 
 //load keymap
-$keymap=file_get_contents('/usr/share/badge_daemon/it_simplified.map');
+$keymap=file_get_contents('../share/badge_daemon/it_simplified.map');
 $preamble=config::preamble;
 $following=config::following;
 $terminate=array('Return','KP_Enter');

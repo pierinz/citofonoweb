@@ -1,7 +1,0 @@
-usr/sbin
-var/www
-usr/src
-usr/share
-etc/logrotate.d
-etc/init.d
-var/lib

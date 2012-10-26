@@ -11,7 +11,7 @@ class config{
 	#HID device to monitor
 	const device='/dev/input/by-id/usb-ID_TECH_ID_TECH_OMNI_TM3_USB-HID_KB_CONVERTER-event-kbd';
 	#garbage before badge code (regexp)
-	const preamble='ò11121200';
+	const preamble='ò11121[0-9]00';
 	#garbage after badge code (regexp)
 	const following='0000000000\-*Shift\-*';
 	#Debounce time (s): ignore same input for specified time

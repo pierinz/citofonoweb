@@ -1,2 +1,0 @@
-#!/bin/bash
-insserv -d badge_daemon
