@@ -12,10 +12,10 @@ install: badge_listener
 
 	install -m 0755 $< $(prefix)/sbin/
 	install -m 0755 script/badge_daemon.sh $(prefix)/sbin/
-	sed -i s:'^webpath=.*':webpath=\"$(wwwdir)\": $(prefix)/sbin/badge_daemon.sh
+	sed -i s:'^webpath=.*':webpath=\"$(wwwdir)\"\: $(prefix)/sbin/badge_daemon.sh
 	
 	install -m 0755 script/badge_open.php $(prefix)/sbin/
-	sed -i s:'^$$wwwdir=.*':\$$wwwdir=\"$(wwwdir)\": $(prefix)/sbin/badge_open.php
+	sed -i s:'^$$wwwdir=.*':\$$wwwdir=\"$(wwwdir)\"\;: $(prefix)/sbin/badge_open.php
 	
 	install -m 0755 script/debian_initscript /etc/init.d/badge_daemon
 	sed -i s:'^PATH':'PATH=$(prefix)/sbin\:': /etc/init.d/badge_daemon
