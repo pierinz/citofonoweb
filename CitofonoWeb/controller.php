@@ -136,7 +136,7 @@ EOF;
 			$page.='Wrong parameters.';
 		if (file_exists('/usr/share/zoneinfo/'.$_POST['timezone'])){
 			$tz=$_POST['timezone'];
-			if (tools::exec("cp -Lf /usr/share/zoneinfo/$tz /etc/localtime",'retval')!=0)
+			if (tools::exec("rm -f /etc/localtime && cp -Lf /usr/share/zoneinfo/$tz /etc/localtime",'retval')!=0)
 				$page.='<br/>Error editing "/etc/localtime".';
 				
 			if (!file_put_contents('/etc/timezone',$tz."\n"))
