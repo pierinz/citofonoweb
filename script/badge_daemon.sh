@@ -1,5 +1,5 @@
 #!/bin/bash
-parser="`dirname($0)`/badge_open.php"
+parser="`dirname $0`/badge_open.php"
 pidfile="/var/run/badge_daemon.pid"
 webpath="/var/www"
 
