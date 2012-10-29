@@ -10,7 +10,7 @@ setlocale(LC_TIME, 'it_IT.utf8');
 setlocale(LC_NUMERIC, 'en_US');
 
 //load keymap
-$keymap=file_get_contents('../share/badge_daemon/it_simplified.map');
+$keymap=file_get_contents(dirname(__FILE__).'/../share/badge_daemon/it_simplified.map');
 $preamble=config::preamble;
 $following=config::following;
 $terminate=array('Return','KP_Enter');
