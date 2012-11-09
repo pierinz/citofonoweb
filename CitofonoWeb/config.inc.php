@@ -24,6 +24,8 @@ class config{
 	const localdb='/var/lib/citofonoweb/citofonoweb.db';
 	#Log path
 	const logname='/var/log/badge_daemon.log';
+	#Keymap file path
+	const keymapfile='/usr/local/share/badge_daemon/it_simplified.map';
 	
 	#GPIO number connected to the door
 	const doorpin='24';

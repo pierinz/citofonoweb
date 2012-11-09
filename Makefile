@@ -2,6 +2,7 @@ CC:=gcc
 CFLAGS:=-Wall -O2
 
 prefix:=/usr/local
+resources:=/usr/local/share
 wwwdir:=/var/www
 
 badge_listener: badge_listener.c
@@ -22,13 +23,14 @@ install: badge_listener
 
 	install -m 0644 conf/badge_daemon.logrotate /etc/logrotate.d/badge_daemon
 	mkdir -p $(prefix)/usr/share/badge_daemon/
-	install -m 0644 resources/it_simplified.map $(prefix)/usr/share/badge_daemon/
+	install -m 0644 resources/it_simplified.map $(resources)/badge_daemon/
 	mkdir -p $(prefix)/var/lib/citofonoweb/
 	install -m 0644 resources/db.info $(prefix)/var/lib/citofonoweb/readme
 
 	mkdir -p $(wwwdir)/
 	cp -rf CitofonoWeb $(wwwdir)/
 	sed -i s:'/var/lib/citofonoweb/citofonoweb.db':'$(prefix)/var/lib/citofonoweb/citofonoweb.db': $(wwwdir)/CitofonoWeb/config.inc.php
+	sed -i s:'/usr/local/share/badge_daemon/it_simplified.map':'$(resources)/badge_daemon/it_simplified.map': $(wwwdir)/CitofonoWeb/config.inc.php
     
 .PHONY: install
 
@@ -39,7 +41,7 @@ uninstall:
 
 	rm -f /etc/init.d/badge_daemon
 	rm -f /etc/logrotate.d/badge_daemon
-	rm -rf $(prefix)/usr/share/badge_daemon
+	rm -rf $(resources)/badge_daemon
 	rm -rf $(prefix)/var/lib/citofonoweb
 	rm -rf $(wwwdir)/CitofonoWeb
 
