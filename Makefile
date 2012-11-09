@@ -22,7 +22,7 @@ install: badge_listener
 	sed -i s:'^PATH':'PATH=$(prefix)/sbin\:': /etc/init.d/badge_daemon
 
 	install -m 0644 conf/badge_daemon.logrotate /etc/logrotate.d/badge_daemon
-	mkdir -p $(prefix)/usr/share/badge_daemon/
+	mkdir -p $(resources)/badge_daemon/
 	install -m 0644 resources/it_simplified.map $(resources)/badge_daemon/
 	mkdir -p $(prefix)/var/lib/citofonoweb/
 	install -m 0644 resources/db.info $(prefix)/var/lib/citofonoweb/readme
