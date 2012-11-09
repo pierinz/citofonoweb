@@ -10,7 +10,7 @@ setlocale(LC_TIME, 'it_IT.utf8');
 setlocale(LC_NUMERIC, 'en_US');
 
 //load keymap
-$keymap=file_get_contents(dirname(__FILE__).'/../share/badge_daemon/it_simplified.map');
+$keymap=file_get_contents(config::keymapfile);
 $preamble=config::preamble;
 $following=config::following;
 $terminate=array('Return','KP_Enter');
@@ -31,7 +31,7 @@ if (isset($options['k']) && $options['k'])
 function clean_close(){
 	global $logger, $listener, $stdin, $link;
 	if (@$options['v']){
-		file_put_contents('php://stderr', 'Y-m-d H:i:s')." - Terminating...\n");
+		file_put_contents('php://stderr', date('Y-m-d H:i:s')." - Terminating...\n");
 	}
 	fwrite($logger,date('Y-m-d H:i:s')." - Daemon stopped.\n");
 	fclose($logger);
@@ -43,7 +43,7 @@ function clean_close(){
     foreach($pids as $pid) {
         if(is_numeric($pid)) {
             if (@$options['v']){
-            	file_put_contents('php://stderr', 'Y-m-d H:i:s')." - Killing $pid\n");
+            	file_put_contents('php://stderr', date('Y-m-d H:i:s')." - Killing $pid\n");
             }
             posix_kill($pid, 9); //9 is the SIGKILL signal
         }
@@ -58,7 +58,7 @@ function clean_close(){
 function rotate(){
 	global $logger;
 	if (@$options['v']){
-		file_put_contents('php://stderr', 'Y-m-d H:i:s')." - SIGHUP received! Rotating...");
+		file_put_contents('php://stderr', date('Y-m-d H:i:s')." - SIGHUP received! Rotating...");
 	}
 	fclose($logger);
 	#Wait logrotate finish its work
