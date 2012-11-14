@@ -14,31 +14,29 @@ $following=config::following;
 $terminate=array("\n");
 $device=config::device;
 
-$verbose=false;
 //Parse options
 $options = getopt("vd::");
 
 if (isset($options['d']))
 	$device=$options['d'];
-if (isset($options['v']) && $options['v'])
-	$verbose=true;
 
 // signal handler function
 function clean_close(){
-	global $logger, $listener, $stdin, $link;
-	if (@$options['v']){
+	global $logger, $listener, $stdin, $stderr, $link;
+	if (isset($options['v'])){
 		file_put_contents('php://stderr', date('Y-m-d H:i:s')." - Terminating...\n");
 	}
 	fwrite($logger,date('Y-m-d H:i:s')." - Daemon stopped.\n");
 	fclose($logger);
 	#Termina il processo che legge dal lettore badge
 	fclose($stdin);
+	fclose($stderr);
 	$s = proc_get_status($listener);
 	$ppid=$s['pid'];
 	$pids = preg_split('/\s+/', `ps -o pid --no-heading --ppid $ppid`);
     foreach($pids as $pid) {
         if(is_numeric($pid)) {
-            if (@$options['v']){
+            if (isset($options['v'])){
             	file_put_contents('php://stderr', date('Y-m-d H:i:s')." - Killing $pid\n");
             }
             posix_kill($pid, 9); //9 is the SIGKILL signal
@@ -53,7 +51,7 @@ function clean_close(){
 
 function rotate(){
 	global $logger;
-	if (@$options['v']){
+	if (isset($options['v'])){
 		file_put_contents('php://stderr', date('Y-m-d H:i:s')." - SIGHUP received! Rotating...");
 	}
 	fclose($logger);
@@ -67,7 +65,7 @@ function rotate(){
 
 function parseline($line){
 	global $link, $logger, $preamble, $following, $options;
-	if (@$options['v'])
+	if (isset($options['v']))
 		echo "line = $line \n";
 	fwrite($logger,date('Y-m-d H:i:s')." - line = $line \n");
 	$line=preg_replace("/^$preamble/",'',$line);
@@ -88,21 +86,21 @@ function parseline($line){
 		if ($row['allowed']){
 			$json=json_decode($row['sched'],1);
 			if (date('His')>$json[date('N')]['start'] && date('His')<$json[date('N')]['end']){
-				if (@$options['v'])
+				if (isset($options['v']))
 					echo "Door open\n";
 				tools::door_open();
 				fwrite($logger,"badge $line => door open \n");
 				usleep(500000);
 			}
 			else{
-				if (@$options['v'])
+				if (isset($options['v']))
 					echo "Unauthorized access\n";
 				tools::door_deny();
 				fwrite($logger,"badge $line => unauthorized access \n");
 			}
 		}
 		else{
-			if (@$options['v'])
+			if (isset($options['v']))
 				echo "Unauthorized access\n";
 			tools::door_deny();
 			fwrite($logger,"badge $line => unauthorized access \n");
@@ -110,7 +108,7 @@ function parseline($line){
 		$i++;
 	}
 	if ($i==0){
-		if (@$options['v'])
+		if (isset($options['v']))
 			echo "Unknown badge\n";
 		tools::door_unknown();
 		fwrite($logger,"badge $line => unknown \n");
@@ -151,18 +149,20 @@ catch(PDOException $e){
 
 #Write pid file
 file_put_contents('/var/run/badge_daemon.pid',getmypid());
-if (@$options['v']){
+if (isset($options['v'])){
 	file_put_contents('php://stderr', date('Y-m-d H:i:s')." - Process started: ".getmypid()."\n");
 }
 
 $descriptorspec = array(
    #0 => array("pipe", "r"),  // stdin is a pipe that the child will read from
-   1 => array("pipe", "w")  // stdout is a pipe that the child will write to
-   #2 => array("pipe", "w") // stderr is a file to write to
+   1 => array("pipe", "w"),  // stdout is a pipe that the child will write to
+   2 => array("pipe", "w") // stderr is a file to write to
 );
 $listener = proc_open("badge_listener $device", $descriptorspec, $pipes);
 $stdin=&$pipes[1];
+$stderr=&$pipes[2];
 stream_set_blocking($stdin,0);
+stream_set_blocking($stderr,0);
 
 // setup signal handlers
 pcntl_signal(SIGTERM, "clean_close");
@@ -207,6 +207,13 @@ while (!feof($stdin)){
 	}
 	#usleep(500);
 }
+
+#If we get there the child process has crashed
+fwrite($logger,date('Y-m-d H:i:s')." - Child process dead -> trace:\n");
+while (!feof($stderr)){
+	fwrite($logger,date('Y-m-d H:i:s')." - ".fgets($stderr)."\n");
+}
+#close & exit
 
 clean_close();
 ?>
