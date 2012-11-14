@@ -13,7 +13,7 @@ class config{
 	#garbage before badge code (regexp)
 	const preamble='ò11121[0-9]00';
 	#garbage after badge code (regexp)
-	const following='0000000000\/*Shift\/*';
+	const following='0000000000\-*Shift\-*';
 	#Debounce time (s): ignore same input for specified time
 	const debouncetime=2;
 	
@@ -25,7 +25,7 @@ class config{
 	#Log path
 	const logname='/var/log/badge_daemon.log';
 	#Keymap file path
-	const keymapfile='/usr/share/keymaps/i386/qwerty/us.kmap.gz';
+	const keymapfile='/usr/local/share/badge_daemon/it_simplified.map';
 	
 	#GPIO number connected to the door
 	const doorpin='24';

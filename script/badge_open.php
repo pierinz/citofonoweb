@@ -10,7 +10,7 @@ setlocale(LC_TIME, 'it_IT.utf8');
 setlocale(LC_NUMERIC, 'en_US');
 
 //load keymap
-$keymap=implode("\n",readgzfile(config::keymapfile);
+$keymap=file_get_contents(config::keymapfile);
 $preamble=config::preamble;
 $following=config::following;
 $terminate=array('Return','KP_Enter');
@@ -123,12 +123,7 @@ function parseline($line){
 
 function parsecode($code){
 	global $keymap;
-	if ($code==11)
-		return '0';
-	if ($code>1 && $code<11)
-		return $code-1;
-
-	preg_match_all("/keycode(\s)+ $code = (.*)\s/", $keymap, $match);
+	preg_match_all("/keycode(\s)+ $code = (.*)\n/", $keymap, $match);
 	if (isset($match[2][0]))
 		return $match[2][0];
 	else
