@@ -2,7 +2,7 @@
 include_once 'framework.php';
 require_once ("functions.php");
 
-$cms=new cms("Service management",$head);
+$cms=new cms("Service management");
 $cms->ACL('admin');
 ?>
 <h1>Service Status</h1>
