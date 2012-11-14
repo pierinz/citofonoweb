@@ -128,7 +128,7 @@ function parsecode($code){
 		"<f2>", "<f3>", "<f4>", "<f5>", "<f6>", "<f7>", "<f8>", "<f9>",
 		"<f10>", "<numlock>", "<scrolllock>", "", "", "", "", "", "", "",
 		"", "", "", "\\", "f11", "f12", "", "", "", "", "", "",
-		"", "", "<control>", "", "<sysrq>");
+		"", "", "<control>", "", "<sysrq>","\n");
 	if (isset($keycodes[$code]))
 		return $keycodes[$code];
 	else
