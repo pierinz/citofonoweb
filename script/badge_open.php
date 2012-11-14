@@ -11,7 +11,7 @@ setlocale(LC_NUMERIC, 'en_US');
 
 $preamble=config::preamble;
 $following=config::following;
-$terminate=array('Return','KP_Enter');
+$terminate=array("\n");
 $device=config::device;
 
 $verbose=false;
@@ -128,11 +128,11 @@ function parsecode($code){
 		"<f2>", "<f3>", "<f4>", "<f5>", "<f6>", "<f7>", "<f8>", "<f9>",
 		"<f10>", "<numlock>", "<scrolllock>", "", "", "", "", "", "", "",
 		"", "", "", "\\", "f11", "f12", "", "", "", "", "", "",
-		"", "", "<control>", "", "<sysrq>","\n");
+		"", "", "<control>", "", "<sysrq>","\n","\n");
 	if (isset($keycodes[$code]))
 		return $keycodes[$code];
 	else
-		return 'Unknown';
+		return "{?$code}";
 }
 
 
@@ -175,7 +175,7 @@ $lastline='';
 $ltime=microtime(1);
 $buffer='';
 while (!feof($stdin)){
-	$line = trim(fgets($stdin)); // reads one line from STDIN
+	$line = trim(fgets($stdin)); // reads one char from STDIN
 	pcntl_signal_dispatch();
 	if (in_array(parsecode($line),$terminate)){
 		#Debounce input
@@ -193,12 +193,11 @@ while (!feof($stdin)){
 		}
 		$buffer='';
 	}
-	elseif($line=="\n" || $line==''){
+	elseif($line==''){
 		usleep(500000);	
 	}
 	else{
 		$buffer.=parsecode($line);
-		#echo $line.' '.parsecode($line)."\n";
 	}
 	
 	if (strlen($buffer)>40){
