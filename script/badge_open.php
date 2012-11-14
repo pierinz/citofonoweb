@@ -132,7 +132,7 @@ function parsecode($code){
 		"", "", "", "\\", "f11", "f12", "", "", "", "", "", "",
 		"", "", "<control>", "", "<sysrq>");
 	if (isset($keycodes[$code]))
-		return $keycodes[$code]);
+		return $keycodes[$code];
 	else
 		return 'Unknown';
 }
