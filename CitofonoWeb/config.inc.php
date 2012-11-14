@@ -11,9 +11,9 @@ class config{
 	#HID device to monitor
 	const device='/dev/input/by-id/usb-ID_TECH_ID_TECH_OMNI_TM3_USB-HID_KB_CONVERTER-event-kbd';
 	#garbage before badge code (regexp)
-	const preamble='ò11121[0-9]00';
+	const preamble=';11121[0-9]00';
 	#garbage after badge code (regexp)
-	const following='0000000000\-*Shift\-*';
+	const following='0000000000\/*<shift>\/*';
 	#Debounce time (s): ignore same input for specified time
 	const debouncetime=2;
 	
@@ -24,8 +24,6 @@ class config{
 	const localdb='/var/lib/citofonoweb/citofonoweb.db';
 	#Log path
 	const logname='/var/log/badge_daemon.log';
-	#Keymap file path
-	const keymapfile='/usr/local/share/badge_daemon/it_simplified.map';
 	
 	#GPIO number connected to the door
 	const doorpin='24';

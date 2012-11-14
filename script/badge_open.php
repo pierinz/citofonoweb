@@ -18,13 +18,11 @@ $device=config::device;
 
 $verbose=false;
 //Parse options
-$options = getopt("vd::k::");
+$options = getopt("vd::");
 
 if (isset($options['d']))
 	$device=$options['d'];
-if (isset($options['k']))
-	$keymap=file_get_contents($options['k']);
-if (isset($options['k']) && $options['k'])
+if (isset($options['v']) && $options['v'])
 	$verbose=true;
 
 // signal handler function
@@ -122,10 +120,19 @@ function parseline($line){
 }
 
 function parsecode($code){
-	global $keymap;
-	preg_match_all("/keycode(\s)+ $code = (.*)\n/", $keymap, $match);
-	if (isset($match[2][0]))
-		return $match[2][0];
+	$keycodes=array("", "<esc>", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0",
+		"-", "=", "<backspace>",
+		"<tab>", "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "[",
+		"]", "\n", "<control>", "a", "s", "d", "f", "g",
+		"h", "j", "k", "l", ";", "'", "", "<shift>",
+		"\\", "z", "x", "c", "v", "b", "n", "m", ",", ".",
+		"/", "<shift>", "", "<alt>", " ", "<capslock>", "<f1>",
+		"<f2>", "<f3>", "<f4>", "<f5>", "<f6>", "<f7>", "<f8>", "<f9>",
+		"<f10>", "<numlock>", "<scrolllock>", "", "", "", "", "", "", "",
+		"", "", "", "\\", "f11", "f12", "", "", "", "", "", "",
+		"", "", "<control>", "", "<sysrq>");
+	if (isset($keycodes[$code]))
+		return $keycodes[$code]);
 	else
 		return 'Unknown';
 }
