@@ -9,8 +9,6 @@ require_once($wwwdir.'/CitofonoWeb/functions.php');
 setlocale(LC_TIME, 'it_IT.utf8');
 setlocale(LC_NUMERIC, 'en_US');
 
-//load keymap
-$keymap=file_get_contents(config::keymapfile);
 $preamble=config::preamble;
 $following=config::following;
 $terminate=array('Return','KP_Enter');
