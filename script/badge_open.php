@@ -10,7 +10,7 @@ setlocale(LC_TIME, 'it_IT.utf8');
 setlocale(LC_NUMERIC, 'en_US');
 
 //load keymap
-$keymap=implode("\n",readgzfile(config::keymapfile);
+$keymap=implode("\n",readgzfile(config::keymapfile));
 $preamble=config::preamble;
 $following=config::following;
 $terminate=array('Return','KP_Enter');
