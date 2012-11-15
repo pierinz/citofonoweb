@@ -20,6 +20,11 @@ class config{
 	#Description of this device
 	const name='Citofonoweb #1';
 	
+	#Restart daemon automatically (useful with faulty MSR/RFID reader)
+	const keepalive=1;
+	#Maximum consecutive crashes (when keepalive enabled)
+	const maxcrashes=3;
+	
 	#Local db (sqlite3)
 	const localdb='/var/lib/citofonoweb/citofonoweb.db';
 	#Log path
