@@ -4,7 +4,7 @@ $wwwdir='/var/www';
 require_once($wwwdir.'/CitofonoWeb/config.inc.php');
 require_once($wwwdir.'/CitofonoWeb/functions.php');
 
-#Configurazioni predefinite
+#Default config
 @date_default_timezone_set(str_replace("\n",'',`cat /etc/timezone`));
 setlocale(LC_TIME, 'it_IT.utf8');
 setlocale(LC_NUMERIC, 'en_US');
@@ -28,7 +28,8 @@ function clean_close(){
 	}
 	fwrite($logger,date('Y-m-d H:i:s')." - Daemon stopped.\n");
 	fclose($logger);
-	#Termina il processo che legge dal lettore badge
+	
+	#Terminate child process
 	fclose($stdin);
 	fclose($stderr);
 	$s = proc_get_status($listener);
@@ -44,7 +45,7 @@ function clean_close(){
     }
 	posix_kill($ppid, SIGTERM);
 	proc_close($listener);
-	#Chiudi la connessione al db
+	#Close db connection
 	$link=null;
 	exit();
 }
@@ -54,11 +55,14 @@ function rotate(){
 	if (isset($options['v'])){
 		file_put_contents('php://stderr', date('Y-m-d H:i:s')." - SIGHUP received! Rotating...");
 	}
+	#Close logfile
 	fclose($logger);
-	#Wait logrotate finish its work
+	
+	#Wait logrotate
 	while (file_exists(config::logname)){
 		usleep(100000);
 	}
+	#Create a new logfile & open it
 	$logger=fopen(config::logname,'w');
 	fwrite($logger,date('Y-m-d H:i:s')." - Rotated logfile.\n");
 }
@@ -70,7 +74,7 @@ function parseline($line){
 	fwrite($logger,date('Y-m-d H:i:s')." - line = $line \n");
 	$line=preg_replace("/^$preamble/",'',$line);
 	$line=preg_replace("/$following$/m",'',$line);
-	#$line=$line*1;
+
 	$line=trim($line);
 	$query="select allowed,sched from acl where badge_code='$line'";
 	try{
@@ -156,64 +160,81 @@ if (isset($options['v'])){
 $descriptorspec = array(
    #0 => array("pipe", "r"),  // stdin is a pipe that the child will read from
    1 => array("pipe", "w"),  // stdout is a pipe that the child will write to
-   2 => array("pipe", "w") // stderr is a file to write to
+   2 => array("pipe", "w") // stderr is a pipe to write to
 );
-$listener = proc_open("badge_listener $device", $descriptorspec, $pipes);
-$stdin=&$pipes[1];
-$stderr=&$pipes[2];
-stream_set_blocking($stdin,0);
-stream_set_blocking($stderr,0);
 
-// setup signal handlers
-pcntl_signal(SIGTERM, "clean_close");
-pcntl_signal(SIGINT, "clean_close");
-pcntl_signal(SIGHUP,  "rotate");
+$lastlaunch=time(1);
+$failures=0;
 
-pcntl_signal_dispatch();
-
-$lastline='';
-$ltime=microtime(1);
-$buffer='';
-while (!feof($stdin)){
-	$line = trim(fgets($stdin)); // reads one char from STDIN
+do{
+	#If the process lasts more than 50s, reset the failure counter
+	if (time(1)>($lastlaunch+50)){
+		$failures=0;
+	}
+	
+	$listener = proc_open("badge_listener $device", $descriptorspec, $pipes);
+	$stdin=&$pipes[1];
+	$stderr=&$pipes[2];
+	stream_set_blocking($stdin,0);
+	stream_set_blocking($stderr,0);
+	
+	// setup signal handlers
+	pcntl_signal(SIGTERM, "clean_close");
+	pcntl_signal(SIGINT, "clean_close");
+	pcntl_signal(SIGHUP,  "rotate");
+	
 	pcntl_signal_dispatch();
-	if (in_array(parsecode($line),$terminate)){
-		#Debounce input
-		if (microtime(1)>($ltime+(config::debouncetime))){
-			parseline($buffer);
-			$ltime=microtime(1);
-			$lastline=$buffer;
-		}
-		else{
-			if($buffer != $lastline){
+
+	$lastline='';
+	$ltime=microtime(1);
+	$buffer='';
+	while (!feof($stdin)){
+		$line = trim(fgets($stdin)); // reads one char from STDIN
+		pcntl_signal_dispatch();
+		if (in_array(parsecode($line),$terminate)){
+			#Debounce input
+			if (microtime(1)>($ltime+(config::debouncetime))){
 				parseline($buffer);
 				$ltime=microtime(1);
 				$lastline=$buffer;
 			}
+			else{
+				if($buffer != $lastline){
+					parseline($buffer);
+					$ltime=microtime(1);
+					$lastline=$buffer;
+				}
+			}
+			$buffer='';
 		}
-		$buffer='';
-	}
-	elseif($line==''){
-		usleep(500000);	
-	}
-	else{
-		$buffer.=parsecode($line);
+		elseif($line==''){
+			usleep(500000);	
+		}
+		else{
+			$buffer.=parsecode($line);
+		}
+		
+		if (strlen($buffer)>40){
+			fwrite($logger,date('Y-m-d H:i:s')." - Dirty buffer: $buffer.\n");
+			$buffer='';
+			fwrite($logger,date('Y-m-d H:i:s')." - Buffer forcefully cleared. The next swipe might be ignored.\n");
+		}
+		#usleep(500);
 	}
 	
-	if (strlen($buffer)>40){
-		fwrite($logger,date('Y-m-d H:i:s')." - Dirty buffer: $buffer.\n");
-		$buffer='';
-		fwrite($logger,date('Y-m-d H:i:s')." - Buffer forcefully cleared. The next swipe might be ignored.\n");
+	#If we get there the child process has crashed
+	fwrite($logger,date('Y-m-d H:i:s')." - Child process dead -> trace:\n");
+	while (!feof($stderr)){
+		fwrite($logger,date('Y-m-d H:i:s')." - ".fgets($stderr)."\n");
 	}
-	#usleep(500);
+	$failures++;
+	#Loop if keepalive is enabled
+}while (config::keepalive && $failures<config::maxcrashes);
+
+if ($failures>=config::maxcrashes){
+	fwrite($logger,date('Y-m-d H:i:s')." - The child process crashed too many times. Service stopped.\n");
 }
 
-#If we get there the child process has crashed
-fwrite($logger,date('Y-m-d H:i:s')." - Child process dead -> trace:\n");
-while (!feof($stderr)){
-	fwrite($logger,date('Y-m-d H:i:s')." - ".fgets($stderr)."\n");
-}
 #close & exit
-
 clean_close();
 ?>
