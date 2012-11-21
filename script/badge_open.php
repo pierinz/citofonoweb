@@ -76,6 +76,12 @@ function parseline($line){
 	$line=preg_replace("/$following$/m",'',$line);
 
 	$line=trim($line);
+	
+	if ($line==''){
+		fwrite($logger,date('Y-m-d H:i:s')." -------> Line was empty, discarding. \n");
+		return false;
+	}
+	
 	$query="select allowed,sched from acl where badge_code='$line'";
 	try{
 		$rx=$link->query($query);
@@ -145,7 +151,7 @@ try{
 	$link = new PDO('sqlite:'.config::localdb);
 }
 catch(PDOException $e){
-	fwrite($logger,date('Y-m-d H:i:s')." - DB missing or corrupted (remember to sync db before start): ".$e->getMessage()." \n");
+	fwrite($logger,date('Y-m-d H:i:s')." - DB missing or corrupted (remember to create the database!): ".$e->getMessage()." \n");
 	fwrite($logger,date('Y-m-d H:i:s')." - Crashing. \n");
 	fclose($logger);
 	die("DB missing or corrupted: ".$e->getMessage());
@@ -168,10 +174,12 @@ $failures=0;
 
 do{
 	#If the process lasts more than 50s, reset the failure counter
-	if (time(1)>($lastlaunch+50)){
+	if ($failures>0 && time(1)>($lastlaunch+50)){
+		fwrite($logger,date('Y-m-d H:i:s')." - Last run was succesful - crash counter set to 0. \n");
 		$failures=0;
 	}
 	
+	fwrite($logger,date('Y-m-d H:i:s')." - Listening on $device... \n");
 	$listener = proc_open("badge_listener $device", $descriptorspec, $pipes);
 	$stdin=&$pipes[1];
 	$stderr=&$pipes[2];
@@ -208,7 +216,7 @@ do{
 			$buffer='';
 		}
 		elseif($line==''){
-			usleep(500000);	
+			usleep(500000);
 		}
 		else{
 			$buffer.=parsecode($line);
@@ -225,7 +233,9 @@ do{
 	#If we get there the child process has crashed
 	fwrite($logger,date('Y-m-d H:i:s')." - Child process dead -> trace:\n");
 	while (!feof($stderr)){
-		fwrite($logger,date('Y-m-d H:i:s')." - ".fgets($stderr)."\n");
+		$err=trim(fgets($stderr));
+		if ($err!='')
+			fwrite($logger,date('Y-m-d H:i:s')." - ".$err."\n");
 	}
 	$failures++;
 	#Loop if keepalive is enabled
