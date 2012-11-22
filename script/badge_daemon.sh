@@ -5,7 +5,7 @@ webpath="/var/www"
 
 ledpin=`grep statusled "$webpath/CitofonoWeb/config.inc.php" | egrep -o '[0-9]+'`
 logfile=`grep statusled "$webpath/CitofonoWeb/config.inc.php" | egrep -o '[0-9]+'`
-version='CitofonoWeb: 0.1'
+version='CitofonoWeb: 0.2'
 
 usage()
 {
