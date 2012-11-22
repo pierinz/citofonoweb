@@ -49,18 +49,20 @@ $cms=new cms("Schedulation",$head);
 
 try{
 	$link = new PDO('sqlite:'.config::localdb);
-	$query="select badge_code, allowed, sched from acl order by badge_code asc";
+	$query="select badge_code, description, allowed, sched from acl order by badge_code asc";
 	$rx=$link->query($query);
 	
 	if (count($rx)==0)
-		echo '<tr><td colspan="9">No data</td></tr>';
+		echo '<tr><td colspan="10">No data</td></tr>';
 	else{
 		foreach($rx as $row){
 			$class='';
 			if ($row['allowed']==0)
 				$class='red';
 			echo '<tr class="'.$class.'">
-			<td>'.$row['badge_code'].'</td><td>'.$row['allowed'].'</td>';
+			<td>'.$row['badge_code'].'</td>
+			<td>'.$row['description'].'</td>
+			<td>'.$row['allowed'].'</td>';
 			$json=json_decode(stripslashes($row['sched']),1);
 			foreach ($json as $day){
 				echo '<td>'.preg_replace('/^([0-9]{2})([0-9]{2})[0-9]{2}$/', '${1}:${2}', $day['start']).' - '.preg_replace('/^([0-9]{2})([0-9]{2})[0-9]{2}$/', '${1}:${2}', $day['end']).'</td>';

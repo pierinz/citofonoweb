@@ -82,7 +82,7 @@ function parseline($line){
 		return false;
 	}
 	
-	$query="select allowed,sched from acl where badge_code='$line'";
+	$query="select description,allowed,sched from acl where badge_code='$line'";
 	try{
 		$rx=$link->query($query);
 	}
@@ -90,6 +90,7 @@ function parseline($line){
 		fwrite($logger,date('Y-m-d H:i:s')." - ".$e->getMessage());
 		clean_close();
 	}
+	fwrite($logger,date('Y-m-d H:i:s')." -------> badge code: ".$line);
 	fwrite($logger,date('Y-m-d H:i:s')." -------> ");
 	$i=0;
 	foreach ($rx as $row){
@@ -99,21 +100,21 @@ function parseline($line){
 				if (isset($options['v']))
 					echo "Door open\n";
 				tools::door_open();
-				fwrite($logger,"badge $line => door open \n");
+				fwrite($logger,"badge '".$row['description']."' => door open \n");
 				usleep(500000);
 			}
 			else{
 				if (isset($options['v']))
 					echo "Unauthorized access\n";
 				tools::door_deny();
-				fwrite($logger,"badge $line => unauthorized access \n");
+				fwrite($logger,"badge '".$row['description']."' => unauthorized access \n");
 			}
 		}
 		else{
 			if (isset($options['v']))
-				echo "Unauthorized access\n";
+				echo "Disabled badge\n";
 			tools::door_deny();
-			fwrite($logger,"badge $line => unauthorized access \n");
+			fwrite($logger,"badge '".$row['description']."' => unauthorized access \n");
 		}
 		$i++;
 	}
