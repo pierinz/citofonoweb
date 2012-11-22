@@ -7,6 +7,7 @@
 	notifempty
 	nocreate
 	sharedscripts
-	prerotate "kill -SIGHUP `cat /var/run/badge_daemon.pid`"
+	prerotate
+		kill -s HUP `cat /var/run/badge_daemon.pid`
 	endscript
 }
