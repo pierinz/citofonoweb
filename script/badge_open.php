@@ -90,7 +90,7 @@ function parseline($line){
 		fwrite($logger,date('Y-m-d H:i:s')." - ".$e->getMessage());
 		clean_close();
 	}
-	fwrite($logger,date('Y-m-d H:i:s')." -------> badge code: ".$line);
+	fwrite($logger,date('Y-m-d H:i:s')." -------> badge code: ".$line."\n");
 	fwrite($logger,date('Y-m-d H:i:s')." -------> ");
 	$i=0;
 	foreach ($rx as $row){
