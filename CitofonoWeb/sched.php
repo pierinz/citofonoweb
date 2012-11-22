@@ -41,7 +41,7 @@ $cms=new cms("Schedulation",$head);
 <table border="1" cellspacing="1" cellpadding="5">
 	<thead>
 		<tr>
-			<th>Badge</th><th>Enabled</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th><th>Sun</th>
+			<th>Badge</th><th>Description</th><th>Enabled</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th><th>Sun</th>
 		</tr>
 	</thead>
 	<tbody>
