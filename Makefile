@@ -28,6 +28,7 @@ install: badge_listener
 	mkdir -p $(wwwdir)/
 	cp -rf CitofonoWeb $(wwwdir)/
 	sed -i s:'/var/lib/citofonoweb/citofonoweb.db':'$(prefix)/var/lib/citofonoweb/citofonoweb.db': $(wwwdir)/CitofonoWeb/config.inc.php
+	sed -i s:'/var/lib/citofonoweb/citofonoweb.db':'$(prefix)/var/lib/citofonoweb/citofonoweb.db': $(wwwdir)/CitofonoWeb/phpliteadmin/phpliteadmin.php
 	chmod +x script/db_update.sh
 	script/db_update.sh '$(prefix)/var/lib/citofonoweb/citofonoweb.db'
 
