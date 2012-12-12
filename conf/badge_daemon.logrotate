@@ -1,5 +1,5 @@
 /var/log/badge_daemon.log {
-	weekly
+	monthly
 	missingok
 	rotate 12
 	compress
