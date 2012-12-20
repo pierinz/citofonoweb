@@ -81,7 +81,7 @@ catch(PDOException $e){
 	</tbody>
 </table>
 <h2>Actions</h2>
-<p><button onclick="document.location.href='dbexample.php'">Create DB and populate with example data</button></p>
+<p><button onclick="if (confirm('Current data will be erased. Are you sure you want to do this?')){document.location.href='dbexample.php';}">Create DB and populate with example data</button></p>
 <form action="phpliteadmin/index.php" method="post">
 <p>
 	<input type="hidden" name="password" value="admin"/>
