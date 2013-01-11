@@ -206,7 +206,7 @@ EOF;
 	case 'pkgupgrade':
 		$head='';
 		$page="<h1>Upgraded packages</h1>";
-		$page.=tools::exec("apt-get upgrade --assume-no");
+		$page.=tools::exec("apt-get upgrade --assume-no -o Acquire::PDiffs=false");
 		$page.='<p>Open a console to upgrade the system.</p>';
 	break;
 		
