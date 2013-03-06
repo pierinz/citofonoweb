@@ -41,15 +41,17 @@ int main (int argc, char *argv[])
 	//Setup check
 	if (argv[1] == NULL){
 		fprintf(stderr,"Please specify (on the command line) the path to the dev event interface device\n");
-		exit (0);
+		exit (1);
     }
 
 	if (argc > 1)
 		device = argv[1];
 
 	//Open Device
-	if ((fd = open (device, O_RDONLY)) == -1)
-		fprintf (stderr,"%s is not a vaild device.\n", device);
+	if ((fd = open (device, O_RDONLY)) == -1){
+		perror(stderr,"%s is not a vaild device.\n", device);
+                exit(1);
+        }
 
 	//Print Device Name
 	ioctl (fd, EVIOCGNAME (sizeof (name)), name);
@@ -66,7 +68,11 @@ int main (int argc, char *argv[])
 
 		rb=read(fd,ev,sizeof(struct input_event)*64);
 
-		if (rb < (int) sizeof(struct input_event)) {
+                if (rb == -1){
+                    	perror("read error: ");
+			exit (1);
+                }
+		else if (rb < (int) sizeof(struct input_event)) {
 			perror("evtest: short read");
 			exit (1);
 		}
