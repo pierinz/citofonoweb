@@ -10,3 +10,4 @@ $cms=new cms('Badge daemon log','');
 <?php echo nl2br(htmlentities($update),1);?>
 </p>
 <p style="width: 650px; text-align: right;"><a href="dlog.php?l=badge_daemon">Download log</a></p>
+<p style="width: 650px; text-align: right;"><a href="oldlogs.php">Older logs</a></p>
