@@ -49,7 +49,8 @@ int main (int argc, char *argv[])
 
 	//Open Device
 	if ((fd = open (device, O_RDONLY)) == -1){
-		perror(stderr,"%s is not a vaild device.\n", device);
+		fprintf(stderr,"%s is not a vaild device.\n", device);
+                perror("error: ");
                 exit(1);
         }
 
