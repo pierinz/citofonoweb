@@ -7,7 +7,7 @@ $list='<ul>';
 foreach(glob("/var/log/badge_daemon.log.*") as $l){
     $list.='<li><a href="dlog.php?l='.basename($l).'">'.basename($l).'</li>';
 }
-$list.='/<ul>';
+$list.='</ul>';
 ?>
 <h1>Older badge daemon logs</h1>
 <?php echo $list; ?>
