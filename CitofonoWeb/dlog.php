@@ -5,7 +5,7 @@ if ($_REQUEST['l']=='syslog' && (utils::inGroup($_SERVER['PHP_AUTH_USER'])=='adm
 	$log='/var/log/syslog';
 elseif ($_REQUEST['l']=='badge_daemon.log')
 	$log='/var/log/badge_daemon.log';
-elseif (preg_match ('/badge_daemon\.log\.[0-9]+(.gz)?/',$_REQUEST['l']))
+elseif (preg_match ('/badge_daemon\.log\.[0-9]+(\.gz)?/',$_REQUEST['l']))
 	$log='/var/log/'.$_REQUEST['l'];
 else
 	$log='/dev/null';
