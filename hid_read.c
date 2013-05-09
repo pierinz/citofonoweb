@@ -17,15 +17,9 @@
 #define EV_RELEASED 0
 #define EV_REPEAT 2
 
-#ifndef CONFDIR
-    #define CONFDIR "conf"
+#ifndef CONFPATH
+    #define CONFPATH "conf/hid_read.conf"
 #endif
-
-#ifndef CONFFILE
-    #define CONFFILE "hid_read.conf"
-#endif
-
-#define CONFPATH CONFDIR "/" CONFFILE
 
 short verbose=0;
 char* devname=NULL;
@@ -35,7 +29,7 @@ int timeout=10;
 short loop=1;
 int retry=-1;
 
-//0 = scancode, 1 = keycode
+/* 0 = scancode, 1 = keycode */
 int mode=0;
 int outmode=0;
 
@@ -257,7 +251,7 @@ int main (int argc, char *argv[]){
                         if (kbdus[ev[yalv].code] == '\n'){
                             printf("%s\n",key);
                             fflush(stdout);
-                            //clean old key
+                            /* Clean old key */
                             free(key);
                             key=calloc(1,sizeof(char));
                         }

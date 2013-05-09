@@ -1,43 +1,52 @@
 CC:=gcc
+CFLAGS:=-Wall -O2 -pipe -pedantic
 
 prefix:=/usr/local
 confdir:=/etc/badge_daemon
 wwwdir:=/var/www
 dbfile:=/var/lib/badge_daemon/citofonoweb.db
 
-CFLAGS:=-Wall -O2 -pipe
 PROGRAMS:=hid_read door_open badge_daemon
 
-OPTIONS:=-Dlights -DCONFDIR'"$(confdir)"'
+OPTIONS:=-Dlights
+LIBS:=-lsqlite3 -lpthread -L. -ldoor
 MACHINE:=placeholder
 
 all: $(PROGRAMS)
 .PHONY: all
 
 hid_read: hid_read.c
-	$(CC) $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) -DCONFPATH='"$(confdir)/hid_read.conf"' $(LIBS) $< -o $@
 
-door_lib.o: door_lib_$(MACHINE).c
-	$(CC) $(CFLAGS) -c $< -o $@
+libdoor.o: libdoor_$(MACHINE).c
+	$(CC) $(CFLAGS) -fPIC -c $< -o $@
 
-door_open.o: door_open.c
+libdoor.so: libdoor.o
+	$(CC) $(CFLAGS) -shared -Wl,-soname,$@ -o $@ $<
+
+door_open.o: door_open.c libdoor.so
+	$(CC) $(CFLAGS) $(OPTIONS) $(LIBS) -ljson -std=gnu99 $< -c
+
+door_open: door_open.o libdoor.so
 	if [ -e '/usr/include/json' ]; then \
-	    $(CC) $(CFLAGS) -Djson -lsqlite3 -ljson $< ; \
+	    $(CC) $(CFLAGS) $(OPTIONS) $(LIBS) -std=gnu99 -DCONFPATH='"$(confdir)/badge-daemon.conf"' -Djson -ljson $< -o $@ ; \
 	else \
-	    $(CC) $(CFLAGS) -lsqlite3 -ljson-c -c $< ; \
+	    $(CC) $(CFLAGS) $(OPTIONS) $(LIBS) -std=gnu99 -DCONFPATH='"$(confdir)/badge_daemon.conf"' -ljson-c $< -o $@ ; \
 	fi
 
-door_open: door_lib.o door_open.o
-	$(CC) $(CFLAGS) -lsqlite3 -ljson-c $^ -o $@
+badge_daemon.o: badge_daemon.c libdoor.so
+	$(CC) $(CFLAGS) $(OPTIONS) $(LIBS) $< -c
 
-badge_daemon.o: badge_daemon.c
-
-badge_daemon: badge_daemon.o door_lib.o
-	$(CC) $(CFLAGS) $(OPTIONS) -lpthread $^ -o $@
+badge_daemon: badge_daemon.o libdoor.so
+	$(CC) $(CFLAGS) $(OPTIONS) $(LIBS) -DCONFPATH='"$(confdir)/badge_daemon.conf"' $< -o $@
 
 install: $(PROGRAMS)
 	mkdir -p $(prefix)/sbin
 	install -m 0755 $(prefix)/sbin $^
+	
+	mkdir -p $(prefix)/lib
+	install -m 0755 $(prefix)/lib libdoor.so
+	ldconfig
 	
 	install -m 0640 conf/hid_read.conf $(confdir)
 	install -m 0640 conf/badge_daemon.conf $(confdir)
@@ -80,5 +89,6 @@ uninstall:
 
 clean:
 	rm -f $(PROGRAMS)
+	rm -f *.so
 	rm -f *.o
 .PHONY: clean

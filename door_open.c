@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <time.h>
+#include <signal.h>
 #include <sqlite3.h>
 
 //Debian and Gentoo (and maybe other distros) use different path for the same library
@@ -15,17 +16,11 @@
     #include <json-c/json.h>
 #endif
 
-#include "door_lib.h"
+#include "libdoor.h"
 
-#ifndef CONFDIR
-    #define CONFDIR "conf"
+#ifndef CONFPATH
+    #define CONFPATH "conf/badge_daemon.conf"
 #endif
-
-#ifndef CONFFILE
-    #define CONFFILE "badge_daemon.conf"
-#endif
-
-#define CONFPATH CONFDIR "/" CONFFILE
 
 #ifndef D_SIZE
     #define D_SIZE 40
@@ -39,7 +34,7 @@ void loadConf(){
     FILE* fp;
     char line[255],def[55],val[200];
 
-    fp=fopen(CONFPATH,"r");
+    fp=fopen(CONFPATH, "r");
     if (!fp){
         fprintf(stderr,"File %s:\n",CONFPATH);
         perror("Error opening configuration: ");

@@ -5,23 +5,17 @@
 #include <errno.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <time.h>
 #include <signal.h>
 #include <pthread.h>
-#include <time.h>
 
 #ifdef lights
-#include "door_lib.h"
+#include "libdoor.h"
 #endif
 
-#ifndef CONFDIR
-    #define CONFDIR "conf"
+#ifndef CONFPATH
+    #define CONFPATH "conf/badge_daemon.conf"
 #endif
-
-#ifndef CONFILE
-    #define CONFFILE "badge_daemon.conf"
-#endif
-
-#define CONFPATH CONFDIR "/" CONFFILE
 
 #ifndef confline
     #define confline 255
@@ -45,7 +39,7 @@
 
 char *source, *helper, separator[2], *logfile;
 short verbose=0;
-short lights=0;
+short light=0;
 short statusled=17;
 short debounce=1;
 
@@ -59,30 +53,31 @@ pthread_mutex_t mutex;
 int loop=1;
 
 size_t trimwhitespace(char *out, size_t len, const char *str){
-    if(len == 0)
-      return 0;
-
     const char *end;
     size_t out_size;
 
-    // Trim leading space
+    
+    if(len == 0)
+      return 0;
+
+    /* Trim leading space */
     while(isspace(*str)) str++;
 
-    if(*str == 0)  // All spaces?
+    if(*str == 0)  /* All spaces? */
     {
       *out = 0;
       return 1;
     }
 
-    // Trim trailing space
+    /* Trim trailing space */
     end = str + strlen(str) - 1;
     while(end > str && isspace(*end)) end--;
     end++;
 
-    // Set output size to minimum of trimmed string length and buffer size minus 1
+    /* Set output size to minimum of trimmed string length and buffer size minus 1 */
     out_size = (end - str) < len-1 ? (end - str) : len-1;
 
-    // Copy trimmed string and add null terminator
+    /* Copy trimmed string and add null terminator */
     memcpy(out, str, out_size);
     out[out_size] = 0;
 
@@ -96,7 +91,7 @@ void logmessage(char *message){
     
     time (&rawtime);
     timeinfo = localtime (&rawtime);
-    strftime(buffer,22,"%m/%d/%y %T - ",timeinfo);
+    strftime(buffer,22,"%m/%d/%y %H:%M:%S - ",timeinfo);
 
     /* Assicurati che nessuno scriva sul log contemporaneamente */
     pthread_mutex_lock(&mutex);
@@ -165,8 +160,8 @@ void loadConf(){
         if (strcmp(def,"verbose")==0){
             verbose=atoi(val);
         }
-        if (strcmp(def,"lights")==0){
-            lights=atoi(val);
+        if (strcmp(def,"light")==0){
+            light=atoi(val);
         }
         if (strcmp(def,"statusled")==0){
             statusled=atoi(val);
@@ -238,7 +233,7 @@ void *tSource(){
                 free(msg);
                 
                 strcat(buffer,"\n");
-                //Send key to helper via pipe
+                /* Send key to helper via pipe */
                 if (write(phelperOUT[1],buffer,sizeof(char)*(strlen(buffer))) < 0){
                     perror("write: ");
                     break;
@@ -252,7 +247,7 @@ void *tSource(){
         close(phelperOUT[1]);
         free(buffer);
         free(oldbuffer);
-        //Pipe closed by signal handler
+        /* Pipe closed by signal handler */
         
         if (verbose > 0){
             fprintf(stderr,"Source process terminated.\n");
@@ -313,7 +308,7 @@ void *tHelper(){
         }
         fclose(pipehelper);
         free(buffer);
-        //Pipe closed by signal handler
+        /* Pipe closed by signal handler */
         if (verbose > 0){
             fprintf(stderr,"Helper process terminated.\n");
         }
@@ -356,7 +351,8 @@ int main (int argc, char *argv[]){
     pthread_mutex_unlock(&mutex);
     
     #ifdef lights
-    pin_on(statusled);
+    if (light)
+        pin_on(statusled);
     #endif
 
     logmessage("Daemon started.");
@@ -407,7 +403,8 @@ int main (int argc, char *argv[]){
     logmessage("Program terminated.");
     clean();
     #ifdef lights
-    pin_off(statusled);
+    if (light)
+        pin_off(statusled);
     #endif
     return EXIT_SUCCESS;
 }
