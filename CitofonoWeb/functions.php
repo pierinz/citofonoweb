@@ -38,12 +38,13 @@ class tools{
 	}
     
     static function confkey($key,$file){
-        $f=file_get_contents(config::confdir.$file);
-        if (preg_match("/^$key (.*)$/", $f, $match)){
-            return $match[1];
+        $f=file(config::confdir.$file);
+        
+        foreach ($f as $line){
+            if (preg_match("/^$key (.*)$/", $line, $match)){
+                return $match[1];
+            }
         }
-        else{
-            return false;
-        }
+        return false;
     }
 }
