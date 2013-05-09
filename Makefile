@@ -16,7 +16,7 @@ all: $(PROGRAMS)
 .PHONY: all
 
 hid_read: hid_read.c
-	$(CC) $(CFLAGS) -DCONFPATH='"$(confdir)/hid_read.conf"' $(LIBS) $< -o $@
+	$(CC) $(CFLAGS) -DCONFPATH='"$(confdir)/hid_read.conf"' $< -o $@
 
 libdoor.o: libdoor_$(MACHINE).c
 	$(CC) $(CFLAGS) -fPIC -c $< -o $@
