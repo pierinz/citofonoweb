@@ -30,6 +30,10 @@ foreach ($pins as $pin){
 		</tr>
 <?php 
 }
+
+$statusled=tools::confkey('statusled', 'badge_daemon.conf');
+$doorpin=tools::confkey('doorpin', 'badge_daemon.conf');
+$alarmpin=tools::confkey('alarmpin', 'badge_daemon.conf');
 ?>
 	</tbody>
 </table>
@@ -45,10 +49,10 @@ foreach ($pins as $pin){
 		<tbody>
 			<tr>
 				<td>Status LED</td>
-				<td><?php echo config::statusled; ?></td>
+				<td><?php echo $statusled; ?></td>
 				<td>
 					<select name="statusled">
-						<option><?php echo config::statusled; ?></option>
+						<option><?php echo $statusled; ?></option>
 						<option>4</option>
 						<option>17</option>
 						<option>18</option>
@@ -62,10 +66,10 @@ foreach ($pins as $pin){
 			</tr>
 			<tr>
 				<td>Door open</td>
-				<td><?php echo config::doorpin; ?></td>
+				<td><?php echo $doorpin; ?></td>
 				<td>
 					<select name="doorpin">
-						<option><?php echo config::doorpin; ?></option>
+						<option><?php echo $doorpin; ?></option>
 						<option>4</option>
 						<option>17</option>
 						<option>18</option>
@@ -79,44 +83,10 @@ foreach ($pins as $pin){
 			</tr>
 			<tr>
 				<td>Buzzer</td>
-				<td><?php echo config::buzzer; ?></td>
+				<td><?php echo $alarmpin; ?></td>
 				<td>
 					<select name="buzzer">
-						<option><?php echo config::buzzer; ?></option>
-						<option>4</option>
-						<option>17</option>
-						<option>18</option>
-						<option>21</option>
-						<option>22</option>
-						<option>23</option>
-						<option>24</option>
-						<option>25</option>
-					</select>
-				</td>
-			</tr>
-			<tr>
-				<td>Door LED</td>
-				<td><?php echo config::redled; ?></td>
-				<td>
-					<select name="redled">
-						<option><?php echo config::redled; ?></option>
-						<option>4</option>
-						<option>17</option>
-						<option>18</option>
-						<option>21</option>
-						<option>22</option>
-						<option>23</option>
-						<option>24</option>
-						<option>25</option>
-					</select>
-				</td>
-			</tr>
-			<tr>
-				<td>Door Button</td>
-				<td><?php echo config::buttonpin; ?></td>
-				<td>
-					<select name="buttonpin">
-						<option><?php echo config::buttonpin; ?></option>
+						<option><?php echo $alarmpin; ?></option>
 						<option>4</option>
 						<option>17</option>
 						<option>18</option>

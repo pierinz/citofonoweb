@@ -48,7 +48,8 @@ $cms=new cms("Schedulation",$head);
 <?php 
 
 try{
-	$link = new PDO('sqlite:'.config::localdb);
+    $localdb=tools::confkey('dbfile', 'badge_daemon.conf');
+	$link = new PDO('sqlite:'.$localdb);
 	$query="select badge_code, description, allowed, sched from acl order by badge_code asc";
 	$rx=$link->query($query);
 	

@@ -8,10 +8,11 @@ $cms=new cms("Example data insertion",'');
 <p>
 <?php
 $insert="insert into `acl` (`badge_code`, `description`, `allowed`, `sched`) values ";
+$localdb=tools::confkey('dbfile', 'badge_daemon.conf');
 
-touch(config::localdb);
+touch($localdb);
 try{
-	$local = new PDO('sqlite:'.config::localdb);
+	$local = new PDO('sqlite:'.$localdb);
 	$query="CREATE TABLE IF NOT EXISTS acl (badge_code varchar(50) PRIMARY KEY, description varchar(50), allowed tinyint, sched text)";
 	$local->exec($query);
 }

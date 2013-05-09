@@ -36,10 +36,11 @@ if (utils::inGroup($cms->user)=='admin'){
 <form action="controller.php" method="post">
 	<p>Input device: <select name="dev">
 <?php
+    $device=tools::confkey('device', 'hid_read.conf');
 	if (file_exists('/dev/input/by-id')){
 		$devlist=tools::exec('ls /dev/input/by-id/ -1');
 		$devices=explode("\n", $devlist);
-		echo '<option value="'.config::device.'">'.basename(config::device).'</option>';
+		echo '<option value="'.$device.'">'.basename($device).'</option>';
 		foreach ($devices as $d){
 			$d=str_replace('<br/>', '', $d);
 			echo '<option value="/dev/input/by-id/'.$d.'">'.$d.'</option>';

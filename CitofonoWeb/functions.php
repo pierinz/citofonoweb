@@ -36,32 +36,14 @@ class tools{
 				return false;
 		}
 	}
-
-	static function door_open(){
-		self::exec("/usr/local/bin/gpio -g mode ".config::doorpin." out");
-		self::exec("/usr/local/bin/gpio -g write ".config::doorpin." 1");
-		usleep(config::doortime*1000000);
-		self::exec("/usr/local/bin/gpio -g write ".config::doorpin." 0");
-	}
-
-	static function door_deny(){
-		self::exec("/usr/local/bin/gpio -g mode ".config::redled." out");
-		self::exec("/usr/local/bin/gpio -g mode ".config::buzzer." out");
-		self::exec("/usr/local/bin/gpio -g write ".config::redled." 1");
-		self::exec("/usr/local/bin/gpio -g write ".config::buzzer." 1");
-		usleep(config::redledtime*1000000);
-		self::exec("/usr/local/bin/gpio -g write ".config::redled." 0");
-		self::exec("/usr/local/bin/gpio -g write ".config::buzzer." 0");
-	}
-
-	static function door_unknown(){
-		self::exec("/usr/local/bin/gpio -g mode ".config::redled." out");
-		self::exec("/usr/local/bin/gpio -g mode ".config::buzzer." out");
-		self::exec("/usr/local/bin/gpio -g write ".config::redled." 1");
-		self::exec("/usr/local/bin/gpio -g write ".config::buzzer." 1");
-		usleep(2000000);
-		self::exec("/usr/local/bin/gpio -g write ".config::redled." 0");
-		self::exec("/usr/local/bin/gpio -g write ".config::buzzer." 0");
-	}
-
+    
+    static function confkey($key,$file){
+        $f=file_get_contents(config::confdir.$file);
+        if (preg_match("/^$key (.*)$/", $f, $match)){
+            return $match[1];
+        }
+        else{
+            return false;
+        }
+    }
 }
