@@ -1,8 +1,8 @@
 #! /bin/sh
 ### BEGIN INIT INFO
 # Provides:			badge_daemon
-# Required-Start:	$syslog $mysql $remote_fs $network $time $mysql
-# Required-Stop:	$syslog $mysql $remote_fs $network $time $mysql
+# Required-Start:	$syslog $remote_fs $network $time
+# Required-Stop:	$syslog $remote_fs $network $time
 # Default-Start:	3 4 5
 # Default-Stop:	 	0 1 2 6
 # Short-Description:	Start badge_daemon service
@@ -14,7 +14,7 @@ PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin
 . /lib/init/vars.sh
 . /lib/lsb/init-functions
 
-DAEMON="badge_daemon.sh &"
+DAEMON="badge_daemon"
 pidfile="/var/run/badge_daemon.pid"
 
 if [ -f "$pidfile" ]; then
@@ -26,7 +26,7 @@ fi
 do_start() {
 	if [ -z "$pid" ]; then
 		[ "$VERBOSE" != no ] && log_begin_msg "Starting badge_daemon..."
-		$DAEMON > /dev/null 2>&1 >> /var/log/badge_daemon.log &
+		$DAEMON > /dev/null 2>&1 >> /var/log/badge_daemon_run.log &
 		ES=$?
 	else
 		if `kill -0 $pid`; then
@@ -34,7 +34,7 @@ do_start() {
 			exit 3
 		else
 			[ "$VERBOSE" != no ] && log_begin_msg "Starting badge_daemon..."
-			$DAEMON > /dev/null 2>&1 >> /var/log/badge_daemon.log &
+			$DAEMON > /dev/null 2>&1 >> /var/log/badge_daemon_run.log &
 			ES=$?
 		fi
 	fi
@@ -56,7 +56,7 @@ case "$1" in
 	;;
     restart)
 		do_stop
-		sleep 2
+		sleep 1
 		do_start
 	;;
 	reload|force-reload)
