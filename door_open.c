@@ -7,7 +7,14 @@
 #include <sys/wait.h>
 #include <time.h>
 #include <sqlite3.h>
-#include <json-c/json.h>
+
+//Debian and Gentoo (and maybe other distros) use different path for the same library
+#ifdef json
+    #include <json/json.h>
+#else
+    #include <json-c/json.h>
+#endif
+
 #include "door_lib.h"
 
 #ifndef CONFDIR

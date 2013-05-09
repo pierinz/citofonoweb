@@ -21,7 +21,11 @@ door_lib.o: door_lib_$(MACHINE).c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 door_open.o: door_open.c
-	$(CC) $(CFLAGS) -lsqlite3 -ljson-c -c $<
+	if [ -e '/usr/include/json' ]; then \
+	    $(CC) $(CFLAGS) -Djson -lsqlite3 -ljson $< ; \
+	else \
+	    $(CC) $(CFLAGS) -lsqlite3 -ljson-c -c $< ; \
+	fi
 
 door_open: door_lib.o door_open.o
 	$(CC) $(CFLAGS) -lsqlite3 -ljson-c $^ -o $@
