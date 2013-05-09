@@ -12,6 +12,6 @@ class config{
 	const name='Citofonoweb #1';
     
     #Config directory
-    const confdir='/etc/badge/daemon/';
+    const confdir='/etc/badge_daemon/';
 }
 ?>
