@@ -1,53 +1,80 @@
 CC:=gcc
-CFLAGS:=-Wall -O2
 
 prefix:=/usr/local
+confdir:=/etc/badge_daemon
 wwwdir:=/var/www
+dbfile:=/var/lib/badge_daemon/citofonoweb.db
 
-badge_listener: badge_listener.c
+CFLAGS:=-Wall -O2 -pipe
+PROGRAMS:=hid_read door_open badge_daemon
+
+OPTIONS:=-Dlights -DCONFDIR'"$(confdir)"'
+MACHINE:=placeholder
+
+all: $(PROGRAMS)
+.PHONY: all
+
+hid_read: hid_read.c
 	$(CC) $(CFLAGS) $< -o $@
 
-install: badge_listener
+door_lib.o: door_lib_$(MACHINE).c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+door_open.o: door_open.c
+	$(CC) $(CFLAGS) -lsqlite3 -ljson-c -c $<
+
+door_open: door_lib.o door_open.o
+	$(CC) $(CFLAGS) -lsqlite3 -ljson-c $^ -o $@
+
+badge_daemon.o: badge_daemon.c
+
+badge_daemon: badge_daemon.o door_lib.o
+	$(CC) $(CFLAGS) $(OPTIONS) -lpthread $^ -o $@
+
+install: $(PROGRAMS)
 	mkdir -p $(prefix)/sbin
-
-	install -m 0755 $< $(prefix)/sbin/
-	install -m 0755 script/badge_daemon.sh $(prefix)/sbin/
-	sed -i s:'^webpath=.*':webpath=\"$(wwwdir)\"\: $(prefix)/sbin/badge_daemon.sh
+	install -m 0755 $(prefix)/sbin $^
 	
-	install -m 0755 script/badge_open.php $(prefix)/sbin/
-	sed -i s:'^$$wwwdir=.*':\$$wwwdir=\"$(wwwdir)\"\;: $(prefix)/sbin/badge_open.php
+	install -m 0640 conf/hid_read.conf $(confdir)
+	install -m 0640 conf/badge_daemon.conf $(confdir)
+	sed -i s:'^source \./':'source $(prefix)/sbin': $(confdir)/badge_daemon.conf
+	sed -i s:'^helper \./':'helper $(prefix)/sbin': $(confdir)/badge_daemon.conf
+	sed -i s:'^dbfile citofonoweb.db':'dbfile $(dbfile)': $(confdir)/badge_daemon.conf
 	
-	install -m 0755 script/debian_initscript /etc/init.d/badge_daemon
-	sed -i s:'^PATH':'PATH=$(prefix)/sbin\:': /etc/init.d/badge_daemon
-
+	mkdir -p `dirname $(dbfile)`
+	install -m 0644 resources/db.info `dirname $(dbfile)`
+	
 	install -m 0644 conf/badge_daemon.logrotate /etc/logrotate.d/badge_daemon
-
-	mkdir -p $(prefix)/var/lib/citofonoweb/
-	install -m 0644 resources/db.info $(prefix)/var/lib/citofonoweb/readme
 
 	mkdir -p $(wwwdir)/
 	cp -rf CitofonoWeb $(wwwdir)/
-	sed -i s:'/var/lib/citofonoweb/citofonoweb.db':'$(prefix)/var/lib/citofonoweb/citofonoweb.db': $(wwwdir)/CitofonoWeb/config.inc.php
-	sed -i s:'/var/lib/citofonoweb/citofonoweb.db':'$(prefix)/var/lib/citofonoweb/citofonoweb.db': $(wwwdir)/CitofonoWeb/phpliteadmin/phpliteadmin.php
+	
+	sed -i s:'/var/lib/citofonoweb/citofonoweb.db':'$(dbfile)': $(wwwdir)/CitofonoWeb/phpliteadmin/phpliteadmin.php
 	chmod +x script/db_update.sh
-	script/db_update.sh '$(prefix)/var/lib/citofonoweb/citofonoweb.db'
-
 .PHONY: install
 
+db-update:
+	script/db_update.sh '$(dbfile)'
+.PHONY: db-update
+
+lighttpd-config:
+	install -m 0644 examples/lighttpd-plain.user /etc/lighttpd/
+	install -m 0644 examples/lighttp.conf.example /etc/lighttpd/lighttp.conf
+	lighttpd-enable-mod fastcgi-php auth
+	/etc/init.d/lighttpd restart
+.PHONY: db-update
+
 uninstall:
-	rm -f $(prefix)/usr/sbin/badge_listener
-	rm -f $(prefix)/usr/sbin/badge_daemon.sh
-	rm -f $(prefix)/usr/sbin/badge_open.php
+	rm -f $(prefix)/sbin/badge_daemon
+	rm -f $(prefix)/sbin/hid_read
+	rm -f $(prefix)/sbin/door_open
 
 	rm -f /etc/init.d/badge_daemon
 	rm -f /etc/logrotate.d/badge_daemon
-	rm -rf $(resources)/badge_daemon
-	rm -rf $(prefix)/var/lib/citofonoweb
 	rm -rf $(wwwdir)/CitofonoWeb
-
 .PHONY: uninstall
 
 clean:
-	rm -f badge_listener
-
+	rm -f $(PROGRAMS)
+	rm -f *.o
 .PHONY: clean
