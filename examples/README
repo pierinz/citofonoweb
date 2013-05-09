@@ -2,7 +2,7 @@ In this folder are stored examples of configuration files.
 
 LIGHTTPD:
 - copy lighttpd-plain.user to /etc/lighttpd/
-- copy lighttp.conf.example to /etc/lighttpd/lighttp.conf
+- copy lighttpd.conf.example to /etc/lighttpd/lighttpd.conf
 - enable mod fastcgi-php and auth: lighttpd-enable-mod fastcgi-php auth
 - /etc/init.d/lighttpd restart
 
