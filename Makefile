@@ -46,10 +46,10 @@ badge_daemon: badge_daemon.o libdoor.so
 
 install: $(PROGRAMS)
 	mkdir -p $(prefix)/sbin
-	install -m 0755 $(prefix)/sbin $^
+	install -m 0755 -t $(prefix)/sbin $^
 	
 	mkdir -p $(prefix)/lib
-	install -m 0755 $(prefix)/lib libdoor.so
+	install -m 0755 -t $(prefix)/lib libdoor.so
 	ldconfig
 	
 	install -m 0640 conf/hid_read.conf $(confdir)
