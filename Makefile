@@ -52,6 +52,7 @@ install: $(PROGRAMS)
 	install -m 0755 -t $(prefix)/lib libdoor.so
 	ldconfig
 	
+	mkdir -p $(confdir)
 	install -m 0640 conf/hid_read.conf $(confdir)
 	install -m 0640 conf/badge_daemon.conf $(confdir)
 	sed -i s:'^source \./':'source $(prefix)/sbin': $(confdir)/badge_daemon.conf
