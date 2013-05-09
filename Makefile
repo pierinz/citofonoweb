@@ -67,6 +67,7 @@ install: $(PROGRAMS)
 	mkdir -p $(wwwdir)/
 	cp -rf CitofonoWeb $(wwwdir)/
 	
+	sed -i s:'/etc/badge_daemon':'$(confdir)': $(wwwdir)/CitofonoWeb/config.inc.php
 	sed -i s:'/var/lib/citofonoweb/citofonoweb.db':'$(dbfile)': $(wwwdir)/CitofonoWeb/phpliteadmin/phpliteadmin.php
 	chmod +x script/db_update.sh
 .PHONY: install
@@ -77,7 +78,7 @@ db-update:
 
 lighttpd-config:
 	install -m 0644 examples/lighttpd-plain.user /etc/lighttpd/
-	install -m 0644 examples/lighttp.conf.example /etc/lighttpd/lighttp.conf
+	install -m 0644 examples/lighttpd.conf.example /etc/lighttpd/lighttpd.conf
 	lighttpd-enable-mod fastcgi-php auth
 	/etc/init.d/lighttpd restart
 .PHONY: db-update
