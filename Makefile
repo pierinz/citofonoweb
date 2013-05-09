@@ -25,7 +25,11 @@ libdoor.so: libdoor.o
 	$(CC) $(CFLAGS) -shared -Wl,-soname,$@ -o $@ $<
 
 door_open.o: door_open.c libdoor.so
-	$(CC) $(CFLAGS) $(OPTIONS) $(LIBS) -ljson -std=gnu99 $< -c
+	if [ -e '/usr/include/json' ]; then \
+	    $(CC) $(CFLAGS) $(OPTIONS) $(LIBS) -Djson -ljson -std=gnu99 $< -c ; \
+	else \
+	    $(CC) $(CFLAGS) $(OPTIONS) $(LIBS) -ljson-c -std=gnu99 $< -c ; \
+	fi
 
 door_open: door_open.o libdoor.so
 	if [ -e '/usr/include/json' ]; then \
