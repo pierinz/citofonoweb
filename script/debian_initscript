@@ -26,7 +26,9 @@ fi
 do_start() {
 	if [ -z "$pid" ]; then
 		[ "$VERBOSE" != no ] && log_begin_msg "Starting badge_daemon..."
-		$DAEMON > /dev/null 2>&1 >> /var/log/badge_daemon_run.log &
+        rm -f /var/log/badge_daemon_lastrun.log.1
+        mv /var/log/badge_daemon_run.log /var/log/badge_daemon_lastrun.log.1
+		$DAEMON 2>&1 >> /var/log/badge_daemon_lastrun.log &
 		ES=$?
 	else
 		if `kill -0 $pid`; then
@@ -34,7 +36,9 @@ do_start() {
 			exit 3
 		else
 			[ "$VERBOSE" != no ] && log_begin_msg "Starting badge_daemon..."
-			$DAEMON > /dev/null 2>&1 >> /var/log/badge_daemon_run.log &
+            rm -f /var/log/badge_daemon_lastrun.log.1
+            mv /var/log/badge_daemon_run.log /var/log/badge_daemon_lastrun.log.1
+			$DAEMON 2>&1 >> /var/log/badge_daemon_lastrun.log &
 			ES=$?
 		fi
 	fi
