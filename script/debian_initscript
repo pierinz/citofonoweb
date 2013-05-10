@@ -30,6 +30,7 @@ do_start() {
         mv /var/log/badge_daemon_run.log /var/log/badge_daemon_lastrun.log.1
 		$DAEMON 2>&1 >> /var/log/badge_daemon_lastrun.log &
 		ES=$?
+        echo $ES > "$pidfile"
 	else
 		if `kill -0 $pid`; then
 			echo 'The daemon is already running.'
@@ -40,6 +41,7 @@ do_start() {
             mv /var/log/badge_daemon_run.log /var/log/badge_daemon_lastrun.log.1
 			$DAEMON 2>&1 >> /var/log/badge_daemon_lastrun.log &
 			ES=$?
+            echo $ES > "$pidfile"
 		fi
 	fi
 	[ "$VERBOSE" != no ] && log_end_msg $ES
