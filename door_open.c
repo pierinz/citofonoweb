@@ -175,6 +175,7 @@ int main(int argc, char **argv){
     
     //Allocate memory
     param = calloc(1,sizeof(char) * D_SIZE);
+    desc = NULL;
     
     loadConf();
     
@@ -259,7 +260,7 @@ int main(int argc, char **argv){
     sqlite3_close(handle);
     
     // Free all pointers
-    if (desc)
+    if (desc!=NULL)
         free(desc);
     free(param);
     free(dbfile);
