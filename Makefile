@@ -65,7 +65,7 @@ install: $(PROGRAMS)
 	install -m 0644 conf/badge_daemon.logrotate /etc/logrotate.d/badge_daemon
 	if [ `lsb_release -is` = 'Debian' ]; then \
 	    install -m 0755 script/debian_initscript /etc/init.d/badge_daemon ; \
-	    sed -i s:'^DAEMON="badge_daemon"':'DAEMON="$(prefix)/sbin/badge_daemon': /etc/init.d/badge_daemon ; \
+	    sed -i s:'^DAEMON="badge_daemon"':'DAEMON="$(prefix)/sbin/badge_daemon"': /etc/init.d/badge_daemon ; \
 	fi
 
 	mkdir -p $(wwwdir)/
