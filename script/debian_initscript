@@ -25,7 +25,10 @@ fi
 
 do_start() {
     if [ -z "$pid" ]; then
-        [ "$VERBOSE" != no ] && log_begin_msg "Starting badge_daemon...\n"
+        if [ "$VERBOSE" != no ]; then
+            log_begin_msg "Starting badge_daemon..."
+            echo
+        fi
         rm -f /var/log/badge_daemon_lastrun.log.1
         if [ -e /var/log/badge_daemon_lastrun.log ]; then
             mv /var/log/badge_daemon_lastrun.log /var/log/badge_daemon_lastrun.log.1
@@ -39,7 +42,10 @@ do_start() {
             echo 'The daemon is already running.'
             exit 3
         else
-            [ "$VERBOSE" != no ] && log_begin_msg "Starting badge_daemon...\n"
+            if [ "$VERBOSE" != no ]; then
+                log_begin_msg "Starting badge_daemon..."
+                echo
+            fi
             rm -f /var/log/badge_daemon_lastrun.log.1
             if [ -e /var/log/badge_daemon_lastrun.log ]; then
                 mv /var/log/badge_daemon_lastrun.log /var/log/badge_daemon_lastrun.log.1
@@ -65,7 +71,8 @@ do_stop() {
         rm "$pidfile"
         echo
     else
-        log_begin_msg "The daemon is not running.\n"
+        log_begin_msg "The daemon is not running."
+        echo
     fi
 }
 
