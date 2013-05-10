@@ -30,7 +30,7 @@ do_start() {
         if [ -e /var/log/badge_daemon_lastrun.log ]; then
             mv /var/log/badge_daemon_lastrun.log /var/log/badge_daemon_lastrun.log.1
         fi
-        $DAEMON 2>&1 >> /var/log/badge_daemon_lastrun.log &
+        $DAEMON 2> /var/log/badge_daemon_lastrun.log &
         pid=$!
         ES=$?
         echo "$pid" > "$pidfile"
@@ -44,10 +44,10 @@ do_start() {
             if [ -e /var/log/badge_daemon_lastrun.log ]; then
                 mv /var/log/badge_daemon_lastrun.log /var/log/badge_daemon_lastrun.log.1
             fi
-            $DAEMON 2>&1 >> /var/log/badge_daemon_lastrun.log &
+            $DAEMON 2> /var/log/badge_daemon_lastrun.log &
             pid=$!
             ES=$?
-            echo "$pid" > "$pidfile"       
+            echo "$pid" > "$pidfile"
         fi
     fi
     [ "$VERBOSE" != no ] && log_end_msg $ES
@@ -55,13 +55,14 @@ do_start() {
 }
 
 do_stop() {
-    if [ -n "$pid" ]; then
+    if [ -n `ps ax | awk '{ print $1}' | grep "$pid"` ]; then
         kill $pid
         echo -n 'Terminating..'
-        while [ `ps ax | awk '{ print $1}' | grep "$pid"` ]; do
+        while [ -n `ps ax | awk '{ print $1}' | grep "$pid"` ]; do
             echo -n .
             sleep 0.5;
         done
+        rm "$pidfile"
         echo
     else
         log_begin_msg 'The daemon is not running.'
