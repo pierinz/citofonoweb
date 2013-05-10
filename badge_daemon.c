@@ -323,7 +323,9 @@ void *tHelper(){
 
 void signal_handler(int signum){
     if ((signum==SIGTERM) || (signum==SIGINT) || (signum==SIGQUIT)){
-        loop=0;
+        kill(spid,15);
+        kill(hpid,15);
+        //Then we continue the cleanup in SIGCHLD
     }
     else if (signum==SIGCHLD){
         loop=0;
@@ -365,6 +367,7 @@ int main (int argc, char *argv[]){
     sigaddset(&sig_h.sa_mask, SIGINT);
     sigaddset(&sig_h.sa_mask, SIGTERM);
     sigaddset(&sig_h.sa_mask, SIGQUIT);
+    sigaddset(&sig_h.sa_mask, SIGUSR1);
     
     sigaction(SIGQUIT,&sig_h,NULL);
     sigaction(SIGINT,&sig_h,NULL);
