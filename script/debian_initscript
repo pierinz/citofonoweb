@@ -9,7 +9,7 @@
 ### END INIT INFO
 
 
-PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin
+PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin:/usr/local/sbin
 
 . /lib/init/vars.sh
 . /lib/lsb/init-functions
