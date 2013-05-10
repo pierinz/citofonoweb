@@ -25,7 +25,7 @@ fi
 
 do_start() {
     if [ -z "$pid" ]; then
-        [ "$VERBOSE" != no ] && log_begin_msg "Starting badge_daemon..."
+        [ "$VERBOSE" != no ] && log_begin_msg "Starting badge_daemon...\n"
         rm -f /var/log/badge_daemon_lastrun.log.1
         if [ -e /var/log/badge_daemon_lastrun.log ]; then
             mv /var/log/badge_daemon_lastrun.log /var/log/badge_daemon_lastrun.log.1
@@ -39,7 +39,7 @@ do_start() {
             echo 'The daemon is already running.'
             exit 3
         else
-            [ "$VERBOSE" != no ] && log_begin_msg "Starting badge_daemon..."
+            [ "$VERBOSE" != no ] && log_begin_msg "Starting badge_daemon...\n"
             rm -f /var/log/badge_daemon_lastrun.log.1
             if [ -e /var/log/badge_daemon_lastrun.log ]; then
                 mv /var/log/badge_daemon_lastrun.log /var/log/badge_daemon_lastrun.log.1
@@ -55,17 +55,17 @@ do_start() {
 }
 
 do_stop() {
-    if [ -n `ps ax | awk '{ print $1}' | grep "$pid"` ]; then
+    if [ `ps ax | awk '{ print $1}' | grep "$pid"` ]; then
         kill $pid
         echo -n 'Terminating..'
-        while [ -n `ps ax | awk '{ print $1}' | grep "$pid"` ]; do
+        while [ `ps ax | awk '{ print $1}' | grep "$pid"` ]; do
             echo -n .
             sleep 0.5;
         done
         rm "$pidfile"
         echo
     else
-        log_begin_msg 'The daemon is not running.'
+        log_begin_msg "The daemon is not running.\n"
     fi
 }
 
