@@ -63,6 +63,9 @@ install: $(PROGRAMS)
 	install -m 0644 resources/db.info `dirname $(dbfile)`
 	
 	install -m 0644 conf/badge_daemon.logrotate /etc/logrotate.d/badge_daemon
+	if [ `lsb_release -is` = 'Debian' ]; then \
+	    install -m 0755 script/debian_initscript /etc/init.d/badge_daemon ; \
+	fi
 
 	mkdir -p $(wwwdir)/
 	cp -rf CitofonoWeb $(wwwdir)/
