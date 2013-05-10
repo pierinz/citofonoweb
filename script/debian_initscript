@@ -1,11 +1,11 @@
 #! /bin/sh
 ### BEGIN INIT INFO
-# Provides:			badge_daemon
-# Required-Start:	$syslog $remote_fs $network $time
-# Required-Stop:	$syslog $remote_fs $network $time
-# Default-Start:	3 4 5
-# Default-Stop:	 	0 1 2 6
-# Short-Description:	Start badge_daemon service
+# Provides:            badge_daemon
+# Required-Start:    $syslog $remote_fs $network $time
+# Required-Stop:    $syslog $remote_fs $network $time
+# Default-Start:    3 4 5
+# Default-Stop:         0 1 2 6
+# Short-Description:    Start badge_daemon service
 ### END INIT INFO
 
 
@@ -18,62 +18,68 @@ DAEMON="badge_daemon"
 pidfile="/var/run/badge_daemon.pid"
 
 if [ -f "$pidfile" ]; then
-	pid=`cat $pidfile`
+    pid=`cat $pidfile`
 else
-	pid=''
+    pid=''
 fi
 
 do_start() {
-	if [ -z "$pid" ]; then
-		[ "$VERBOSE" != no ] && log_begin_msg "Starting badge_daemon..."
+    if [ -z "$pid" ]; then
+        [ "$VERBOSE" != no ] && log_begin_msg "Starting badge_daemon..."
         rm -f /var/log/badge_daemon_lastrun.log.1
-        mv /var/log/badge_daemon_run.log /var/log/badge_daemon_lastrun.log.1
-		$DAEMON 2>&1 >> /var/log/badge_daemon_lastrun.log &
-        echo $! > "$pidfile"
-		ES=$?
-	else
-		if `kill -0 $pid`; then
-			echo 'The daemon is already running.'
-			exit 3
-		else
-			[ "$VERBOSE" != no ] && log_begin_msg "Starting badge_daemon..."
+        if [ -e /var/log/badge_daemon_lastrun.log ]; then
+            mv /var/log/badge_daemon_lastrun.log /var/log/badge_daemon_lastrun.log.1
+        fi
+        $DAEMON 2>&1 >> /var/log/badge_daemon_lastrun.log &
+        pid=$!
+        ES=$?
+        echo "$pid" > "$pidfile"
+    else
+        if `kill -0 $pid`; then
+            echo 'The daemon is already running.'
+            exit 3
+        else
+            [ "$VERBOSE" != no ] && log_begin_msg "Starting badge_daemon..."
             rm -f /var/log/badge_daemon_lastrun.log.1
-            mv /var/log/badge_daemon_run.log /var/log/badge_daemon_lastrun.log.1
-			$DAEMON 2>&1 >> /var/log/badge_daemon_lastrun.log &
-            echo $! > "$pidfile"
-			ES=$?
-		fi
-	fi
-	[ "$VERBOSE" != no ] && log_end_msg $ES
-	return $ES
+            if [ -e /var/log/badge_daemon_lastrun.log ]; then
+                mv /var/log/badge_daemon_lastrun.log /var/log/badge_daemon_lastrun.log.1
+            fi
+            $DAEMON 2>&1 >> /var/log/badge_daemon_lastrun.log &
+            pid=$!
+            ES=$?
+            echo "$pid" > "$pidfile"       
+        fi
+    fi
+    [ "$VERBOSE" != no ] && log_end_msg $ES
+    return $ES
 }
 
 do_stop() {
-	if [ -n "$pid" ]; then
-		kill $pid
-	else
-		log_begin_msg 'The daemon is not running.'
-	fi
+    if [ -n "$pid" ]; then
+        kill $pid
+    else
+        log_begin_msg 'The daemon is not running.'
+    fi
 }
 
 case "$1" in
     start)
-		do_start
-	;;
+        do_start
+    ;;
     restart)
-		do_stop
-		sleep 1
-		do_start
-	;;
-	reload|force-reload)
+        do_stop
+        sleep 1
+        do_start
+    ;;
+    reload|force-reload)
         echo "Error: argument '$1' not supported" >&2
         exit 3
-       ;;
+    ;;
     stop)
-		do_stop
-	;;
+        do_stop
+    ;;
     *)
         echo "Usage: $0 start|stop|restart" >&2
         exit 3
-        ;;
+    ;;
 esac
