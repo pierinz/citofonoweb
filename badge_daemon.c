@@ -217,7 +217,7 @@ void *tSource(){
         while (loop && fgets(buffer,keylen,pipesource)){
             strtok(buffer,"\n");
             
-            if (verbose > 2){
+            if (verbose > 1){
                 fprintf(stderr,"Raw data: %s\n",buffer);
             }
             
@@ -301,7 +301,7 @@ void *tHelper(){
         while (loop && fgets(buffer,loglen,pipehelper)){
             strtok(buffer,"\n");
             time(&now);
-            if (verbose > 0){
+            if (verbose > 1){
                 fprintf(stderr,"Log: %s\n",buffer);
             }
             logmessage(buffer);
