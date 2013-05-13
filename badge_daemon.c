@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -111,18 +112,32 @@ void rotate(){
     }
     flog=fopen(logfile,"a");
     pthread_mutex_unlock(&mutex);
+    logmessage("Logfile rotated.");
 }
 
 void clean(){
-    fclose(flog);
+    if (flog)
+        fclose(flog);
+    
     free(logfile);
+    free(source);
+    free(helper);
+    
+    #ifdef lights
+    if (light)
+        pin_off(statusled);
+    #endif
 }
 
 void fatal(char* message){
+    fprintf(stderr,"%s\n",message);
     logmessage(message);
+
+    fprintf(stderr,"Fatal error - program terminated.\n");
     logmessage("Fatal error - program terminated.");
-    exit(1);
+
     clean();
+    exit(1);
 }
 
 void loadConf(){
@@ -197,13 +212,14 @@ void *tSource(){
         close(psource[1]);
 
         if (execlp(source,"source",NULL)<0){
-            perror("source: execlp: ");
+            perror("Source -> execlp: ");
             _exit(1);
         }
     }
     else if (spid>0){
         /* Parent process */
         free(source);
+        source=NULL;
         
         close(psource[1]); /* These are being used by the child */
 
@@ -214,11 +230,17 @@ void *tSource(){
         time(&now);
         
         pipesource=fdopen(psource[0],"r");
+        
+        if (verbose > 1){
+            fprintf(stderr,"Source -> ready.\n");
+        }
+        logmessage("Source -> ready.");
+        
         while (loop && fgets(buffer,keylen,pipesource)){
             strtok(buffer,"\n");
             
             if (verbose > 1){
-                fprintf(stderr,"Raw data: %s\n",buffer);
+                fprintf(stderr,"Source -> raw data: %s\n",buffer);
             }
             
             time(&now);
@@ -250,12 +272,12 @@ void *tSource(){
         /* Pipe closed by signal handler */
         
         if (verbose > 0){
-            fprintf(stderr,"Source process terminated.\n");
+            fprintf(stderr,"Source -> process terminated.\n");
         }
-        logmessage("Source process terminated.");
+        logmessage("Source -> process terminated.");
     }
     else{
-        perror("fork: ");
+        perror("Source -> fork: ");
         loop=0;
     }
     return 0;
@@ -281,13 +303,14 @@ void *tHelper(){
         close(phelperOUT[0]);
 
         if (execlp(helper,"helper",NULL)<0){
-            perror("helper: execlp: ");
+            perror("Helper -> execlp: ");
             _exit(1);
         }
     }
     else if (hpid>0){
         /* Parent process */
         free(helper);
+        helper=NULL;
         
         /* These are being used by the child */
         close(phelperIN[1]);
@@ -297,12 +320,17 @@ void *tHelper(){
         time(&now);
         
         pipehelper=fdopen(phelperIN[0],"r");
-
+        
+        if (verbose > 1){
+            fprintf(stderr,"Helper -> ready.\n");
+        }
+        logmessage("Helper -> ready to parse data.");
+        
         while (loop && fgets(buffer,loglen,pipehelper)){
             strtok(buffer,"\n");
             time(&now);
             if (verbose > 1){
-                fprintf(stderr,"Log: %s\n",buffer);
+                fprintf(stderr,"Helper -> logging %s\n",buffer);
             }
             logmessage(buffer);
         }
@@ -310,22 +338,31 @@ void *tHelper(){
         free(buffer);
         /* Pipe closed by signal handler */
         if (verbose > 0){
-            fprintf(stderr,"Helper process terminated.\n");
+            fprintf(stderr,"Helper -> process terminated.\n");
         }
-        logmessage("Helper process terminated.");
+        logmessage("Helper -> process terminated.");
     }
     else{
-        perror("fork: ");
+        perror("Helper -> fork: ");
         loop=0;
     }
     return 0;
 }
 
 void signal_handler(int signum){
+    char *buf;
     if ((signum==SIGTERM) || (signum==SIGINT) || (signum==SIGQUIT)){
+        if (asprintf(&buf,"Caught signal %d, shutting down...",signum) < 0){
+            perror("asprintf: ");
+        }
+        else{
+            fprintf(stderr,"%s\n",buf);
+            logmessage(buf);
+            free(buf);
+        }
         kill(spid,15);
         kill(hpid,15);
-        //Then we continue the cleanup in SIGCHLD
+        /* Then we continue the cleanup in SIGCHLD */
     }
     else if (signum==SIGCHLD){
         loop=0;
@@ -335,6 +372,16 @@ void signal_handler(int signum){
         waitpid(hpid,NULL,0);
     }
     else if (signum==SIGUSR1){
+        if (asprintf(&buf,"Caught signal %d, rotating log file...",signum) < 0){
+            perror("asprintf: ");
+            clean();
+            exit(1);
+        }
+        else{
+            fprintf(stderr,"%s\n",buf);
+            logmessage(buf);
+            free(buf);
+        }
         rotate();
     }
 }
@@ -344,13 +391,12 @@ int main (int argc, char *argv[]){
     
     loadConf();
 
-    pthread_mutex_lock(&mutex);
     flog=fopen(logfile,"a");
     if (!flog){
         perror("fopen: ");
+        clean();
         exit(1);
     }
-    pthread_mutex_unlock(&mutex);
     
     #ifdef lights
     if (light)
@@ -395,9 +441,17 @@ int main (int argc, char *argv[]){
     
     /* Crea thread di controllo coda */
     pthread_create(&thr_source,NULL,tSource,NULL);
+    if (verbose>1){
+        fprintf(stderr,"Source thread started.\n");
+    }
+    logmessage("Source thread started.");
 
     /* Crea thread autenticazione */
     pthread_create(&thr_helper,NULL,tHelper,NULL);
+    if (verbose>1){
+        fprintf(stderr,"Helper thread started.\n");
+    }
+    logmessage("Helper thread started.");
 
     /* Attendi che i threads terminino */
     pthread_join(thr_source,NULL);
@@ -405,9 +459,6 @@ int main (int argc, char *argv[]){
     
     logmessage("Program terminated.");
     clean();
-    #ifdef lights
-    if (light)
-        pin_off(statusled);
-    #endif
+
     return EXIT_SUCCESS;
 }
