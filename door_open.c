@@ -260,8 +260,7 @@ int main(int argc, char **argv){
     sqlite3_close(handle);
     
     // Free all pointers
-    if (desc!=NULL)
-        free(desc);
+    // desc is freed automatically by sqlite
     free(param);
     free(dbfile);
     
