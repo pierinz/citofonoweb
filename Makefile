@@ -1,5 +1,5 @@
 CC:=gcc
-CFLAGS:=-Wall -O2 -pipe -pedantic
+CFLAGS:=-Os -pipe -march=native -Wall -pedantic
 
 prefix:=/usr/local
 confdir:=/etc/badge_daemon
@@ -67,16 +67,19 @@ install: $(PROGRAMS)
 	    install -m 0755 script/debian_initscript /etc/init.d/badge_daemon ; \
 	    sed -i s:'^DAEMON="badge_daemon"':'DAEMON="$(prefix)/sbin/badge_daemon"': /etc/init.d/badge_daemon ; \
 	fi
+	
+	chmod +x script/db_update.sh
+.PHONY: install
 
+webinstall: install
 	mkdir -p $(wwwdir)/
 	cp -rf CitofonoWeb $(wwwdir)/
 	
 	sed -i s:'/etc/badge_daemon':'$(confdir)': $(wwwdir)/CitofonoWeb/config.inc.php
 	sed -i s:'/var/lib/citofonoweb/citofonoweb.db':'$(dbfile)': $(wwwdir)/CitofonoWeb/phpliteadmin/phpliteadmin.php
-	chmod +x script/db_update.sh
-.PHONY: install
+.PHONY: webinstall
 
-db-update:
+db-update: install
 	script/db_update.sh '$(dbfile)'
 .PHONY: db-update
 
