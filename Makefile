@@ -8,7 +8,6 @@ dbfile:=/var/lib/badge_daemon/citofonoweb.db
 
 PROGRAMS:=hid_read door_open badge_daemon
 
-OPTIONS:=-Dlights
 LIBS:=-lsqlite3 -lpthread -L. -ldoor
 MACHINE:=placeholder
 
@@ -20,16 +19,9 @@ hid_read: hid_read.c
 
 libdoor.o: libdoor_$(MACHINE).c
 	if [ $(MACHINE) = 'raspberry_piface' ]; then \
-	sed -i s/'^blacklist spi\-bcm2708'/'#blacklist spi-bcm2708'/ /etc/modprobe.d/raspi-blacklist.conf ; \
-	    if [ -e piface ]; then \
-		cd piface; \
-		git pull; \
-		cd .. ; \
-	    else \
-		git clone https://github.com/thomasmacpherson/piface ; \
-	    fi ; \
-	    $(CC) $(CFLAGS) -fPIC -c $< -o $@ ; \
-	    $(CC) $(CFLAGS) -fPIC -c piface/c/src/piface/pfio.c -o pfio.o ; \
+	    sed -i s/'^blacklist spi\-bcm2708'/'#blacklist spi-bcm2708'/ /etc/modprobe.d/raspi-blacklist.conf 2>/dev/null ; \
+	    $(CC) $(CFLAGS) -fPIC -L/usr/local/lib/ -lpiface-1.0 -c $< -o $@ || \
+	    echo "You need to install this library: https://github.com/thomasmacpherson/piface" ; \
 	else \
 	    $(CC) $(CFLAGS) -fPIC -c $< -o $@ ; \
 	fi
@@ -43,23 +35,23 @@ libdoor.so: libdoor.o
 
 door_open.o: door_open.c libdoor.so
 	if [ -e '/usr/include/json' ]; then \
-	    $(CC) $(CFLAGS) $(OPTIONS) $(LIBS) -std=gnu99 -DCONFPATH='"$(confdir)/badge_daemon.conf"' -Djson -ljson $< -c ; \
+	    $(CC) $(CFLAGS) $(LIBS) -std=gnu99 -DCONFPATH='"$(confdir)/badge_daemon.conf"' -Djson -ljson $< -c ; \
 	else \
-	    $(CC) $(CFLAGS) $(OPTIONS) $(LIBS) -std=gnu99 -DCONFPATH='"$(confdir)/badge_daemon.conf"' -ljson-c $< -c ; \
+	    $(CC) $(CFLAGS) $(LIBS) -std=gnu99 -DCONFPATH='"$(confdir)/badge_daemon.conf"' -ljson-c $< -c ; \
 	fi
 
 door_open: door_open.o libdoor.so
 	if [ -e '/usr/include/json' ]; then \
-	    $(CC) $(CFLAGS) $(OPTIONS) $(LIBS) -std=gnu99 -DCONFPATH='"$(confdir)/badge_daemon.conf"' -Djson -ljson $< -o $@ ; \
+	    $(CC) $(CFLAGS) $(LIBS) -std=gnu99 -DCONFPATH='"$(confdir)/badge_daemon.conf"' -Djson -ljson $< -o $@ ; \
 	else \
-	    $(CC) $(CFLAGS) $(OPTIONS) $(LIBS) -std=gnu99 -DCONFPATH='"$(confdir)/badge_daemon.conf"' -ljson-c $< -o $@ ; \
+	    $(CC) $(CFLAGS) $(LIBS) -std=gnu99 -DCONFPATH='"$(confdir)/badge_daemon.conf"' -ljson-c $< -o $@ ; \
 	fi
 
 badge_daemon.o: badge_daemon.c libdoor.so
-	$(CC) $(CFLAGS) $(OPTIONS) $(LIBS) -DCONFPATH='"$(confdir)/badge_daemon.conf"' $< -c
+	$(CC) $(CFLAGS) $(LIBS) -DCONFPATH='"$(confdir)/badge_daemon.conf"' $< -c
 
 badge_daemon: badge_daemon.o libdoor.so
-	$(CC) $(CFLAGS) $(OPTIONS) $(LIBS) -DCONFPATH='"$(confdir)/badge_daemon.conf"' $< -o $@
+	$(CC) $(CFLAGS) $(LIBS) -DCONFPATH='"$(confdir)/badge_daemon.conf"' $< -o $@
 
 install: $(PROGRAMS)
 	mkdir -p $(prefix)/sbin

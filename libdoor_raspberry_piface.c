@@ -1,5 +1,5 @@
 #include <unistd.h>
-#include "piface/c/src/piface/pfio.h"
+#include <libpiface-1.0/pfio.h>
 
 void pin_init(){
     pfio_init();
