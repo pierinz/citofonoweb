@@ -28,7 +28,7 @@ libdoor.o: libdoor_$(MACHINE).c
 
 libdoor.so: libdoor.o
 	if [ $(MACHINE) = 'raspberry_piface' ]; then \
-	    $(CC) $(CFLAGS) -shared -Wl,-soname,$@ -o $@ $< pfio.o ; \
+	    $(CC) $(CFLAGS) -shared -Wl,-soname,$@  -L/usr/local/lib/ -lpiface-1.0 -o $@ $< ; \
 	else \
 	    $(CC) $(CFLAGS) -shared -Wl,-soname,$@ -o $@ $< ; \
 	fi
