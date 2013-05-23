@@ -19,10 +19,27 @@ hid_read: hid_read.c
 	$(CC) $(CFLAGS) -DCONFPATH='"$(confdir)/hid_read.conf"' $< -o $@
 
 libdoor.o: libdoor_$(MACHINE).c
-	$(CC) $(CFLAGS) -fPIC -c $< -o $@
+	if [ $(MACHINE) = 'raspberry_piface' ]; then \
+	sed -i s/'^blacklist spi\-bcm2708'/'#blacklist spi-bcm2708'/ /etc/modprobe.d/raspi-blacklist.conf ; \
+	    if [ -e piface ]; then \
+		cd piface; \
+		git pull; \
+		cd .. ; \
+	    else \
+		git clone https://github.com/thomasmacpherson/piface ; \
+	    fi ; \
+	    $(CC) $(CFLAGS) -fPIC -c $< -o $@ ; \
+	    $(CC) $(CFLAGS) -fPIC -c piface/c/src/piface/pfio.c -o pfio.o ; \
+	else \
+	    $(CC) $(CFLAGS) -fPIC -c $< -o $@ ; \
+	fi
 
 libdoor.so: libdoor.o
-	$(CC) $(CFLAGS) -shared -Wl,-soname,$@ -o $@ $<
+	if [ $(MACHINE) = 'raspberry_piface' ]; then \
+	    $(CC) $(CFLAGS) -shared -Wl,-soname,$@ -o $@ $< pfio.o ; \
+	else \
+	    $(CC) $(CFLAGS) -shared -Wl,-soname,$@ -o $@ $< ; \
+	fi
 
 door_open.o: door_open.c libdoor.so
 	if [ -e '/usr/include/json' ]; then \
