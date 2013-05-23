@@ -10,10 +10,6 @@
 #include <signal.h>
 #include <pthread.h>
 
-#ifdef lights
-#include "libdoor.h"
-#endif
-
 #ifndef CONFPATH
     #define CONFPATH "conf/badge_daemon.conf"
 #endif
@@ -40,8 +36,6 @@
 
 char *source, *helper, separator[2], *logfile;
 short verbose=0;
-short light=0;
-short statusled=17;
 short debounce=1;
 
 pthread_t thr_source, thr_helper;
@@ -122,11 +116,6 @@ void clean(){
     free(logfile);
     free(source);
     free(helper);
-    
-    #ifdef lights
-    if (light)
-        pin_off(statusled);
-    #endif
 }
 
 void fatal(char* message){
@@ -174,12 +163,6 @@ void loadConf(){
         }
         if (strcmp(def,"verbose")==0){
             verbose=atoi(val);
-        }
-        if (strcmp(def,"light")==0){
-            light=atoi(val);
-        }
-        if (strcmp(def,"statusled")==0){
-            statusled=atoi(val);
         }
         if (strcmp(def,"debounce")==0){
             debounce=atoi(val);
@@ -397,11 +380,6 @@ int main (int argc, char *argv[]){
         clean();
         exit(1);
     }
-    
-    #ifdef lights
-    if (light)
-        pin_on(statusled);
-    #endif
 
     logmessage("Daemon started.");
     

@@ -28,6 +28,8 @@
 
 char *dbfile;
 int verbose, doorpin, doortime, alarmpin, alarmtime;
+short light=0;
+short statusled=17;
 int loop=1;
 
 void loadConf(){
@@ -61,6 +63,12 @@ void loadConf(){
         }
         if (strcmp(def,"alarmtime")==0){
             alarmtime=atoi(val);
+        }
+        if (strcmp(def,"light")==0){
+            light=atoi(val);
+        }
+        if (strcmp(def,"statusled")==0){
+            statusled=atoi(val);
         }
     }
     fclose(fp);
@@ -212,6 +220,11 @@ int main(int argc, char **argv){
         exit(1);
     }
     
+    pin_init();
+    
+    if (light)
+        pin_on(statusled);
+    
     while (loop && fgets(param,D_SIZE,stdin)){
         //Remove trailing \n
         strtok(param,"\n");
@@ -248,6 +261,9 @@ int main(int argc, char **argv){
         else{
             printf("Internal error. Program terminated.\n");
             fflush(stdout);
+            if (light)
+                pin_off(statusled);
+            pin_clean();
             exit(1);
         }
 
@@ -263,6 +279,11 @@ int main(int argc, char **argv){
     // desc is freed automatically by sqlite
     free(param);
     free(dbfile);
+    
+    if (light)
+        pin_off(statusled);
+    
+    pin_clean();
     
     exit(0);
 }
