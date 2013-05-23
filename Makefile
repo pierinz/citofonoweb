@@ -1,5 +1,5 @@
 CC:=gcc
-CFLAGS:=-Os -pipe -march=native -Wall -pedantic
+CFLAGS:=-Os -pipe -Wall -pedantic
 
 prefix:=/usr/local
 confdir:=/etc/badge_daemon
