@@ -3,7 +3,12 @@
 #include <stdio.h>
 
 #define GPIO_EXPORT "/sys/class/gpio/export"
+#define GPIO_UNEXPORT "/sys/class/gpio/unexport"
 #define GPIO_NUM "/sys/class/gpio/gpio"
+
+void pin_init(){
+    return;
+}
 
 void pin_export(short pin){
     FILE* f;
@@ -79,4 +84,8 @@ void pin_off(short pin){
 int read_pin(short pin){
     /* Not implemented */
     return 0;
+}
+
+void pin_clean(){
+    return;
 }
