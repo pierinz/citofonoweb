@@ -62,8 +62,19 @@ install: $(PROGRAMS)
 	ldconfig
 	
 	mkdir -p $(confdir)
-	install -m 0640 conf/hid_read.conf $(confdir)
-	install -m 0640 conf/badge_daemon.conf $(confdir)
+	if [ -e $(confdir)/hid_read.conf ]; then \
+	    echo "hid_read.conf found - skipping" ; \
+	    echo "Run 'make conf' to overwrite" ; \
+	else \
+	    install -m 0640 conf/hid_read.conf $(confdir) ; \
+	fi
+	if [ -e $(confdir)/badge_daemon.conf ]; then \
+	    echo "badge_daemon.conf found - skipping" ; \
+	    echo "Run 'make conf' to overwrite" ; \
+	else \
+	    install -m 0640 conf/badge_daemon.conf $(confdir) ; \
+	fi
+	
 	sed -i s:'^source \./':'source $(prefix)/sbin/': $(confdir)/badge_daemon.conf
 	sed -i s:'^helper \./':'helper $(prefix)/sbin/': $(confdir)/badge_daemon.conf
 	sed -i s:'^dbfile citofonoweb.db':'dbfile $(dbfile)': $(confdir)/badge_daemon.conf
@@ -79,6 +90,12 @@ install: $(PROGRAMS)
 	
 	chmod +x script/db_update.sh
 .PHONY: install
+	
+conf:
+	mkdir -p $(confdir)
+	install -m 0640 conf/hid_read.conf $(confdir)
+	install -m 0640 conf/badge_daemon.conf $(confdir)
+.PHONY: conf
 
 webinstall: install
 	mkdir -p $(wwwdir)/
