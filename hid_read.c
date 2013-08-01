@@ -91,7 +91,7 @@ void loadConf(){
     if (!fp){
         fprintf(stderr,"File %s:\n",CONFPATH);
         perror("Error opening configuration: ");
-        exit(1);
+        return;
     }
     while(fgets(line,255,fp)){
         sscanf(line,"%s%s",def,val);
