@@ -1,3 +1,15 @@
+/*
+ * Usage: hid_read [options] device
+ * read data from HID devices.
+    -m X            Device mode (scancode|keycode)
+    -o X            Output (char|line)
+    -v              Be verbose
+    -vv             Be more verbose
+    -t X            If the device disappears, wait X µs before retry
+    -r              If the device disappears, retry X times before crashing
+    -h              Show this message
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -17,12 +29,8 @@
 #define EV_RELEASED 0
 #define EV_REPEAT 2
 
-#ifndef CONFPATH
-    #define CONFPATH "conf/hid_read.conf"
-#endif
-
 short verbose=0;
-char* devname=NULL;
+char* devname;
 int max_retry=3;
 int timeout=10;
 
@@ -31,6 +39,7 @@ int retry=-1;
 
 /* 0 = scancode, 1 = keycode */
 int mode=0;
+/* 0 = line, 1 = char */
 int outmode=0;
 
 /* KBDUS means US Keyboard Layout. This is a scancode table
@@ -78,56 +87,6 @@ unsigned char kbdus[128] =
     0,	/* All other keys are undefined */
 };
 
-/* Clean */
-void clean(){
-    free(devname);
-}
-
-void loadConf(){
-    FILE* fp;
-    char line[255],def[55],val[200];
-
-    fp=fopen(CONFPATH,"r");
-    if (!fp){
-        fprintf(stderr,"File %s:\n",CONFPATH);
-        perror("Error opening configuration: ");
-        return;
-    }
-    while(fgets(line,255,fp)){
-        sscanf(line,"%s%s",def,val);
-        if (strcmp(def,"device")==0){
-            /* "devname" must be large enough to contain "val" */
-            devname=malloc(sizeof(val));
-            strcpy(devname,val);
-        }
-        if (strcmp(def,"verbose")==0)
-            verbose=atoi(val);
-        if (strcmp(def,"max_retry")==0)
-            max_retry=atoi(val);
-        if (strcmp(def,"timeout")==0)
-            timeout=atoi(val);
-        if (strcmp(def,"mode")==0){
-            if (strcmp(val,"scancode")==0)
-                mode=0;
-            else if (strcmp(val,"keycode")==0)
-                mode=1;
-            else
-                mode=2;
-        }
-        if (strcmp(def,"outmode")==0){
-            if (strcmp(val,"line")==0)
-                outmode=0;
-            else
-                outmode=1;
-        }
-    }
-    fclose(fp);
-    
-    if (verbose > 1){
-        fprintf(stderr,"Configuration loaded.\n");
-    }
-}
-
 int prepareDev(char* devname){
     int fd = sizeof(struct input_event);
     char name[256] = "Unknown";
@@ -143,7 +102,6 @@ int prepareDev(char* devname){
             usleep(timeout);
             return prepareDev(devname);
         }
-        clean();
         exit(1);
     }
 
@@ -182,7 +140,7 @@ int main (int argc, char *argv[]){
     /* Entire line */
     char* key;
     /* Buffer */
-    char buffer[2];
+    char buffer[2], c;
     
     /* Cattura segnali di uscita */
     sig_h.sa_handler=signal_handler;
@@ -197,17 +155,53 @@ int main (int argc, char *argv[]){
     sigaction(SIGINT,&sig_h,NULL);
     sigaction(SIGTERM,&sig_h,NULL);
     
-    /* Load settings from file */
-    loadConf();
-        
+    /* Load settings from commandline */        
+    while ((c = getopt (argc, argv, "r:t:m:o:vh")) != -1){
+        switch (c){
+            case 'r':
+                max_retry = atoi(optarg);
+                break;
+            case 't':
+                timeout = atoi(optarg);
+                break;
+            case 'm':
+                if (strcmp(optarg,"scancode")==0)
+                    mode=0;
+                else if (strcmp(optarg,"keycode")==0)
+                    mode=1;
+                else
+                    mode=2;
+                break;
+            case 'o':
+                if (strcmp(optarg,"line")==0)
+                    outmode=0;
+                else
+                    outmode=1;
+                break;
+            case 'v':
+                verbose++;
+                break;
+            case 'h':
+                printf("Usage: hid_read [options] device\n"
+                    "read data from HID devices.\n\n"
+                    "-m X\t\tDevice mode (scancode|keycode)\n"
+                    "-o X\t\tOutput (char|line)\n"
+                    "-v\t\tBe verbose\n"
+                    "-vv\t\tBe more verbose\n"
+                    "-t X\t\tIf the device disappears, wait X µs before retry\n"
+                    "-r\t\tIf the device disappears, retry X times before crashing\n"
+                    "-h\t\tShow this message\n\n"
+                );
+                exit (1);
+        }
+    }
+    /* The next argument is the device name */
+    devname=argv[optind];
+    
     /* Setup check */
     if (devname == NULL){
-        if (argv[1] == NULL){
-            fprintf(stderr,"Please specify the path to the dev event interface device\n");
-            clean();
-            exit (1);
-        }
-	devname = argv[1];
+        fprintf(stderr,"Please specify the path to the dev event interface device\n");
+        exit(1);
     }
     
     /* Open device and grab it */
@@ -281,6 +275,5 @@ int main (int argc, char *argv[]){
     }
     free(key);
     close(fd);
-    clean();
     return 0;
 }
