@@ -1,15 +1,22 @@
 CC:=gcc
-CFLAGS:=-Os -pipe -Wall -pedantic
+CFLAGS:=-g -pipe -Wall
 
 prefix:=/usr/local
 confdir:=/etc/badge_daemon
 wwwdir:=/var/www
 dbfile:=/var/lib/badge_daemon/citofonoweb.db
 
+BACKEND:=sqlite
 PROGRAMS:=hid_read door_open badge_daemon
 
-LIBS:=-lsqlite3 -lpthread -L. -ldoor
-MACHINE:=placeholder
+ifeq (BACKEND,sqlite)
+    LIBS:=-DSQLITE_B -lsqlite3 -lpthread -L. -ldoor
+else
+    LIBS:=-DMYSQL_B `mysql_config --cflags --libs` -lpthread
+endif
+
+LIBDOOR:=libdoor_debug.so libdoor_raspberry_sysfs.so
+#libdoor_raspberry_piface.so
 
 all: $(PROGRAMS)
 .PHONY: all
@@ -17,21 +24,23 @@ all: $(PROGRAMS)
 hid_read: hid_read.c
 	$(CC) $(CFLAGS) -DCONFPATH='"$(confdir)/hid_read.conf"' $< -o $@
 
-libdoor.o: libdoor_$(MACHINE).c
-	if [ $(MACHINE) = 'raspberry_piface' ]; then \
+libdoor.so: $(LIBDOOR)
+	if [ -n "`echo $(LIBDOOR) | grep piface`" ]; then \
 	    sed -i s/'^blacklist spi\-bcm2708'/'#blacklist spi-bcm2708'/ /etc/modprobe.d/raspi-blacklist.conf 2>/dev/null ; \
-	    $(CC) $(CFLAGS) -fPIC -L/usr/local/lib/ -lpiface-1.0 -c $< -o $@ || \
-	    echo "You need to install this library: https://github.com/thomasmacpherson/piface" ; \
-	else \
-	    $(CC) $(CFLAGS) -fPIC -c $< -o $@ ; \
 	fi
+.PHONY: libdoor.so
 
-libdoor.so: libdoor.o
-	if [ $(MACHINE) = 'raspberry_piface' ]; then \
-	    $(CC) $(CFLAGS) -shared -Wl,-soname,$@  -L/usr/local/lib/ -lpiface-1.0 -o $@ $< ; \
-	else \
-	    $(CC) $(CFLAGS) -shared -Wl,-soname,$@ -o $@ $< ; \
-	fi
+libdoor_debug.so: libdoor_debug.c
+	$(CC) $(CFLAGS) -shared -fPIC -Wl,-soname,$@ -o $@ $<
+
+libdoor_raspberry_piface.so: libdoor_raspberry_piface.c
+	$(CC) $(CFLAGS) -shared -fPIC -Wl,-soname,$@  -L/usr/local/lib/ -lpiface-1.0 -o $@ $< || echo "You need to install this library: https://github.com/thomasmacpherson/piface"
+
+libdoor_raspberry_sysfs.so: libdoor_raspberry_sysfs.c
+	$(CC) $(CFLAGS) -shared -fPIC -Wl,-soname,$@  -o $@ $<
+
+libdoor_raspberry_gpio.so: libdoor_raspberry_gpio.c
+	$(CC) $(CFLAGS) -shared -fPIC -Wl,-soname,$@  -o $@ $<
 
 door_open.o: door_open.c libdoor.so
 	if [ -e '/usr/include/json' ]; then \
@@ -47,10 +56,10 @@ door_open: door_open.o libdoor.so
 	    $(CC) $(CFLAGS) $(LIBS) -std=gnu99 -DCONFPATH='"$(confdir)/badge_daemon.conf"' -ljson-c $< -o $@ ; \
 	fi
 
-badge_daemon.o: badge_daemon.c libdoor.so
+badge_daemon.o: badge_daemon.c
 	$(CC) $(CFLAGS) $(LIBS) -DCONFPATH='"$(confdir)/badge_daemon.conf"' $< -c
 
-badge_daemon: badge_daemon.o libdoor.so
+badge_daemon: badge_daemon.o
 	$(CC) $(CFLAGS) $(LIBS) -DCONFPATH='"$(confdir)/badge_daemon.conf"' $< -o $@
 
 install: $(PROGRAMS)
@@ -58,7 +67,7 @@ install: $(PROGRAMS)
 	install -m 0755 -t $(prefix)/sbin $^
 	
 	mkdir -p $(prefix)/lib
-	install -m 0755 -t $(prefix)/lib libdoor.so
+	install -m 0755 -t $(prefix)/lib libdoor*.so
 	ldconfig
 	
 	mkdir -p $(confdir)
@@ -78,6 +87,7 @@ install: $(PROGRAMS)
 	sed -i s:'^source \./':'source $(prefix)/sbin/': $(confdir)/badge_daemon.conf
 	sed -i s:'^helper \./':'helper $(prefix)/sbin/': $(confdir)/badge_daemon.conf
 	sed -i s:'^dbfile citofonoweb.db':'dbfile $(dbfile)': $(confdir)/badge_daemon.conf
+	sed -i s:'^libdoor ./libdoor_debug.so':'libdoor $(prefix)/lib/libdoor_debug.so': $(confdir)/badge_daemon.conf
 	
 	mkdir -p `dirname $(dbfile)`
 	install -m 0644 resources/db.info `dirname $(dbfile)`
