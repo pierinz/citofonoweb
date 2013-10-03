@@ -142,10 +142,10 @@ void loadConf(){
     
     line=calloc(1,confline*sizeof(char));
     def=calloc(1,confdef*sizeof(char));
-    val=calloc(1,confdef*sizeof(char));
+    val=calloc(1,confval*sizeof(char));
     
     while(fgets(line,255,fp)){
-        sscanf(line,"%s%s",def,val);
+        sscanf(line,"%s %[^\n]",def,val);
         if (strcmp(def,"source")==0){
             /* must be large enough to contain "val" */
             source=calloc(1,strlen(val)+1);
@@ -194,7 +194,7 @@ void *tSource(){
         close(psource[0]);
         close(psource[1]);
 
-        if (execlp(source,"source",NULL)<0){
+        if (execlp("/bin/sh","sh","-c",source,NULL)<0){
             perror("Source -> execlp: ");
             _exit(1);
         }
@@ -285,7 +285,7 @@ void *tHelper(){
         close(phelperIN[1]);
         close(phelperOUT[0]);
 
-        if (execlp(helper,"helper",NULL)<0){
+        if (execlp("/bin/sh","sh","-c",helper,NULL)<0){
             perror("Helper -> execlp: ");
             _exit(1);
         }
