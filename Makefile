@@ -89,7 +89,7 @@ install: $(PROGRAMS)
 	    sed -i s:'^DAEMON="badge_daemon"':'DAEMON="$(prefix)/sbin/badge_daemon"': /etc/init.d/badge_daemon ; \
 	fi
 	
-	if [ $(BACKEND) == 'sqlite' ]; then \
+	if [ "$(BACKEND)" == 'sqlite' ]; then \
 	    chmod +x script/db_update.sh ; \
 	fi
 .PHONY: install
