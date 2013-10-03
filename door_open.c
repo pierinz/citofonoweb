@@ -25,7 +25,7 @@
     #define D_SIZE 40
 #endif
 
-#ifndef MYSQL_B
+#if !defined(MYSQL_B) && !defined(SQLITE_B)
 #define SQLITE_B
 #endif
 

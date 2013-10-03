@@ -7,12 +7,12 @@ wwwdir:=/var/www
 dbfile:=/var/lib/badge_daemon/citofonoweb.db
 
 BACKEND:=sqlite
-PROGRAMS:=hid_read door_open badge_daemon
+PROGRAMS:=hid_read serial_read door_open badge_daemon
 
-ifeq (BACKEND,sqlite)
-    LIBS:=-DSQLITE_B -lsqlite3 -lpthread -L. -ldoor
-else
+ifeq ("$(BACKEND)","mysql")
     LIBS:=-DMYSQL_B `mysql_config --cflags --libs` -lpthread
+else
+    LIBS:=-DSQLITE_B -lsqlite3 -lpthread -ldl
 endif
 
 LIBDOOR:=libdoor_debug.so libdoor_raspberry_sysfs.so
@@ -20,9 +20,6 @@ LIBDOOR:=libdoor_debug.so libdoor_raspberry_sysfs.so
 
 all: $(PROGRAMS)
 .PHONY: all
-
-hid_read: hid_read.c
-	$(CC) $(CFLAGS) -DCONFPATH='"$(confdir)/hid_read.conf"' $< -o $@
 
 libdoor.so: $(LIBDOOR)
 	if [ -n "`echo $(LIBDOOR) | grep piface`" ]; then \
@@ -71,12 +68,6 @@ install: $(PROGRAMS)
 	ldconfig
 	
 	mkdir -p $(confdir)
-	if [ -e $(confdir)/hid_read.conf ]; then \
-	    echo "hid_read.conf found - skipping" ; \
-	    echo "Run 'make conf' to overwrite" ; \
-	else \
-	    install -m 0640 conf/hid_read.conf $(confdir) ; \
-	fi
 	if [ -e $(confdir)/badge_daemon.conf ]; then \
 	    echo "badge_daemon.conf found - skipping" ; \
 	    echo "Run 'make conf' to overwrite" ; \
@@ -98,7 +89,9 @@ install: $(PROGRAMS)
 	    sed -i s:'^DAEMON="badge_daemon"':'DAEMON="$(prefix)/sbin/badge_daemon"': /etc/init.d/badge_daemon ; \
 	fi
 	
-	chmod +x script/db_update.sh
+	if [ $(BACKEND) == 'sqlite' ]; then \
+	    chmod +x script/db_update.sh ; \
+	fi
 .PHONY: install
 	
 conf:
