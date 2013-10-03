@@ -73,7 +73,7 @@ void set_blocking (int fd, int should_block){
 
 int main(int argc, char* argv[]){
     FILE* port;
-    char c;
+    int c;
     int speed, parity;
 
     /* Load settings from commandline */        

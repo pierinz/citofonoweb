@@ -123,12 +123,6 @@ int prepareDev(char* devname){
     return fd;
 }
 
-void signal_handler(int signum){
-    if ((signum==SIGTERM) || (signum==SIGINT) || (signum==SIGQUIT)){
-        loop=0;
-    }
-}
-
 int main (int argc, char *argv[]){
     int fd;
     int yalv;
@@ -136,26 +130,13 @@ int main (int argc, char *argv[]){
     size_t rb;
     /* the events (up to 64 at once) */
     struct input_event ev[64];
-    struct sigaction sig_h;
     /* Entire line */
     char* key;
     /* Buffer */
-    char buffer[2], c;
+    char buffer[2];
+    int c;
     
-    /* Cattura segnali di uscita */
-    sig_h.sa_handler=signal_handler;
-    sig_h.sa_flags=0;
-    /* Signals blocked during the execution of the handler. */
-    sigemptyset(&sig_h.sa_mask);
-    sigaddset(&sig_h.sa_mask, SIGINT);
-    sigaddset(&sig_h.sa_mask, SIGTERM);
-    sigaddset(&sig_h.sa_mask, SIGQUIT);
-    
-    sigaction(SIGQUIT,&sig_h,NULL);
-    sigaction(SIGINT,&sig_h,NULL);
-    sigaction(SIGTERM,&sig_h,NULL);
-    
-    /* Load settings from commandline */        
+    /* Load settings from commandline */
     while ((c = getopt (argc, argv, "r:t:m:o:vh")) != -1){
         switch (c){
             case 'r':
