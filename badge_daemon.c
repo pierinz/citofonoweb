@@ -47,6 +47,30 @@ pthread_mutex_t mutex;
 
 int loop=1;
 
+char** argv_from_string(char *args) {
+    int i, spaces = 0, argc = 0, len = strlen(args);
+    char **argv;
+
+    for (i = 0; i < len; i++)
+        if (isspace(args[i]))
+            spaces++;
+
+    // add 1 for cmd, 1 for NULL and 1 as spaces will be one short
+    argv = (char**) malloc ( (spaces + 3) * sizeof(char*) );
+    argv[argc++] = args;
+    
+    for ( i = 0; i < len; i++ ) {
+        if ( isspace(args[i]) ) {
+            args[i] = '\0';
+            if ( i + 1 < len )
+              argv[argc++] = args + i + 1;
+        }
+    }
+
+    argv[argc] = (char*)NULL;
+    return argv;
+}
+
 size_t trimwhitespace(char *out, size_t len, const char *str){
     const char *end;
     size_t out_size;
@@ -193,9 +217,11 @@ void *tSource(){
         dup2(psource[1], STDOUT_FILENO);
         close(psource[0]);
         close(psource[1]);
-
-        if (execlp("/bin/sh","sh","-c",source,NULL)<0){
-            perror("Source -> execlp: ");
+        
+        char** args;
+        args=argv_from_string(source);
+        if (execvp(args[0],args)<0){
+            perror("Source -> execvp: ");
             _exit(1);
         }
     }
@@ -285,8 +311,10 @@ void *tHelper(){
         close(phelperIN[1]);
         close(phelperOUT[0]);
 
-        if (execlp("/bin/sh","sh","-c",helper,NULL)<0){
-            perror("Helper -> execlp: ");
+        char** args;
+        args=argv_from_string(helper);
+        if (execvp(args[0],args)<0){
+            perror("Source -> execvp: ");
             _exit(1);
         }
     }
