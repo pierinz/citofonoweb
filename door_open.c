@@ -309,16 +309,25 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched){
 #ifdef MYSQL_B
 void db_open(){
     con = mysql_init(NULL);
+    //Retry count
+    int i = 1;
   
     if (con == NULL){
         fprintf(stderr, "mysql_init() failed\n");
         exit(1);
     }  
 
-    if (mysql_real_connect(con, dbhost, dbuser, dbpassword, dbname, 0, NULL, 0) == NULL){
-        fprintf(stderr, "%s\n", mysql_error(con));
-        mysql_close(con);
-        exit(1);
+    while (mysql_real_connect(con, dbhost, dbuser, dbpassword, dbname, 0, NULL, 0) == NULL){
+        if (i < 6){
+            fprintf(stderr, "Connection failed #%d: %s - retry in 5s\n",i,mysql_error(con));
+            i++;
+            sleep(5);
+        }
+        else{
+            fprintf(stderr, "Fatal error: %s\n", mysql_error(con));
+            mysql_close(con);
+            exit(1);
+        }
     }
 }
 
