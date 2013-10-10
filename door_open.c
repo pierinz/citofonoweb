@@ -76,27 +76,27 @@ void loadConf(){
             strcpy(libdoor,val);
             lib_handle=dlopen(libdoor,RTLD_NOW);
             if (!lib_handle) {
-                fputs (dlerror(), stderr);
+                printf("Error loading library: %s\n",dlerror());
                 exit(1);
             }
             pin_init = dlsym(lib_handle, "pin_init");
             if ((error = dlerror()) != NULL)  {
-                fputs(error, stderr);
+                printf("Error loading library: %s\n",error);
                 exit(1);
             }
             pin_on = dlsym(lib_handle, "pin_on");
             if ((error = dlerror()) != NULL)  {
-                fputs(error, stderr);
+                printf("Error loading library: %s\n",error);
                 exit(1);
             }
             pin_off = dlsym(lib_handle, "pin_off");
             if ((error = dlerror()) != NULL)  {
-                fputs(error, stderr);
+                printf("Error loading library: %s\n",error);
                 exit(1);
             }
             pin_clean = dlsym(lib_handle, "pin_clean");
             if ((error = dlerror()) != NULL)  {
-                fputs(error, stderr);
+                printf("Error loading library: %s\n",error);
                 exit(1);
             }
         }
@@ -244,7 +244,7 @@ void db_open(){
     query = "SELECT description,allowed,sched from acl where badge_code = ?";
     retval = sqlite3_prepare_v2(handle,query,-1,&stmt,0);
     if(retval){
-        fprintf(stderr,"Preparing statement failed\n");
+        printf("Preparing statement failed\n");
         exit(1);
     }
 }
@@ -264,7 +264,7 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched){
     
     retval = sqlite3_bind_text(stmt,1,code,-1,SQLITE_TRANSIENT);
     if(retval){
-        fprintf(stderr,"Binding statement failed\n");
+        printf("Binding statement failed\n");
         return -1;
     }
 
@@ -313,18 +313,18 @@ void db_open(){
     int i = 1;
   
     if (con == NULL){
-        fprintf(stderr, "mysql_init() failed\n");
+        printf("mysql_init() failed\n");
         exit(1);
     }  
 
     while (mysql_real_connect(con, dbhost, dbuser, dbpassword, dbname, 0, NULL, 0) == NULL){
         if (i < 6){
-            fprintf(stderr, "Connection failed #%d: %s - retry in 5s\n",i,mysql_error(con));
+            printf("Connection failed #%d: %s - retry in 5s\n",i,mysql_error(con));
             i++;
             sleep(5);
         }
         else{
-            fprintf(stderr, "Fatal error: %s\n", mysql_error(con));
+            printf("Fatal error: %s\n", mysql_error(con));
             mysql_close(con);
             exit(1);
         }
@@ -351,9 +351,9 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched){
     }
     
     if (mysql_real_query(con, query, strlen(query))){
-        fprintf(stderr, "%s\n", mysql_error(con));
+        printf("Error: %s\n", mysql_error(con));
         mysql_close(con);
-        printf("Internal error. Program terminated.\n");
+        printf("Query failed. Program terminated.\n");
         fflush(stdout);
         if (light)
             (*pin_off)(statusled);
@@ -364,7 +364,7 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched){
     result = mysql_store_result(con);
 
     if (result == NULL){
-        fprintf(stderr, "%s\n", mysql_error(con));
+        printf("Error: %s\n", mysql_error(con));
         mysql_close(con);
         printf("Internal error. Program terminated.\n");
         fflush(stdout);
