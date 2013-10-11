@@ -329,6 +329,8 @@ void db_open(){
             exit(1);
         }
     }
+    mysql_options(&mysql,MYSQL_OPT_COMPRESS,0);
+    mysql_options(&mysql,MYSQL_OPT_RECONNECT,1);
 }
 
 void db_close(){
@@ -338,7 +340,9 @@ void db_close(){
 int fetchRow(char* code, char** desc, int* allowed, char** sched){
     MYSQL_ROW row;
     MYSQL_RES *result;
-    char* query;
+    char *query, *code_e;
+    
+    mysql_real_escape_string(con, code_e, code, strlen(code));
     
     if (asprintf(&query,"SELECT `users`.`user`, allowed, sched FROM `users` LEFT JOIN `acl` on `users`.user=acl.user and id_device='%s' WHERE `%s` = '%s' ",id,code_colname,code)==-1){
         perror("Cannot allocate memory");
@@ -350,16 +354,24 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched){
         exit(1);
     }
     
-    if (mysql_real_query(con, query, strlen(query))){
+    if (mysql_ping(con)!=0){
+        if (mysql_error(con)==CR_SERVER_GONE_ERROR || mysql_error(con)==CR_SERVER_GONE_ERROR){
+            printf("Disconnected: %s\n", mysql_error(con));
+            db_close();
+            db_open();
+        }
+    }
+    if (mysql_real_query(con, query, strlen(query))!=0){
         printf("Error: %s\n", mysql_error(con));
-        mysql_close(con);
+        db_close();
         printf("Query failed. Program terminated.\n");
         fflush(stdout);
         if (light)
             (*pin_off)(statusled);
         (*pin_clean)();
-        exit(1);
+        exit(1);   
     }
+    
     free(query);
     result = mysql_store_result(con);
 
