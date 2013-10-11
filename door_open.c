@@ -52,6 +52,7 @@ sqlite3 *handle;
 
 #ifdef MYSQL_B
 #include <mysql/mysql.h>
+#include <mysql/errmsg.h>
 
 MYSQL *con;
 char *dbhost, *dbuser, *dbpassword, *dbname, *id, *code_colname;
@@ -329,8 +330,8 @@ void db_open(){
             exit(1);
         }
     }
-    mysql_options(&mysql,MYSQL_OPT_COMPRESS,0);
-    mysql_options(&mysql,MYSQL_OPT_RECONNECT,1);
+    mysql_options(con,MYSQL_OPT_COMPRESS,0);
+    mysql_options(con,MYSQL_OPT_RECONNECT,1);
 }
 
 void db_close(){
@@ -355,7 +356,7 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched){
     }
     
     if (mysql_ping(con)!=0){
-        if (mysql_error(con)==CR_SERVER_GONE_ERROR || mysql_error(con)==CR_SERVER_GONE_ERROR){
+        if (mysql_error(con)==CR_SERVER_GONE_ERROR || mysql_error(con)==CR_SERVER_LOST){
             printf("Disconnected: %s\n", mysql_error(con));
             db_close();
             db_open();
