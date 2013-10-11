@@ -310,6 +310,7 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched){
 #ifdef MYSQL_B
 void db_open(){
     con = mysql_init(NULL);
+    int reconnect=1;
     //Retry count
     int i = 1;
   
@@ -330,8 +331,10 @@ void db_open(){
             exit(1);
         }
     }
+    
+    
     mysql_options(con,MYSQL_OPT_COMPRESS,0);
-    mysql_options(con,MYSQL_OPT_RECONNECT,1);
+    mysql_options(con,MYSQL_OPT_RECONNECT,&reconnect);
 }
 
 void db_close(){
@@ -343,6 +346,7 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched){
     MYSQL_RES *result;
     char *query, *code_e;
     
+    code_e=NULL;
     mysql_real_escape_string(con, code_e, code, strlen(code));
     
     if (asprintf(&query,"SELECT `users`.`user`, allowed, sched FROM `users` LEFT JOIN `acl` on `users`.user=acl.user and id_device='%s' WHERE `%s` = '%s' ",id,code_colname,code)==-1){
@@ -356,7 +360,7 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched){
     }
     
     if (mysql_ping(con)!=0){
-        if (mysql_error(con)==CR_SERVER_GONE_ERROR || mysql_error(con)==CR_SERVER_LOST){
+        if (mysql_errno(con)==CR_SERVER_GONE_ERROR || mysql_errno(con)==CR_SERVER_LOST){
             printf("Disconnected: %s\n", mysql_error(con));
             db_close();
             db_open();
