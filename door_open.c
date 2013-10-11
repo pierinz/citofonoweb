@@ -346,7 +346,7 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched){
     MYSQL_RES *result;
     char *query, *code_e;
     
-    code_e=calloc(sizeof char, strlen(code)*2+1);
+    code_e=calloc(sizeof(char), (strlen(code)*2)    +1);
     mysql_real_escape_string(con, code_e, code, strlen(code));
     
     if (asprintf(&query,"SELECT `users`.`user`, allowed, sched FROM `users` LEFT JOIN `acl` on `users`.user=acl.user and id_device='%s' WHERE `%s` = '%s' ",id,code_colname,code)==-1){
