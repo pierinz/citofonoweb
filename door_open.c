@@ -349,7 +349,7 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched){
     code_e=calloc(sizeof(char), (strlen(code)*2)+1);
     mysql_real_escape_string(con, code_e, code, strlen(code));
     
-    if (asprintf(&query,"SELECT `users`.`user`, allowed, sched FROM `users` LEFT JOIN `acl` on `users`.user=acl.user and id_device='%s' WHERE `%s` = '%s' ",id,code_colname,code)==-1){
+    if (asprintf(&query,"SELECT `users`.`user`, allowed, sched FROM `users` LEFT JOIN `acl` on `users`.user=acl.user and id_device='%s' WHERE `%s` = '%s' ",id,code_colname,code_e)==-1){
         perror("Cannot allocate memory");
         printf("Internal error. Program terminated.\n");
         fflush(stdout);
