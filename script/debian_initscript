@@ -17,7 +17,7 @@ PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin:/usr/local/sbin
 CONFDIR="conf"
 DAEMON="badge_daemon"
 
-CONFIGURATION=`basename "$0" | sed 's/badge_daemon\.(.*)/\1/'`
+CONFIGURATION=`basename "$0" | sed -E 's/badge_daemon\.(.*)/\1/'`
 if [ -z "$CONFIGURATION" ]; then
 	CONFIGURATION="badge_daemon"
 fi
