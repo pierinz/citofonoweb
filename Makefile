@@ -41,23 +41,23 @@ libdoor_raspberry_gpio.so: libdoor_raspberry_gpio.c
 
 door_open.o: door_open.c libdoor.so
 	if [ -e '/usr/include/json' ]; then \
-	    $(CC) $(CFLAGS) $(LIBS) -std=gnu99 -DCONFPATH='"$(confdir)/badge_daemon.conf"' -Djson -ljson $< -c ; \
+	    $(CC) $(CFLAGS) $(LIBS) -std=gnu99 -DCONFPATH='"$(confdir)"' -Djson -ljson $< -c ; \
 	else \
-	    $(CC) $(CFLAGS) $(LIBS) -std=gnu99 -DCONFPATH='"$(confdir)/badge_daemon.conf"' -ljson-c $< -c ; \
+	    $(CC) $(CFLAGS) $(LIBS) -std=gnu99 -DCONFPATH='"$(confdir)"' -ljson-c $< -c ; \
 	fi
 
 door_open: door_open.o libdoor.so
 	if [ -e '/usr/include/json' ]; then \
-	    $(CC) $(CFLAGS) $(LIBS) -std=gnu99 -DCONFPATH='"$(confdir)/badge_daemon.conf"' -Djson -ljson $< -o $@ ; \
+	    $(CC) $(CFLAGS) $(LIBS) -std=gnu99 -DCONFPATH='"$(confdir)"' -Djson -ljson $< -o $@ ; \
 	else \
-	    $(CC) $(CFLAGS) $(LIBS) -std=gnu99 -DCONFPATH='"$(confdir)/badge_daemon.conf"' -ljson-c $< -o $@ ; \
+	    $(CC) $(CFLAGS) $(LIBS) -std=gnu99 -DCONFPATH='"$(confdir)"' -ljson-c $< -o $@ ; \
 	fi
 
 badge_daemon.o: badge_daemon.c
-	$(CC) $(CFLAGS) $(LIBS) -DCONFPATH='"$(confdir)/badge_daemon.conf"' $< -c
+	$(CC) $(CFLAGS) $(LIBS) -DCONFPATH='"$(confdir)"' $< -c
 
 badge_daemon: badge_daemon.o
-	$(CC) $(CFLAGS) $(LIBS) -DCONFPATH='"$(confdir)/badge_daemon.conf"' $< -o $@
+	$(CC) $(CFLAGS) $(LIBS) -DCONFPATH='"$(confdir)"' $< -o $@
 
 install: $(PROGRAMS)
 	mkdir -p $(prefix)/sbin
@@ -87,6 +87,7 @@ install: $(PROGRAMS)
 	if [ `lsb_release -is` = 'Debian' ]; then \
 	    install -m 0755 script/debian_initscript /etc/init.d/badge_daemon ; \
 	    sed -i s:'^DAEMON="badge_daemon"':'DAEMON="$(prefix)/sbin/badge_daemon"': /etc/init.d/badge_daemon ; \
+	    sed -i s:'^CONFDIR="conf"':'CONFDIR="$(confdir)"': /etc/init.d/badge_daemon ; \
 	fi
 	
 	chmod +x script/db_update.sh

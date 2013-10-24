@@ -18,7 +18,7 @@
 #endif
 
 #ifndef CONFPATH
-    #define CONFPATH "conf/badge_daemon.conf"
+    #define CONFPATH "conf"
 #endif
 
 #ifndef D_SIZE
@@ -58,14 +58,14 @@ MYSQL *con;
 char *dbhost, *dbuser, *dbpassword, *dbname, *id, *code_colname;
 #endif
 
-void loadConf(){
+void loadConf(char* conffile){
     FILE* fp;
     char line[255],def[55],val[200];
     char *error;
     
-    fp=fopen(CONFPATH, "r");
+    fp=fopen(conffile, "r");
     if (!fp){
-        fprintf(stderr,"File %s:\n",CONFPATH);
+        fprintf(stderr,"File %s:\n",conffile);
         perror("Error opening configuration: ");
         exit(1);
     }
@@ -475,11 +475,39 @@ void signal_handler(int signum){
 int main(int argc, char **argv){
     char *param;
     struct sigaction sig_h;
-    
+    int c;
+	char *conffile;
+	
+	/* Load settings from commandline */
+    while ((c = getopt (argc, argv, "f:h")) != -1){
+        switch (c){
+            case 'r':
+                if (asprintf(&conffile,"%s",optarg)<0){
+					perror("asprintf");
+					exit(1);
+				}
+                break;
+            case 'h':
+                printf("Usage: door_open [ -f configuration file ] [ -h ]\n"
+                    "\n"
+                    "-f FILE\t\tLoad configuration from FILE (badge_daemon.conf if not specified)\n"
+                    "-h\t\tShow this message\n\n"
+                );
+                exit (1);
+        }
+    }
+	if (!conffile){
+		if (asprintf(&conffile,"%s/%s",CONFPATH,"badge_daemon.conf")<0){
+			perror("asprintf");
+			exit(1);
+		}
+	}
+	
+    loadConf(conffile);
+	free(conffile);
+	
     //Allocate memory
     param = calloc(1,sizeof(char) * D_SIZE);
-    
-    loadConf();
     
     /* Cattura segnali di uscita */
     sig_h.sa_handler=signal_handler;

@@ -11,7 +11,7 @@
 #include <pthread.h>
 
 #ifndef CONFPATH
-    #define CONFPATH "conf/badge_daemon.conf"
+    #define CONFPATH "conf"
 #endif
 
 #ifndef confline
@@ -153,13 +153,13 @@ void fatal(char* message){
     exit(1);
 }
 
-void loadConf(){
+void loadConf(char *conffile){
     FILE* fp;
     char *line,*def,*val;
 
-    fp=fopen(CONFPATH,"r");
+    fp=fopen(conffile,"r");
     if (!fp){
-        fprintf(stderr,"File %s:\n",CONFPATH);
+        fprintf(stderr,"File %s:\n",conffile);
         perror("Error opening configuration: ");
         exit(1);
     }
@@ -399,8 +399,36 @@ void signal_handler(int signum){
 
 int main (int argc, char *argv[]){
     struct sigaction sig_h;
-    
-    loadConf();
+	int c;
+	char *conffile;
+	
+	/* Load settings from commandline */
+    while ((c = getopt (argc, argv, "f:h")) != -1){
+        switch (c){
+            case 'r':
+                if (asprintf(&conffile,"%s",optarg)<0){
+					perror("asprintf");
+					exit(1);
+				}
+                break;
+            case 'h':
+                printf("Usage: badge_daemon [ -f configuration file ] [ -h ]\n"
+                    "\n"
+                    "-f FILE\t\tLoad configuration from FILE (badge_daemon.conf if not specified)\n"
+                    "-h\t\tShow this message\n\n"
+                );
+                exit (1);
+        }
+    }
+	if (!conffile){
+		if (asprintf(&conffile,"%s/%s",CONFPATH,"badge_daemon.conf")<0){
+			perror("asprintf");
+			exit(1);
+		}
+	}
+	
+    loadConf(conffile);
+	free(conffile);
 
     flog=fopen(logfile,"a");
     if (!flog){
