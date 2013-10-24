@@ -14,8 +14,16 @@ PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin:/usr/local/sbin
 . /lib/init/vars.sh
 . /lib/lsb/init-functions
 
+CONFDIR="conf"
 DAEMON="badge_daemon"
-pidfile="/var/run/badge_daemon.pid"
+
+CONFIGURATION=`echo "$0" | sed 's/badge_daemon\.(.*)/\1/'`
+if [ -z "$CONFIGURATION" ]; then
+	CONFIGURATION="badge_daemon"
+fi
+
+OPTIONS="-f $CONFDIR/$CONFIGURATION.conf"
+pidfile="/var/run/$0.pid"
 
 if [ -f "$pidfile" ]; then
     pid=`cat $pidfile`
@@ -33,7 +41,7 @@ do_start() {
         if [ -e /var/log/badge_daemon_lastrun.log ]; then
             mv /var/log/badge_daemon_lastrun.log /var/log/badge_daemon_lastrun.log.1
         fi
-        $DAEMON 2> /var/log/badge_daemon_lastrun.log &
+        $DAEMON $OPTIONS 2> /var/log/badge_daemon_lastrun.log &
         pid=$!
         ES=$?
         echo "$pid" > "$pidfile"
@@ -50,7 +58,7 @@ do_start() {
             if [ -e /var/log/badge_daemon_lastrun.log ]; then
                 mv /var/log/badge_daemon_lastrun.log /var/log/badge_daemon_lastrun.log.1
             fi
-            $DAEMON 2> /var/log/badge_daemon_lastrun.log &
+            $DAEMON $OPTIONS 2> /var/log/badge_daemon_lastrun.log &
             pid=$!
             ES=$?
             echo "$pid" > "$pidfile"
