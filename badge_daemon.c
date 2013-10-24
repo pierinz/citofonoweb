@@ -400,12 +400,12 @@ void signal_handler(int signum){
 int main (int argc, char *argv[]){
     struct sigaction sig_h;
 	int c;
-	char *conffile;
+	char *conffile=NULL;
 	
 	/* Load settings from commandline */
     while ((c = getopt (argc, argv, "f:h")) != -1){
         switch (c){
-            case 'r':
+            case 'f':
                 if (asprintf(&conffile,"%s",optarg)<0){
 					perror("asprintf");
 					exit(1);

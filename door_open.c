@@ -481,7 +481,7 @@ int main(int argc, char **argv){
 	/* Load settings from commandline */
     while ((c = getopt (argc, argv, "f:h")) != -1){
         switch (c){
-            case 'r':
+            case 'f':
                 if (asprintf(&conffile,"%s",optarg)<0){
 					perror("asprintf");
 					exit(1);
