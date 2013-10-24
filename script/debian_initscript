@@ -23,7 +23,7 @@ if [ -z "$CONFIGURATION" ]; then
 fi
 
 OPTIONS="-f $CONFDIR/$CONFIGURATION.conf"
-pidfile="/var/run/$0.pid"
+pidfile="/var/run/$CONFIGURATION.pid"
 
 if [ -f "$pidfile" ]; then
     pid=`cat $pidfile`
