@@ -37,11 +37,11 @@ do_start() {
             log_begin_msg "Starting badge_daemon..."
             echo
         fi
-        rm -f /var/log/badge_daemon_lastrun.log.1
-        if [ -e /var/log/badge_daemon_lastrun.log ]; then
-            mv /var/log/badge_daemon_lastrun.log /var/log/badge_daemon_lastrun.log.1
+        rm -f "/var/log/$CONFIGURATION_lastrun.log.1"
+        if [ -e "/var/log/$CONFIGURATION_lastrun.log" ]; then
+            mv "/var/log/$CONFIGURATION_lastrun.log" "/var/log/$CONFIGURATION_lastrun.log.1"
         fi
-        $DAEMON $OPTIONS 2> /var/log/badge_daemon_lastrun.log &
+        $DAEMON $OPTIONS 2> "/var/log/$CONFIGURATION_lastrun.log" &
         pid=$!
         ES=$?
         echo "$pid" > "$pidfile"
@@ -54,11 +54,11 @@ do_start() {
                 log_begin_msg "Starting badge_daemon..."
                 echo
             fi
-            rm -f /var/log/badge_daemon_lastrun.log.1
-            if [ -e /var/log/badge_daemon_lastrun.log ]; then
-                mv /var/log/badge_daemon_lastrun.log /var/log/badge_daemon_lastrun.log.1
-            fi
-            $DAEMON $OPTIONS 2> /var/log/badge_daemon_lastrun.log &
+            rm -f "/var/log/$CONFIGURATION_lastrun.log.1"
+        if [ -e "/var/log/$CONFIGURATION_lastrun.log" ]; then
+            mv "/var/log/$CONFIGURATION_lastrun.log" "/var/log/$CONFIGURATION_lastrun.log.1"
+        fi
+            $DAEMON $OPTIONS 2> "/var/log/$CONFIGURATION_lastrun.log" &
             pid=$!
             ES=$?
             echo "$pid" > "$pidfile"
