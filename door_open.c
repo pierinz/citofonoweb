@@ -34,6 +34,9 @@ short light=0;
 short statusled=17;
 int loop=1;
 
+/* Debug */
+short debug=0;
+
 char* libdoor;
 
 //Libdoor functions
@@ -359,6 +362,9 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched){
         exit(1);
     }
     free(code_e);
+	
+	if (debug > 0)
+		fprintf(stderr,"Query ready: %s\n",query);
     
     if (mysql_ping(con)!=0){
         if (mysql_errno(con)==CR_SERVER_GONE_ERROR || mysql_errno(con)==CR_SERVER_LOST){
@@ -392,6 +398,9 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched){
         exit(1);
     }
 
+	if (debug > 0)
+		fprintf(stderr,"Query returned %d rows\n",mysql_num_rows(result));
+	
     if (mysql_num_rows(result) == 0){
         mysql_free_result(result);
         return 0;
@@ -479,21 +488,28 @@ int main(int argc, char **argv){
 	char *conffile;
 	
 	/* Load settings from commandline */
-    while ((c = getopt (argc, argv, "f:h")) != -1){
+    while ((c = getopt (argc, argv, "f:dh")) != -1){
         switch (c){
             case 'f':
                 if (asprintf(&conffile,"%s",optarg)<0){
 					perror("asprintf");
 					exit(1);
 				}
-                break;
+			break;
+			
+			case 'd':
+				debug=1;
+			break;
+			
             case 'h':
                 printf("Usage: door_open [ -f configuration file ] [ -h ]\n"
                     "\n"
                     "-f FILE\t\tLoad configuration from FILE (badge_daemon.conf if not specified)\n"
-                    "-h\t\tShow this message\n\n"
+                    "-d\t\tShow debug messages\n\n"
+					"-h\t\tShow this message\n\n"
                 );
                 exit (1);
+			break;
         }
     }
 	if (!conffile){
