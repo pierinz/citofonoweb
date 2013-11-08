@@ -23,7 +23,7 @@ int set_interface_attribs (int fd, int speed, int parity){
     struct termios tty;
     memset (&tty, 0, sizeof tty);
     if (tcgetattr (fd, &tty) != 0){
-        printf ("error %d from tcgetattr", errno);
+        printf ("error %d from tcgetattr\n", errno);
         return -1;
     }
 
@@ -50,7 +50,7 @@ int set_interface_attribs (int fd, int speed, int parity){
     tty.c_cflag &= ~CRTSCTS;
 
     if (tcsetattr (fd, TCSANOW, &tty) != 0){
-        printf ("error %d from tcsetattr", errno);
+        printf ("error %d from tcsetattr\n", errno);
         return -1;
     }
     return 0;
@@ -60,7 +60,7 @@ void set_blocking (int fd, int should_block){
     struct termios tty;
     memset (&tty, 0, sizeof tty);
     if (tcgetattr (fd, &tty) != 0){
-        printf ("error %d from tggetattr", errno);
+        printf ("error %d from tggetattr\n", errno);
         return;
     }
 
@@ -68,7 +68,7 @@ void set_blocking (int fd, int should_block){
     tty.c_cc[VTIME] = 5;            // 0.5 seconds read timeout
 
     if (tcsetattr (fd, TCSANOW, &tty) != 0)
-        printf ("error %d setting term attributes", errno);
+        printf ("error %d setting term attributes\n", errno);
 }
 
 int main(int argc, char* argv[]){
@@ -147,7 +147,7 @@ int main(int argc, char* argv[]){
     
     int fd = open (devname, O_RDWR | O_NOCTTY | O_SYNC);
     if (fd < 0){
-        fprintf (stderr, "error %d opening %s: %s", errno, devname, strerror (errno));
+        fprintf (stderr, "error %d opening %s: %s\n", errno, devname, strerror (errno));
         exit(1);
     }
 
