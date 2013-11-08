@@ -3,8 +3,11 @@
  * read data from HID devices.
     -m X            Device mode (scancode|keycode)
     -o X            Output (char|line)
+	-s X			Skip first X chars
+	-l X			Print only first X chars (can be used with -s)
     -v              Be verbose
     -vv             Be more verbose
+    -d				Show debug messages
     -t X            If the device disappears, wait X µs before retry
     -r              If the device disappears, retry X times before crashing
     -h              Show this message
@@ -30,6 +33,7 @@
 #define EV_REPEAT 2
 
 short verbose=0;
+short debug=0;
 char* devname;
 int max_retry=3;
 int timeout=10;
@@ -41,6 +45,11 @@ int retry=-1;
 int mode=0;
 /* 0 = line, 1 = char */
 int outmode=0;
+
+/* Start from the beginning */
+int start=0;
+/* Max length */
+int length=0;
 
 /* KBDUS means US Keyboard Layout. This is a scancode table
 *  used to layout a standard US keyboard. I have left some
@@ -85,6 +94,13 @@ unsigned char kbdus[128] =
     0,	/* F11 Key */
     0,	/* F12 Key */
     0,	/* All other keys are undefined */
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	'\n'	/* Enter key */
 };
 
 int prepareDev(char* devname){
@@ -137,7 +153,7 @@ int main (int argc, char *argv[]){
     int c;
     
     /* Load settings from commandline */
-    while ((c = getopt (argc, argv, "r:t:m:o:vh")) != -1){
+    while ((c = getopt (argc, argv, "r:t:m:o:s:l:vdh")) != -1){
         switch (c){
             case 'r':
                 max_retry = atoi(optarg);
@@ -159,16 +175,28 @@ int main (int argc, char *argv[]){
                 else
                     outmode=1;
                 break;
+			case 's':
+                start = atoi(optarg);
+                break;
+			case 'l':
+                length = atoi(optarg);
+                break;
             case 'v':
                 verbose++;
+                break;
+			case 'd':
+                debug++;
                 break;
             case 'h':
                 printf("Usage: hid_read [options] device\n"
                     "read data from HID devices.\n\n"
                     "-m X\t\tDevice mode (scancode|keycode)\n"
                     "-o X\t\tOutput (char|line)\n"
+					"-s X\t\tSkip first X chars\n"
+					"-l X\t\tPrint only first X chars (can be used with -s)\n"
                     "-v\t\tBe verbose\n"
                     "-vv\t\tBe more verbose\n"
+					"-d\t\tShow debug messages\n"
                     "-t X\t\tIf the device disappears, wait X µs before retry\n"
                     "-r\t\tIf the device disappears, retry X times before crashing\n"
                     "-h\t\tShow this message\n\n"
@@ -222,9 +250,17 @@ int main (int argc, char *argv[]){
             if (EV_KEY == ev[yalv].type){
                 /* Stampa solo al keyup */
                 if (ev[yalv].value==EV_RELEASED){
+					if (debug > 0){
+						fprintf(stderr,"debug: key released: %d | %c | %d\n", ev[yalv].code,kbdus[ev[yalv].code],kbdus[ev[yalv].code]);
+					}
                     if (outmode == 0){
                         if (kbdus[ev[yalv].code] == '\n'){
-                            printf("%s\n",key);
+							if (length == 0){
+								printf("%s\n",key+start);
+							}
+                            else{
+								printf("%.*s\n",length,key+start);
+							}
                             fflush(stdout);
                             /* Clean old key */
                             free(key);
@@ -251,7 +287,13 @@ int main (int argc, char *argv[]){
                         }
                     }
                 }
+				else if (debug > 1){
+					fprintf(stderr,"debug (not ev_released: %d): %d | %c | %d\n", ev[yalv].value, ev[yalv].code,kbdus[ev[yalv].code],kbdus[ev[yalv].code]);
+				}
             }
+			else if (debug > 1){
+				fprintf(stderr,"debug (not a key: %d): %d | %c | %d\n", ev[yalv].type, ev[yalv].code, kbdus[ev[yalv].code],kbdus[ev[yalv].code]);
+			}
         }
     }
     free(key);
