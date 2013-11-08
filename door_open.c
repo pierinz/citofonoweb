@@ -458,11 +458,17 @@ void isAllowed(char* code){
         unknown(code);
     }
     else{
+		if (debug > 0)
+			fprintf(stderr,"Data: %s | %d | %s\n",desc, allowed, sched);
+		
         if (allowed==0 || strlen(sched)<2 ){
             deny(code, desc);
         }
         else{
             jsonparse(sched,day,&start,&end);
+			if (debug > 0)
+				fprintf(stderr,"Now: %d; Start: %d; End: %d\n",now, start, end);
+			
             if (now >= start && now <= end){
                 allow(code, desc);
             }
