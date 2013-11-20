@@ -65,7 +65,7 @@ void loadConf(char* conffile){
     FILE* fp;
     char line[255],def[55],val[200];
     char *error;
-    
+
     fp=fopen(conffile, "r");
     if (!fp){
         fprintf(stderr,"File %s:\n",conffile);
@@ -231,7 +231,7 @@ void db_open(){
     int retval;
     // Query string
     char *query;
-    
+
     // try to create the database. If it doesnt exist, it would be created
     // pass a pointer to the pointer to sqlite3, in short sqlite3**
     retval = sqlite3_open(dbfile, &handle);
@@ -243,7 +243,7 @@ void db_open(){
     if (verbose > 1){
         fprintf(stderr,"Connection successful\n");
     }
-    
+
     // select rows from the table
     query = "SELECT description,allowed,sched from acl where badge_code = ?";
     retval = sqlite3_prepare_v2(handle,query,-1,&stmt,0);
@@ -265,7 +265,7 @@ void db_close(){
 
 int fetchRow(char* code, char** desc, int* allowed, char** sched){
     int retval;
-    
+
     retval = sqlite3_bind_text(stmt,1,code,-1,SQLITE_TRANSIENT);
     if(retval){
         printf("Binding statement failed\n");
@@ -280,22 +280,22 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched){
         if(retval == SQLITE_ROW){
             // sqlite3_column_text returns a const void* , typecast it to const char*
             *allowed= sqlite3_column_int(stmt,1);
-            
+
             *desc=calloc(sizeof(char), strlen((char*)sqlite3_column_text(stmt,0)));
             sprintf(*desc,"%s",sqlite3_column_text(stmt,0));
-            
+
             *sched=calloc(sizeof(char), strlen((char*)sqlite3_column_text(stmt,2)));
             sprintf(*sched,"%s",sqlite3_column_text(stmt,2));
-            
+
             //Reset statement
             sqlite3_reset(stmt);
-            
+
             return 1;
         }
         else if(retval == SQLITE_DONE){
             //Reset statement
             sqlite3_reset(stmt);
-            
+
             return 0;
         }
         else{
@@ -316,11 +316,11 @@ void db_open(){
     int reconnect=1;
     //Retry count
     int i = 1;
-  
+
     if (con == NULL){
         printf("mysql_init() failed\n");
         exit(1);
-    }  
+    }
 
     while (mysql_real_connect(con, dbhost, dbuser, dbpassword, dbname, 0, NULL, 0) == NULL){
         if (i < 6){
@@ -334,8 +334,7 @@ void db_open(){
             exit(1);
         }
     }
-    
-    
+
     mysql_options(con,MYSQL_OPT_COMPRESS,0);
     mysql_options(con,MYSQL_OPT_RECONNECT,&reconnect);
 }
@@ -348,10 +347,10 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched){
     MYSQL_ROW row;
     MYSQL_RES *result;
     char *query, *code_e;
-    
+
     code_e=calloc(sizeof(char), (strlen(code)*2)+1);
     mysql_real_escape_string(con, code_e, code, strlen(code));
-    
+
     if (asprintf(&query,"SELECT `users`.`user`, allowed, sched FROM `users` LEFT JOIN `acl` on `users`.user=acl.user and id_device='%s' WHERE `%s` = '%s' ",id,code_colname,code_e)==-1){
         perror("Cannot allocate memory");
         printf("Internal error. Program terminated.\n");
@@ -362,10 +361,10 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched){
         exit(1);
     }
     free(code_e);
-	
+
 	if (debug > 0)
 		fprintf(stderr,"Query ready: %s\n",query);
-    
+
     if (mysql_ping(con)!=0){
         if (mysql_errno(con)==CR_SERVER_GONE_ERROR || mysql_errno(con)==CR_SERVER_LOST){
             printf("Disconnected: %s\n", mysql_error(con));
@@ -381,9 +380,9 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched){
         if (light)
             (*pin_off)(statusled);
         (*pin_clean)();
-        exit(1);   
+        exit(1);
     }
-    
+
     free(query);
     result = mysql_store_result(con);
 
@@ -399,16 +398,16 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched){
     }
 
 	if (debug > 0)
-		fprintf(stderr,"Query returned %d rows\n",mysql_num_rows(result));
+		fprintf(stderr,"Query returned %lu rows\n", (unsigned long) mysql_num_rows(result));
 	
     if (mysql_num_rows(result) == 0){
         mysql_free_result(result);
         return 0;
     }
 
-    while ((row = mysql_fetch_row(result))){ 
+    while ((row = mysql_fetch_row(result))){
         *allowed=atoi(row[1]);
-        
+
         *desc=calloc(sizeof(char), strlen(row[0]));
         sprintf(*desc,"%s",row[0]);
 
@@ -420,7 +419,7 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched){
             *sched=calloc(sizeof(char), 2);
             sprintf(*sched," ");
         }
-        
+
         mysql_free_result(result);
         return 1;
     }
@@ -434,24 +433,24 @@ void isAllowed(char* code){
     //Will contain the badge owner's name
     char *desc;
     int allowed;
-        
+
     desc = NULL;
-    
+
     time_t rawtime;
     struct tm * timeinfo;
     char buffer [7];
-    
+
     int day, now, start = 0, end = 0;
 
     time (&rawtime);
     timeinfo = localtime (&rawtime);
-    
+
     strftime(buffer,2,"%u",timeinfo);
     day=atoi(buffer);
-    
+
     strftime(buffer,7,"%H%M%S",timeinfo);
     now=atoi(buffer);
-    
+
     retval=fetchRow(code,&desc,&allowed,&sched);
     //Code not found
     if (retval < 1){
@@ -530,7 +529,7 @@ int main(int argc, char **argv){
 	
     //Allocate memory
     param = calloc(1,sizeof(char) * D_SIZE);
-    
+
     /* Cattura segnali di uscita */
     sig_h.sa_handler=signal_handler;
     sig_h.sa_flags=0;
@@ -539,19 +538,19 @@ int main(int argc, char **argv){
     sigaddset(&sig_h.sa_mask, SIGINT);
     sigaddset(&sig_h.sa_mask, SIGTERM);
     sigaddset(&sig_h.sa_mask, SIGQUIT);
-    
+
     sigaction(SIGQUIT,&sig_h,NULL);
     sigaction(SIGINT,&sig_h,NULL);
     sigaction(SIGTERM,&sig_h,NULL);
-    
+
     //Init database
     db_open();
-    
+
     (*pin_init)();
-    
+
     if (light)
         (*pin_on)(statusled);
-    
+
     while (loop && fgets(param,D_SIZE,stdin)){
         //Remove trailing \n
         strtok(param,"\n");
@@ -559,15 +558,15 @@ int main(int argc, char **argv){
         isAllowed(param);
     }
     db_close();
-    
+
     // Free all pointers
     free(param);
-    
+
     if (light)
         (*pin_off)(statusled);
-    
+
     (*pin_clean)();
-    
+
     dlclose(lib_handle);
     exit(0);
 }
