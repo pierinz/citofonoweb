@@ -400,7 +400,7 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched){
 		exit(1);
 	}
 
-	if (row = mysql_fetch_row(result)){
+	if ((row = mysql_fetch_row(result))){
 		if (debug > 0){
 			fprintf(stderr,"Query returned a row\n");
 			fprintf(stderr,"Result\n");
