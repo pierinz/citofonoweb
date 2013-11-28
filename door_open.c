@@ -405,11 +405,17 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched){
         return 0;
     }
 
+	if (debug > 0)
+			fprintf(stderr,"Result\n");
     while ((row = mysql_fetch_row(result))){
         *allowed=atoi(row[1]);
+		if (debug > 0)
+			fprintf(stderr,"-> allowed: %d\n",*allowed);
 
         *desc=calloc(sizeof(char), strlen(row[0]));
         sprintf(*desc,"%s",row[0]);
+		if (debug > 0)
+			fprintf(stderr,"-> desc: %s\n",*desc);
 
         if (row[2]){
             *sched=calloc(sizeof(char), strlen(row[2]));
@@ -419,6 +425,8 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched){
             *sched=calloc(sizeof(char), 2);
             sprintf(*sched," ");
         }
+		if (debug > 0)
+			fprintf(stderr,"-> sched: %s\n",*sched);
 
         mysql_free_result(result);
         return 1;
@@ -454,11 +462,15 @@ void isAllowed(char* code){
     retval=fetchRow(code,&desc,&allowed,&sched);
     //Code not found
     if (retval < 1){
+		if (debug > 0)
+			fprintf(stderr,"Code unknown\n");
         unknown(code);
     }
     else{
-		if (debug > 0)
+		if (debug > 0){
+			fprintf(stderr,"Code found\n");
 			fprintf(stderr,"Data: %s | %d | %s\n",desc, allowed, sched);
+		}
 		
         if (allowed==0 || strlen(sched)<2 ){
             deny(code, desc);
@@ -490,7 +502,7 @@ int main(int argc, char **argv){
     char *param;
     struct sigaction sig_h;
     int c;
-	char *conffile;
+	char *conffile=NULL;
 	
 	/* Load settings from commandline */
     while ((c = getopt (argc, argv, "f:dh")) != -1){
@@ -545,15 +557,22 @@ int main(int argc, char **argv){
 
     //Init database
     db_open();
+	if (debug > 0)
+		fprintf(stderr,"Db opened\n");
 
     (*pin_init)();
-
+	
     if (light)
         (*pin_on)(statusled);
 
+	if (debug > 0)
+		fprintf(stderr,"Starting main loop\n");
     while (loop && fgets(param,D_SIZE,stdin)){
         //Remove trailing \n
         strtok(param,"\n");
+		
+		if (debug > 0)
+			fprintf(stderr,"Got param: %s\n",param);
         //Check if allowed
         isAllowed(param);
     }
