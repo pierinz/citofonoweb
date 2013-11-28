@@ -387,7 +387,7 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched){
 	}
 
 	free(query);
-	result = mysql_store_result(con);
+	result = mysql_use_result(con);
 
 	if (result == NULL){
 		printf("Error: %s\n", mysql_error(con));
@@ -400,21 +400,12 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched){
 		exit(1);
 	}
 
-	if (debug > 0)
-		fprintf(stderr,"Query returned %lu rows\n", (unsigned long) mysql_num_rows(result));
-	
-	if (mysql_num_rows(result) == 0){
-		mysql_free_result(result);
-		
-		if (debug > 0)
-			fprintf(stderr,"fetchRow returns 0\n");
-		return 0;
-	}
-
-	if (debug > 0)
+	if (row = mysql_fetch_row(result)){
+		if (debug > 0){
+			fprintf(stderr,"Query returned a row\n");
 			fprintf(stderr,"Result\n");
+		}
 	
-	while ((row = mysql_fetch_row(result))){
 		*allowed=atoi(row[1]);
 		if (debug > 0)
 			fprintf(stderr,"-> allowed: %d\n",*allowed);
@@ -442,6 +433,17 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched){
 		
 		return 1;
 	}
+	else{
+		if (debug > 0)
+			fprintf(stderr,"Query returned 0 rows\n");
+
+		mysql_free_result(result);
+		
+		if (debug > 0)
+			fprintf(stderr,"fetchRow returns 0\n");
+		return 0;
+	}
+	
 	return 0;
 }
 #endif
