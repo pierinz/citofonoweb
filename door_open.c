@@ -423,9 +423,10 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched){
 			*sched=calloc(sizeof(char), 2);
 			sprintf(*sched," ");
 		}
-		if (debug > 0)
+		if (debug > 0){
 			fprintf(stderr,"-> sched: %s\n",*sched);
-
+			fprintf(stderr,"Free result set...\n");
+		}
 		mysql_free_result(result);
 		
 		if (debug > 0)
@@ -434,8 +435,10 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched){
 		return 1;
 	}
 	else{
-		if (debug > 0)
+		if (debug > 0){
 			fprintf(stderr,"Query returned 0 rows\n");
+			fprintf(stderr,"Free resultset...\n");
+		}
 
 		mysql_free_result(result);
 		
@@ -500,6 +503,9 @@ void isAllowed(char* code){
 				deny(code, desc);
 			}
 		}
+		if (debug > 0)
+				fprintf(stderr,"Free desc & sched...\n");
+		
 		free(desc);
 		free(sched);
 	}
