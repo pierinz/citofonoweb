@@ -191,13 +191,18 @@ void jsonparse(const char* sched, int day, int* start, int* end){
 					else if (strcmp(key2,"end")==0)
 						(*end)=atoi(json_object_get_string(value2));
 					//Free memory
+					if (debug > 0)
+						fprintf(stderr,"Free json array element\n");
 					json_object_put(value2);
 				}
 			}
 		}
 	}
-	if (jobj)
+	if (jobj){
+		if (debug > 0)
+			fprintf(stderr,"Free json object\n");
 		json_object_put(jobj);
+	}
 }
 
 void allow(char* code, char* desc){
