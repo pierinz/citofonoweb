@@ -47,10 +47,10 @@ door_open.o: door_open.c libdoor.so
 	fi
 
 door_open: door_open.o libdoor.so
-	if [ -e '/usr/include/json' ]; then \
-	    $(CC) $(CFLAGS) $(LIBS) -std=gnu99 -DCONFPATH='"$(confdir)"' -Djson -ljson $< -o $@ ; \
-	else \
+	if [ -e '/usr/include/json-c' ]; then \
 	    $(CC) $(CFLAGS) $(LIBS) -std=gnu99 -DCONFPATH='"$(confdir)"' -ljson-c $< -o $@ ; \
+	else \
+	    $(CC) $(CFLAGS) $(LIBS) -std=gnu99 -DCONFPATH='"$(confdir)"' -Djson -ljson $< -o $@ ; \
 	fi
 
 badge_daemon.o: badge_daemon.c
