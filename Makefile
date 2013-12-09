@@ -61,8 +61,13 @@ badge_daemon: badge_daemon.o
 
 piface-deps:
 	mkdir -p ./piface/c/src/piface
-	wget -o ./piface/c/src/piface/pfio.c https://raw.github.com/thomasmacpherson/piface/master/c/src/piface/pfio.c
-	wget -o ./piface/c/src/piface/pfio.h https://raw.github.com/thomasmacpherson/piface/master/c/src/piface/pfio.h
+	wget -O ./piface/c/src/piface/pfio.c https://raw.github.com/thomasmacpherson/piface/master/c/src/piface/pfio.c
+	wget -O ./piface/c/src/piface/pfio.h https://raw.github.com/thomasmacpherson/piface/master/c/src/piface/pfio.h
+	wget -O ./piface/c/src/piface/pfio.h https://raw.github.com/thomasmacpherson/piface/master/c/src/piface/Makefile
+	cd ./piface/c/src/piface/
+	make
+	make install
+	cd ../../../../
 .PHONY: piface-deps
 
 install: $(PROGRAMS)
