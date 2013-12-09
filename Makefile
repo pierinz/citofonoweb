@@ -94,7 +94,7 @@ install: $(PROGRAMS)
 	install -m 0644 resources/db.info `dirname $(dbfile)`
 	
 	install -m 0644 conf/badge_daemon.logrotate /etc/logrotate.d/badge_daemon
-	if [ `lsb_release -is` = 'Debian' ]; then \
+	if [ "`lsb_release -is`" = 'Debian' ]; then \
 	    install -m 0755 resources/debian_initscript /etc/init.d/badge_daemon ; \
 	    sed -i s:'^DAEMON="badge_daemon"':'DAEMON="$(prefix)/sbin/badge_daemon"': /etc/init.d/badge_daemon ; \
 	    sed -i s:'^CONFDIR="conf"':'CONFDIR="$(confdir)"': /etc/init.d/badge_daemon ; \
