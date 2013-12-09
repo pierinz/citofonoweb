@@ -31,7 +31,7 @@ libdoor_debug.so: libdoor_debug.c
 	$(CC) $(CFLAGS) -shared -fPIC -Wl,-soname,$@ -o $@ $<
 
 libdoor_raspberry_piface.so: libdoor_raspberry_piface.c
-	$(CC) $(CFLAGS) -shared -fPIC -Wl,-soname,$@  -L/usr/local/lib/ -lpiface-1.0 -o $@ $< || echo "You need to install this library: https://github.com/thomasmacpherson/piface"
+	$(CC) $(CFLAGS) -shared -fPIC -Wl,-soname,$@  -L/usr/local/lib/ -lpiface-1.0 -o $@ $< || echo "You need to install this library: https://github.com/thomasmacpherson/piface. Alternatively, run 'make piface-deps'"
 
 libdoor_raspberry_sysfs.so: libdoor_raspberry_sysfs.c
 	$(CC) $(CFLAGS) -shared -fPIC -Wl,-soname,$@  -o $@ $<
@@ -59,6 +59,12 @@ badge_daemon.o: badge_daemon.c
 badge_daemon: badge_daemon.o
 	$(CC) $(CFLAGS) $(LIBS) -DCONFPATH='"$(confdir)"' $< -o $@
 
+piface-deps:
+	mkdir -p ./piface/c/src/piface
+	wget -o ./piface/c/src/piface/pfio.c https://raw.github.com/thomasmacpherson/piface/master/c/src/piface/pfio.c
+	wget -o ./piface/c/src/piface/pfio.h https://raw.github.com/thomasmacpherson/piface/master/c/src/piface/pfio.h
+.PHONY: piface-deps
+
 install: $(PROGRAMS)
 	mkdir -p $(prefix)/sbin
 	install -m 0755 -t $(prefix)/sbin $^
@@ -85,9 +91,15 @@ install: $(PROGRAMS)
 	
 	install -m 0644 conf/badge_daemon.logrotate /etc/logrotate.d/badge_daemon
 	if [ `lsb_release -is` = 'Debian' ]; then \
-	    install -m 0755 script/debian_initscript /etc/init.d/badge_daemon ; \
+	    install -m 0755 resources/debian_initscript /etc/init.d/badge_daemon ; \
 	    sed -i s:'^DAEMON="badge_daemon"':'DAEMON="$(prefix)/sbin/badge_daemon"': /etc/init.d/badge_daemon ; \
 	    sed -i s:'^CONFDIR="conf"':'CONFDIR="$(confdir)"': /etc/init.d/badge_daemon ; \
+	fi
+	if [ -e '/usr/bin/systemctl' ]; then
+	    install -m 0644 resources/badge_daemon.service /etc/systemd/system/badge_daemon.service ; \
+	    sed -i s:'^ExecStart=badge_daemon':'ExecStart=$(prefix)/sbin/badge_daemon': /etc/systemd/system/badge_daemon.service ; \
+	    sed -i s:'-f conf/badge_daemon.conf':'-f $(confdir)/badge_daemon.conf': /etc/systemd/system/badge_daemon.service ; \
+	    systemctl enable badge_daemon
 	fi
 	
 	chmod +x script/db_update.sh
