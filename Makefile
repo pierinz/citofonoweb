@@ -60,13 +60,10 @@ badge_daemon: badge_daemon.o
 	$(CC) $(CFLAGS) $(LIBS) -DCONFPATH='"$(confdir)"' $< -o $@
 
 piface-deps:
-	mkdir -p ./piface/c/src/piface
-	wget -O ./piface/c/src/piface/pfio.c https://raw.github.com/thomasmacpherson/piface/master/c/src/piface/pfio.c
-	wget -O ./piface/c/src/piface/pfio.h https://raw.github.com/thomasmacpherson/piface/master/c/src/piface/pfio.h
-	wget -O ./piface/c/src/piface/pfio.h https://raw.github.com/thomasmacpherson/piface/master/c/src/piface/Makefile
+	git clone https://github.com/thomasmacpherson/piface
 	cd ./piface/c/src/piface/
-	make
-	make install
+	$(MAKE) -C /dir/ MAKEFLAGS=
+	$(MAKE) -C /dir/ MAKEFLAGS= install
 	cd ../../../../
 .PHONY: piface-deps
 
