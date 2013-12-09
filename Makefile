@@ -22,7 +22,7 @@ all: $(PROGRAMS)
 .PHONY: all
 
 libdoor.so: $(LIBDOOR)
-	if [ -n "`echo $(LIBDOOR) | grep piface`" ]; then \
+	if [ -n "`echo $(LIBDOOR) | grep piface`" ] && [ -e '/etc/modprobe.d/raspi-blacklist.conf' ]; then \
 	    sed -i s/'^blacklist spi\-bcm2708'/'#blacklist spi-bcm2708'/ /etc/modprobe.d/raspi-blacklist.conf 2>/dev/null ; \
 	fi
 .PHONY: libdoor.so
@@ -63,7 +63,10 @@ piface-deps:
 	git clone https://github.com/thomasmacpherson/piface
 	cd ./piface/c/src/piface/
 	./autogen.sh
-	cd ../../../../
+	./configure
+	make MAKEFLAGS=
+	make MAKEFLAGS= install
+	cd ../../
 .PHONY: piface-deps
 
 install: $(PROGRAMS)
