@@ -61,8 +61,8 @@ badge_daemon: badge_daemon.o
 
 piface-deps:
 	git clone https://github.com/thomasmacpherson/piface
-	$(MAKE) -C ./piface/c/src/piface/ MAKEFLAGS=
-	$(MAKE) -C ./piface/c/src/piface/ MAKEFLAGS= install
+	cd ./piface/c/src/piface/
+	./autogen.sh
 	cd ../../../../
 .PHONY: piface-deps
 
