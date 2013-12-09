@@ -1,0 +1,107 @@
+#! /bin/sh
+### BEGIN INIT INFO
+# Provides:            badge_daemon
+# Required-Start:    $syslog $remote_fs $network $time
+# Required-Stop:    $syslog $remote_fs $network $time
+# Default-Start:    2 3 4 5
+# Default-Stop:         0 1 6
+# Short-Description:    Start badge_daemon service
+### END INIT INFO
+
+
+PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin:/usr/local/sbin
+
+. /lib/init/vars.sh
+. /lib/lsb/init-functions
+
+CONFDIR="conf"
+DAEMON="badge_daemon"
+
+CONFIGURATION=`basename "$0" | sed -E 's/badge_daemon\.(.*)/\1/'`
+if [ -z "$CONFIGURATION" ]; then
+	CONFIGURATION="badge_daemon"
+fi
+
+OPTIONS="-f $CONFDIR/$CONFIGURATION.conf"
+pidfile="/var/run/$CONFIGURATION.pid"
+
+if [ -f "$pidfile" ]; then
+    pid=`cat $pidfile`
+else
+    pid=''
+fi
+
+do_start() {
+    if [ -z "$pid" ]; then
+        if [ "$VERBOSE" != no ]; then
+            log_begin_msg "Starting badge_daemon..."
+            echo
+        fi
+        rm -f "/var/log/"$CONFIGURATION"_lastrun.log.1"
+        if [ -e "/var/log/"$CONFIGURATION"_lastrun.log" ]; then
+            mv "/var/log/"$CONFIGURATION"_lastrun.log" "/var/log/"$CONFIGURATION"_lastrun.log.1"
+        fi
+        $DAEMON $OPTIONS 2> "/var/log/"$CONFIGURATION"_lastrun.log" &
+        pid=$!
+        ES=$?
+        echo "$pid" > "$pidfile"
+    else
+        if `kill -0 $pid 2>/dev/null`; then
+            echo 'The daemon is already running.'
+            exit 3
+        else
+            if [ "$VERBOSE" != no ]; then
+                log_begin_msg "Starting badge_daemon..."
+                echo
+            fi
+            rm -f "/var/log/"$CONFIGURATION"_lastrun.log.1"
+        if [ -e "/var/log/"$CONFIGURATION"_lastrun.log" ]; then
+            mv "/var/log/"$CONFIGURATION"_lastrun.log" "/var/log/"$CONFIGURATION"_lastrun.log.1"
+        fi
+            $DAEMON $OPTIONS 2> "/var/log/"$CONFIGURATION"_lastrun.log" &
+            pid=$!
+            ES=$?
+            echo "$pid" > "$pidfile"
+        fi
+    fi
+    [ "$VERBOSE" != no ] && log_end_msg $ES
+    return $ES
+}
+
+do_stop() {
+    if [ `ps ax | awk '{ print $1}' | grep "$pid"` ]; then
+        kill $pid
+        echo -n 'Terminating..'
+        while [ `ps ax | awk '{ print $1}' | grep "$pid"` ]; do
+            echo -n .
+            sleep 0.5;
+        done
+        rm "$pidfile"
+        echo
+    else
+        log_begin_msg "The daemon is not running."
+        echo
+    fi
+}
+
+case "$1" in
+    start)
+        do_start
+    ;;
+    restart)
+        do_stop
+        sleep 0.5
+        do_start
+    ;;
+    reload|force-reload)
+        echo "Error: argument '$1' not supported" >&2
+        exit 3
+    ;;
+    stop)
+        do_stop
+    ;;
+    *)
+        echo "Usage: $0 start|stop|restart" >&2
+        exit 3
+    ;;
+esac
