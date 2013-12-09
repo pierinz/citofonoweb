@@ -1,0 +1,11 @@
+[Unit]
+Description=badge_daemon
+
+[Service]
+Wants=mysqld
+After=mysqld
+Type=simple
+ExecStart=badge_daemon -f conf/badge_daemon.conf
+
+[Install]
+WantedBy=multi-user.target
