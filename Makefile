@@ -40,14 +40,14 @@ libdoor_raspberry_gpio.so: libdoor_raspberry_gpio.c
 	$(CC) $(CFLAGS) -shared -fPIC -Wl,-soname,$@  -o $@ $<
 
 door_open.o: door_open.c libdoor.so
-	if [ -e '/usr/include/json' ]; then \
-	    $(CC) $(CFLAGS) $(LIBS) -std=gnu99 -DCONFPATH='"$(confdir)"' -Djson -ljson $< -c ; \
-	else \
+	if [ -e '/usr/include/json-c' ] || [ -e '/usr/local/include/json-c' ]; then \
 	    $(CC) $(CFLAGS) $(LIBS) -std=gnu99 -DCONFPATH='"$(confdir)"' -ljson-c $< -c ; \
+	else \
+	    $(CC) $(CFLAGS) $(LIBS) -std=gnu99 -DCONFPATH='"$(confdir)"' -Djson -ljson $< -c ; \
 	fi
 
 door_open: door_open.o libdoor.so
-	if [ -e '/usr/include/json-c' ]; then \
+	if [ -e '/usr/include/json-c' ] || [ -e '/usr/local/include/json-c' ]; then \
 	    $(CC) $(CFLAGS) $(LIBS) -std=gnu99 -DCONFPATH='"$(confdir)"' -ljson-c $< -o $@ ; \
 	else \
 	    $(CC) $(CFLAGS) $(LIBS) -std=gnu99 -DCONFPATH='"$(confdir)"' -Djson -ljson $< -o $@ ; \
@@ -108,7 +108,7 @@ install: $(PROGRAMS)
 	
 	chmod +x script/db_update.sh
 .PHONY: install
-	
+
 conf:
 	mkdir -p $(confdir)
 	install -m 0640 conf/hid_read.conf $(confdir)
