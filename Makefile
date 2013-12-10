@@ -99,7 +99,7 @@ install: $(PROGRAMS)
 	    sed -i s:'^DAEMON="badge_daemon"':'DAEMON="$(prefix)/sbin/badge_daemon"': /etc/init.d/badge_daemon ; \
 	    sed -i s:'^CONFDIR="conf"':'CONFDIR="$(confdir)"': /etc/init.d/badge_daemon ; \
 	fi
-	if [ -e '/usr/bin/systemctl' ]; then
+	if [ -e '/usr/bin/systemctl' ]; then \
 	    install -m 0644 resources/badge_daemon.service /etc/systemd/system/badge_daemon.service ; \
 	    sed -i s:'^ExecStart=badge_daemon':'ExecStart=$(prefix)/sbin/badge_daemon': /etc/systemd/system/badge_daemon.service ; \
 	    sed -i s:'-f conf/badge_daemon.conf':'-f $(confdir)/badge_daemon.conf': /etc/systemd/system/badge_daemon.service ; \
