@@ -64,6 +64,38 @@ MYSQL *con;
 char *dbhost, *dbuser, *dbpassword, *dbname, *id, *code_colname;
 #endif
 
+size_t trimwhitespace(char *out, size_t len, const char *str){
+    const char *end;
+    size_t out_size;
+
+    
+    if(len == 0)
+      return 0;
+
+    /* Trim leading space */
+    while(isspace(*str)) str++;
+
+    if(*str == 0)  /* All spaces? */
+    {
+      *out = 0;
+      return 1;
+    }
+
+    /* Trim trailing space */
+    end = str + strlen(str) - 1;
+    while(end > str && isspace(*end)) end--;
+    end++;
+
+    /* Set output size to minimum of trimmed string length and buffer size minus 1 */
+    out_size = (end - str) < len-1 ? (end - str) : len-1;
+
+    /* Copy trimmed string and add null terminator */
+    memcpy(out, str, out_size);
+    out[out_size] = 0;
+
+    return out_size;
+}
+
 void loadConf(char* conffile){
 	FILE* fp;
 	char line[255],def[55],val[200];
@@ -293,7 +325,7 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched){
 			sprintf(*desc,"%s",sqlite3_column_text(stmt,0));
 
 			*sched=calloc(sizeof(char), strlen((char*)sqlite3_column_text(stmt,2)));
-			sprintf(*sched,"%s",sqlite3_column_text(stmt,2));
+			trimwhitespace(*sched, strlen((char*)sqlite3_column_text(stmt,2)), sqlite3_column_text(stmt,2));
 
 			//Reset statement
 			sqlite3_reset(stmt);
@@ -422,7 +454,7 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched){
 
 		if (row[2]){
 			*sched=calloc(sizeof(char), strlen(row[2]));
-			sprintf(*sched,"%s",row[2]);
+			trimwhitespace(*sched,strlen(row[2]),row[2]);
 		}
 		else{
 			*sched=calloc(sizeof(char), 2);
