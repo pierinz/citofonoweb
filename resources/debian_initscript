@@ -1,11 +1,13 @@
 #! /bin/sh
 ### BEGIN INIT INFO
-# Provides:            badge_daemon
-# Required-Start:    $syslog $remote_fs $network $time
+# Provides:			badge_daemon
+# Required-Start:	$syslog $remote_fs $network $time
 # Required-Stop:    $syslog $remote_fs $network $time
-# Default-Start:    2 3 4 5
-# Default-Stop:         0 1 6
-# Short-Description:    Start badge_daemon service
+# Should-Start:		$mysql
+# Should-Stop:		$mysql
+# Default-Start:	2 3 4 5
+# Default-Stop:		0 1 6
+# Short-Description:	Start badge_daemon service
 ### END INIT INFO
 
 
@@ -69,7 +71,7 @@ do_start() {
 }
 
 do_stop() {
-    if [ `ps ax | awk '{ print $1}' | grep "$pid"` ]; then
+    if [ -n "$pid" ] && [ "`ps ax | awk '{ print $1}' | grep $pid`" ]; then
         kill $pid
         echo -n 'Terminating..'
         while [ `ps ax | awk '{ print $1}' | grep "$pid"` ]; do
