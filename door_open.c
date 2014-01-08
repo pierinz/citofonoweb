@@ -29,22 +29,16 @@
 #define SQLITE_B
 #endif
 
-int verbose, doorpin, doortime, alarmpin, alarmtime;
-short light=0;
-short statusled=17;
+int verbose, doortime, alarmtime;
 int loop=1;
+
+char *led_on_command, *led_off_command, *door_open_command, *door_close_command, *alarm_on_command, *alarm_off_command;
+#define Statusled 0
+#define Door 1
+#define Alarm 2
 
 /* Debug */
 short debug=0;
-
-char* libdoor;
-
-//Libdoor functions
-void *lib_handle;
-void (*pin_on)(short pin);
-void (*pin_off)(short pin);
-void (*pin_init)();
-void (*pin_clean)();
 
 #ifdef SQLITE_B
 #include <sqlite3.h>
@@ -67,7 +61,6 @@ char *dbhost, *dbuser, *dbpassword, *dbname, *id, *code_colname;
 void loadConf(char* conffile){
 	FILE* fp;
 	char line[255],def[55],val[200];
-	char *error;
 
 	fp=fopen(conffile, "r");
 	if (!fp){
@@ -76,96 +69,87 @@ void loadConf(char* conffile){
 		exit(1);
 	}
 	while(fgets(line,255,fp)){
-		sscanf(line,"%s%s",def,val);
-		if (strcmp(def,"libdoor")==0){
+		/* Delete previous value */
+		def[0]='\0';
+		val[0]='\0';
+		sscanf(line,"%s %[^\n]",def,val);
+		if (strcmp(def,"led_on_command")==0){
 			/* must be large enough to contain "val" */
-			libdoor=calloc(1,sizeof(val));
-			strcpy(libdoor,val);
-			lib_handle=dlopen(libdoor,RTLD_NOW);
-			if (!lib_handle) {
-				printf("Error loading library: %s\n",dlerror());
-				exit(1);
-			}
-			pin_init = dlsym(lib_handle, "pin_init");
-			if ((error = dlerror()) != NULL)  {
-				printf("Error loading library: %s\n",error);
-				exit(1);
-			}
-			pin_on = dlsym(lib_handle, "pin_on");
-			if ((error = dlerror()) != NULL)  {
-				printf("Error loading library: %s\n",error);
-				exit(1);
-			}
-			pin_off = dlsym(lib_handle, "pin_off");
-			if ((error = dlerror()) != NULL)  {
-				printf("Error loading library: %s\n",error);
-				exit(1);
-			}
-			pin_clean = dlsym(lib_handle, "pin_clean");
-			if ((error = dlerror()) != NULL)  {
-				printf("Error loading library: %s\n",error);
-				exit(1);
-			}
+			led_on_command=calloc(1,strlen(val)+1);
+			sprintf(led_on_command, "%s", val);
+		}
+		if (strcmp(def,"led_off_command")==0){
+			/* must be large enough to contain "val" */
+			led_off_command=calloc(1,strlen(val)+1);
+			sprintf(led_off_command, "%s", val);
+		}
+		if (strcmp(def,"door_open_command")==0){
+			/* must be large enough to contain "val" */
+			door_open_command=calloc(1,strlen(val)+1);
+			sprintf(door_open_command, "%s", val);
+		}
+		if (strcmp(def,"door_close_command")==0){
+			/* must be large enough to contain "val" */
+			door_close_command=calloc(1,strlen(val)+1);
+			sprintf(door_close_command, "%s", val);
+		}
+		if (strcmp(def,"alarm_on_command")==0){
+			/* must be large enough to contain "val" */
+			alarm_on_command=calloc(1,strlen(val)+1);
+			sprintf(alarm_on_command, "%s", val);
+		}
+		if (strcmp(def,"alarm_off_command")==0){
+			/* must be large enough to contain "val" */
+			alarm_off_command=calloc(1,strlen(val)+1);
+			sprintf(alarm_off_command, "%s", val);
 		}
 		#ifdef SQLITE_B
 		if (strcmp(def,"dbfile")==0){
 			/* must be large enough to contain "val" */
-			dbfile=calloc(1,sizeof(val));
+			dbfile=calloc(1,strlen(val)+1);
 			strcpy(dbfile,val);
 		}
 		#endif
 		#ifdef MYSQL_B
 		if (strcmp(def,"dbhost")==0){
 			/* must be large enough to contain "val" */
-			dbhost=calloc(1,sizeof(val));
+			dbhost=calloc(1,strlen(val)+1);
 			strcpy(dbhost,val);
 		}
 		if (strcmp(def,"dbname")==0){
 			/* must be large enough to contain "val" */
-			dbname=calloc(1,sizeof(val));
+			dbname=calloc(1,strlen(val)+1);
 			strcpy(dbname,val);
 		}
 		if (strcmp(def,"dbuser")==0){
 			/* must be large enough to contain "val" */
-			dbuser=calloc(1,sizeof(val));
+			dbuser=calloc(1,strlen(val)+1);
 			strcpy(dbuser,val);
 		}
 		if (strcmp(def,"dbpassword")==0){
 			/* must be large enough to contain "val" */
-			dbpassword=calloc(1,sizeof(val));
+			dbpassword=calloc(1,strlen(val)+1);
 			strcpy(dbpassword,val);
 		}
 		if (strcmp(def,"id_device")==0){
 			/* must be large enough to contain "val" */
-			id=calloc(1,sizeof(val));
+			id=calloc(1,strlen(val)+1);
 			strcpy(id,val);
 		}
 		if (strcmp(def,"code_colname")==0){
 			/* must be large enough to contain "val" */
-			code_colname=calloc(1,sizeof(val));
+			code_colname=calloc(1,strlen(val)+1);
 			strcpy(code_colname,val);
 		}
 		#endif
 		if (strcmp(def,"verbose")==0){
 			verbose=atoi(val);
 		}
-		if (strcmp(def,"doorpin")==0){
-			doorpin=atoi(val);
-		}
 		if (strcmp(def,"doortime")==0){
 			doortime=atoi(val);
 		}
-		if (strcmp(def,"alarmpin")==0){
-			alarmpin=atoi(val);
-		}
 		if (strcmp(def,"alarmtime")==0){
 			alarmtime=atoi(val);
-		}
-		if (strcmp(def,"light")==0){
-			light=atoi(val);
-		}
-		if (strcmp(def,"statusled")==0){
-			statusled=atoi(val);
 		}
 	}
 	fclose(fp);
@@ -174,6 +158,61 @@ void loadConf(char* conffile){
 		fprintf(stderr,"Configuration loaded.\n");
 	}
 }
+
+void pin_on(short item){
+	char* command;
+	
+	switch (item){
+		case Statusled:
+			command=led_on_command;
+		break;
+		case Door:
+			command=door_open_command;
+		break;
+		case Alarm:
+			command=alarm_on_command;
+		break;
+		default:
+			fprintf(stderr,"Invalid value\n");
+			exit(1);
+		break;
+	}
+	
+	if (strlen(command)<2){
+		fprintf(stderr,"Command not specified\n");
+		exit(1);
+	}
+	
+	system(command);
+}
+
+void pin_off(short item){
+	char* command;
+	
+	switch (item){
+		case Statusled:
+			command=led_off_command;
+		break;
+		case Door:
+			command=door_close_command;
+		break;
+		case Alarm:
+			command=alarm_off_command;
+		break;
+		default:
+			fprintf(stderr,"Invalid value\n");
+			exit(1);
+		break;
+	}
+	
+	if (strlen(command)<2){
+		fprintf(stderr,"Command not specified\n");
+		exit(1);
+	}
+	
+	system(command);
+}
+
 
 void jsonparse(const char* sched, int day, int* start, int* end){
 	json_object *jarray, *jobj;
@@ -208,28 +247,28 @@ void jsonparse(const char* sched, int day, int* start, int* end){
 void allow(char* code, char* desc){
 	printf("Badge %s: %s - ALLOWED\n",code,desc);
 	fflush(stdout);
-	(*pin_on)(doorpin);
+	pin_on(Door);
 	sleep(doortime);
-	(*pin_off)(doorpin);
+	pin_off(Door);
 }
 
 void deny(char* code, char* desc){
 	printf("Badge %s: %s - DENIED\n",code,desc);
 	fflush(stdout);
-	if (alarmpin > 0){
-		(*pin_on)(alarmpin);
+	if (strlen(alarm_on_command) > 2 && strlen(alarm_off_command) > 2){
+		pin_on(Alarm);
 		sleep(alarmtime);
-		(*pin_off)(alarmpin);
+		pin_off(Alarm);
 	}
 }
 
 void unknown(char* code){
 	printf("Badge %s: UNKNOWN - DENIED BY POLICY\n",code);
 	fflush(stdout);
-	if (alarmpin > 0){
-		(*pin_on)(alarmpin);
+	if (strlen(alarm_on_command) > 2 && strlen(alarm_off_command) > 2){
+		pin_on(Alarm);
 		sleep(alarmtime);
-		(*pin_off)(alarmpin);
+		pin_off(Alarm);
 	}
 }
 
@@ -309,8 +348,8 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched){
 		else{
 			printf("Internal error. Program terminated.\n");
 			fflush(stdout);
-			if (light)
-				(*pin_off)(statusled);
+			if (strlen(led_off_command)>2)
+				pin_off(statusled);
 			(*pin_clean)();
 			exit(1);
 		}
@@ -363,9 +402,8 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched){
 		perror("Cannot allocate memory");
 		printf("Internal error. Program terminated.\n");
 		fflush(stdout);
-		if (light)
-			(*pin_off)(statusled);
-		(*pin_clean)();
+		if (strlen(led_off_command)>2)
+			pin_off(Statusled);
 		exit(1);
 	}
 	free(code_e);
@@ -385,9 +423,8 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched){
 		db_close();
 		printf("Query failed. Program terminated.\n");
 		fflush(stdout);
-		if (light)
-			(*pin_off)(statusled);
-		(*pin_clean)();
+		if (strlen(led_off_command)>2)
+			pin_off(Statusled);
 		exit(1);
 	}
 
@@ -399,9 +436,8 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched){
 		mysql_close(con);
 		printf("Internal error. Program terminated.\n");
 		fflush(stdout);
-		if (light)
-			(*pin_off)(statusled);
-		(*pin_clean)();
+		if (strlen(led_off_command)>2)
+			pin_off(Statusled);
 		exit(1);
 	}
 
@@ -584,10 +620,8 @@ int main(int argc, char **argv){
 	if (debug > 0)
 		fprintf(stderr,"Db opened\n");
 
-	(*pin_init)();
-	
-	if (light)
-		(*pin_on)(statusled);
+	if (strlen(led_on_command)>2)
+		pin_on(Statusled);
 
 	if (debug > 0)
 		fprintf(stderr,"Starting main loop\n");
@@ -605,11 +639,8 @@ int main(int argc, char **argv){
 	// Free all pointers
 	free(param);
 
-	if (light)
-		(*pin_off)(statusled);
+	if (strlen(led_off_command)>2)
+		pin_off(Statusled);
 
-	(*pin_clean)();
-
-	dlclose(lib_handle);
 	exit(0);
 }

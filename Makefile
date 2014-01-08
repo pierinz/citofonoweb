@@ -15,38 +15,19 @@ else
     LIBS:=-DSQLITE_B -lsqlite3 -lpthread -ldl
 endif
 
-LIBDOOR:=libdoor_debug.so libdoor_raspberry_sysfs.so
-#libdoor_raspberry_piface.so
+DOOR_TOOLS:=gpio piface
 
-all: $(PROGRAMS)
+all: $(PROGRAMS) $(DOOR_TOOLS)
 .PHONY: all
 
-libdoor.so: $(LIBDOOR)
-	if [ -n "`echo $(LIBDOOR) | grep piface`" ] && [ -e '/etc/modprobe.d/raspi-blacklist.conf' ]; then \
-	    sed -i s/'^blacklist spi\-bcm2708'/'#blacklist spi-bcm2708'/ /etc/modprobe.d/raspi-blacklist.conf 2>/dev/null ; \
-	fi
-.PHONY: libdoor.so
-
-libdoor_debug.so: libdoor_debug.c
-	$(CC) $(CFLAGS) -shared -fPIC -Wl,-soname,$@ -o $@ $<
-
-libdoor_raspberry_piface.so: libdoor_raspberry_piface.c
-	$(CC) $(CFLAGS) -shared -fPIC -Wl,-soname,$@  -L/usr/local/lib/ -lpiface-1.0 -o $@ $< || echo "You need to install this library: https://github.com/thomasmacpherson/piface. Alternatively, run 'make piface-deps'"
-
-libdoor_raspberry_sysfs.so: libdoor_raspberry_sysfs.c
-	$(CC) $(CFLAGS) -shared -fPIC -Wl,-soname,$@  -o $@ $<
-
-libdoor_raspberry_gpio.so: libdoor_raspberry_gpio.c
-	$(CC) $(CFLAGS) -shared -fPIC -Wl,-soname,$@  -o $@ $<
-
-door_open.o: door_open.c libdoor.so
+door_open.o: door_open.c
 	if [ -e '/usr/include/json-c' ] || [ -e '/usr/local/include/json-c' ]; then \
 	    $(CC) $(CFLAGS) $(LIBS) -std=gnu99 -DCONFPATH='"$(confdir)"' -ljson-c $< -c ; \
 	else \
 	    $(CC) $(CFLAGS) $(LIBS) -std=gnu99 -DCONFPATH='"$(confdir)"' -Djson -ljson $< -c ; \
 	fi
 
-door_open: door_open.o libdoor.so
+door_open: door_open.o
 	if [ -e '/usr/include/json-c' ] || [ -e '/usr/local/include/json-c' ]; then \
 	    $(CC) $(CFLAGS) $(LIBS) -std=gnu99 -DCONFPATH='"$(confdir)"' -ljson-c $< -o $@ ; \
 	else \
@@ -59,23 +40,32 @@ badge_daemon.o: badge_daemon.c
 badge_daemon: badge_daemon.o
 	$(CC) $(CFLAGS) $(LIBS) -DCONFPATH='"$(confdir)"' $< -o $@
 
-piface-deps:
-	git clone https://github.com/thomasmacpherson/piface
-	cd ./piface/c/src/piface/
-	./autogen.sh
-	./configure
-	make MAKEFLAGS=
-	make MAKEFLAGS= install
-	cd ../../
-.PHONY: piface-deps
+gpio:
+.PHONY: gpio
+
+piface:
+	if [ ! -e ./piface_tool ]; then \
+	    git clone https://github.com/pierinz/piface_tool.git ; \
+	else \
+	    cd piface_tool ; \
+	    git pull ; \
+	    cd .. ; \
+	fi
+	make -C piface_tool/ prefix=$(prefix)
+	cd ..
+.PHONY: piface
 
 install: $(PROGRAMS)
 	mkdir -p $(prefix)/sbin
 	install -m 0755 -t $(prefix)/sbin $^
 	
-	mkdir -p $(prefix)/lib
-	install -m 0755 -t $(prefix)/lib libdoor*.so
-	ldconfig
+	if [ -n "`echo $(DOOR_TOOLS) | grep gpio`" ]; then \
+	    install -m 0755 -t $(prefix)/sbin resources/gpio.sh ; \
+	fi
+	
+	if [ -n "`echo $(DOOR_TOOLS) | grep piface`" ]; then \
+	    make -C piface_tool/ prefix=$(prefix) install
+	fi
 	
 	mkdir -p $(confdir)
 	if [ -e $(confdir)/badge_daemon.conf ]; then \
@@ -85,10 +75,7 @@ install: $(PROGRAMS)
 	    install -m 0640 conf/badge_daemon.conf $(confdir) ; \
 	fi
 	
-	sed -i s:'^source \./':'source $(prefix)/sbin/': $(confdir)/badge_daemon.conf
-	sed -i s:'^helper \./':'helper $(prefix)/sbin/': $(confdir)/badge_daemon.conf
-	sed -i s:'^dbfile citofonoweb.db':'dbfile $(dbfile)': $(confdir)/badge_daemon.conf
-	sed -i s:'^libdoor ./libdoor_debug.so':'libdoor $(prefix)/lib/libdoor_debug.so': $(confdir)/badge_daemon.conf
+	sed -i s:' ./':'$(prefix)/sbin/': $(confdir)/badge_daemon.conf
 	
 	mkdir -p `dirname $(dbfile)`
 	install -m 0644 resources/db.info `dirname $(dbfile)`
