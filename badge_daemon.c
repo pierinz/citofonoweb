@@ -78,7 +78,7 @@ void logmessage(char *message){
     
     time (&rawtime);
     timeinfo = localtime (&rawtime);
-    strftime(buffer,22,"%m/%d/%y %H:%M:%S - ",timeinfo);
+    strftime(buffer,22,"%d/%m/%y %H:%M:%S - ",timeinfo);
 
     /* Assicurati che nessuno scriva sul log contemporaneamente */
     pthread_mutex_lock(&mutex);
