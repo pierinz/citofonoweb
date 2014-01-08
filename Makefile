@@ -64,7 +64,7 @@ install: $(PROGRAMS)
 	fi
 	
 	if [ -n "`echo $(DOOR_TOOLS) | grep piface`" ]; then \
-	    make -C piface_tool/ prefix=$(prefix) install
+	    make -C piface_tool/ prefix=$(prefix) install ; \
 	fi
 	
 	mkdir -p $(confdir)
