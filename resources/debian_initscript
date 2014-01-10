@@ -25,7 +25,7 @@ if [ -z "$CONFIGURATION" ]; then
 fi
 
 OPTIONS="-f $CONFDIR/$CONFIGURATION.conf"
-pidfile="/var/run/$CONFIGURATION.pid"
+pidfile="`grep pidfile $CONFIGURATION.conf | awk '{ print $2 }' `"
 
 if [ -f "$pidfile" ]; then
     pid=`cat $pidfile`
@@ -43,10 +43,8 @@ do_start() {
         if [ -e "/var/log/"$CONFIGURATION"_lastrun.log" ]; then
             mv "/var/log/"$CONFIGURATION"_lastrun.log" "/var/log/"$CONFIGURATION"_lastrun.log.1"
         fi
-        $DAEMON $OPTIONS 2> "/var/log/"$CONFIGURATION"_lastrun.log" &
-        pid=$!
+        $DAEMON $OPTIONS > "/var/log/"$CONFIGURATION"_lastrun.log" 2>&1 &
         ES=$?
-        echo "$pid" > "$pidfile"
     else
         if `kill -0 $pid 2>/dev/null`; then
             echo 'The daemon is already running.'
@@ -60,10 +58,8 @@ do_start() {
         if [ -e "/var/log/"$CONFIGURATION"_lastrun.log" ]; then
             mv "/var/log/"$CONFIGURATION"_lastrun.log" "/var/log/"$CONFIGURATION"_lastrun.log.1"
         fi
-            $DAEMON $OPTIONS 2> "/var/log/"$CONFIGURATION"_lastrun.log" &
-            pid=$!
+            $DAEMON $OPTIONS > "/var/log/"$CONFIGURATION"_lastrun.log" 2>&1 &
             ES=$?
-            echo "$pid" > "$pidfile"
         fi
     fi
     [ "$VERBOSE" != no ] && log_end_msg $ES
@@ -78,7 +74,6 @@ do_stop() {
             echo -n .
             sleep 0.5;
         done
-        rm "$pidfile"
         echo
     else
         log_begin_msg "The daemon is not running."

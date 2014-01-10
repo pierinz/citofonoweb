@@ -34,7 +34,7 @@
     #define loglen 150
 #endif
 
-char *source, *helper, separator[2], *logfile;
+char *source, *helper, separator[2], *logfile, *pidfile;
 short verbose=0;
 short debounce=1;
 
@@ -105,7 +105,9 @@ void clean(){
     if (flog)
         fclose(flog);
     
+	unlink(pidfile);
     free(logfile);
+	free(pidfile);
     free(source);
     free(helper);
 }
@@ -152,6 +154,11 @@ void loadConf(char *conffile){
             /* must be large enough to contain "val" */
             logfile=calloc(1,strlen(val)+1);
             strcpy(logfile,val);
+        }
+		if (strcmp(def,"pidfile")==0){
+            /* must be large enough to contain "val" */
+            pidfile=calloc(1,strlen(val)+1);
+            strcpy(pidfile,val);
         }
         if (strcmp(def,"verbose")==0){
             verbose=atoi(val);
@@ -368,6 +375,7 @@ void signal_handler(int signum){
 int main (int argc, char *argv[]){
     struct sigaction sig_h;
 	int c;
+	FILE* pidf;
 	char *conffile=NULL;
 	
 	/* Load settings from commandline */
@@ -398,6 +406,15 @@ int main (int argc, char *argv[]){
     loadConf(conffile);
 	free(conffile);
 
+	pidf=fopen(pidfile,"w");
+	if (!pidf){
+		perror("fopen: ");
+        clean();
+        exit(1);
+	}
+	fprintf(pidf,"%d\n",getpid());
+	fclose(pidf);
+	
     flog=fopen(logfile,"a");
     if (!flog){
         perror("fopen: ");
