@@ -8,14 +8,13 @@ dbfile:=/var/lib/badge_daemon/citofonoweb.db
 
 BACKEND:=sqlite
 PROGRAMS:=hid_read serial_read door_open badge_daemon
+DOOR_TOOLS:=gpio piface
 
 ifeq ("$(BACKEND)","mysql")
     LIBS:=-DMYSQL_B `mysql_config --cflags --libs` -lpthread
 else
-    LIBS:=-DSQLITE_B -lsqlite3 -lpthread -ldl
+    LIBS:=-DSQLITE_B -lsqlite3 -lpthread
 endif
-
-DOOR_TOOLS:=gpio piface
 
 all: $(PROGRAMS) $(DOOR_TOOLS)
 .PHONY: all
@@ -73,9 +72,8 @@ install: $(PROGRAMS)
 	    echo "Run 'make conf' to overwrite" ; \
 	else \
 	    install -m 0640 conf/badge_daemon.conf $(confdir) ; \
+	    sed -i s:' ./':' $(prefix)/sbin/': $(confdir)/badge_daemon.conf ; \
 	fi
-	
-	sed -i s:' ./':' $(prefix)/sbin/': $(confdir)/badge_daemon.conf
 	
 	mkdir -p `dirname $(dbfile)`
 	install -m 0644 resources/db.info `dirname $(dbfile)`
@@ -133,6 +131,5 @@ uninstall:
 
 clean:
 	rm -f $(PROGRAMS)
-	rm -f *.so
 	rm -f *.o
 .PHONY: clean
