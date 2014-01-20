@@ -349,8 +349,7 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched){
 			printf("Internal error. Program terminated.\n");
 			fflush(stdout);
 			if (strlen(led_off_command)>2)
-				pin_off(statusled);
-			(*pin_clean)();
+				pin_off(Statusled);
 			exit(1);
 		}
 	}
