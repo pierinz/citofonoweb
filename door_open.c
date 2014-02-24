@@ -29,7 +29,8 @@
 #define SQLITE_B
 #endif
 
-int verbose, doortime, alarmtime;
+int verbose;
+float doortime, alarmtime;
 int loop=1;
 
 char *led_on_command, *led_off_command, *door_open_command, *door_close_command, *alarm_on_command, *alarm_off_command;
@@ -146,10 +147,10 @@ void loadConf(char* conffile){
 			verbose=atoi(val);
 		}
 		if (strcmp(def,"doortime")==0){
-			doortime=atoi(val);
+			doortime=atof(val);
 		}
 		if (strcmp(def,"alarmtime")==0){
-			alarmtime=atoi(val);
+			alarmtime=atof(val);
 		}
 	}
 	fclose(fp);
@@ -248,7 +249,7 @@ void allow(char* code, char* desc){
 	printf("Badge %s: %s - ALLOWED\n",code,desc);
 	fflush(stdout);
 	pin_on(Door);
-	sleep(doortime);
+	usleep(doortime*1000000);
 	pin_off(Door);
 }
 
@@ -257,7 +258,7 @@ void deny(char* code, char* desc){
 	fflush(stdout);
 	if (strlen(alarm_on_command) > 2 && strlen(alarm_off_command) > 2){
 		pin_on(Alarm);
-		sleep(alarmtime);
+		usleep(alarmtime*1000000);
 		pin_off(Alarm);
 	}
 }
@@ -267,7 +268,7 @@ void unknown(char* code){
 	fflush(stdout);
 	if (strlen(alarm_on_command) > 2 && strlen(alarm_off_command) > 2){
 		pin_on(Alarm);
-		sleep(alarmtime);
+		usleep(alarmtime*1000000);
 		pin_off(Alarm);
 	}
 }
