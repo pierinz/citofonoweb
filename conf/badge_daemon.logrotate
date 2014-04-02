@@ -8,6 +8,6 @@
 	nocreate
 	sharedscripts
 	prerotate
-		kill -s SIGUSR1 `cat /var/run/badge_daemon.pid`
+		/bin/kill -s SIGUSR1 `cat /var/run/badge_daemon.pid`
 	endscript
 }
