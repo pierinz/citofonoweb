@@ -92,12 +92,13 @@ void logmessage(char *message){
 void rotate(){
     pthread_mutex_lock(&mutex);
     fclose(flog);
-    while(access(logfile,F_OK)){
+    while(access(logfile,F_OK)==0){
         /* Wait for file deletion */
         usleep(20000);
     }
     flog=fopen(logfile,"a");
     pthread_mutex_unlock(&mutex);
+	fprintf(stderr,"Logfile rotated.");
     logmessage("Logfile rotated.");
 }
 
@@ -408,7 +409,7 @@ int main (int argc, char *argv[]){
 
 	pidf=fopen(pidfile,"w");
 	if (!pidf){
-		perror("fopen: ");
+		perror("pidfile: fopen: ");
         clean();
         exit(1);
 	}
@@ -417,7 +418,7 @@ int main (int argc, char *argv[]){
 	
     flog=fopen(logfile,"a");
     if (!flog){
-        perror("fopen: ");
+        perror("logfile: fopen: ");
         clean();
         exit(1);
     }
