@@ -73,6 +73,7 @@ install: $(PROGRAMS)
 	else \
 	    install -m 0640 conf/badge_daemon.conf $(confdir) ; \
 	    sed -i s:' ./':' $(prefix)/sbin/': $(confdir)/badge_daemon.conf ; \
+	    sed -i s:'conf/':'$(confdir)': $(confdir)/badge_daemon.conf ; \
 	fi
 	
 	mkdir -p `dirname $(dbfile)`
