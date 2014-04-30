@@ -72,8 +72,7 @@ install: $(PROGRAMS)
 	    echo "Run 'make conf' to overwrite" ; \
 	else \
 	    install -m 0640 conf/badge_daemon.conf $(confdir) ; \
-	    sed -i s:' ./':' $(prefix)/sbin/': $(confdir)/badge_daemon.conf ; \
-	    sed -i s:'conf/':'$(confdir)': $(confdir)/badge_daemon.conf ; \
+	    sed -i -e s:' ./':' $(prefix)/sbin/': $(confdir)/badge_daemon.conf -e s:' conf/':' $(confdir)/': $(confdir)/badge_daemon.conf ; \
 	fi
 	
 	mkdir -p `dirname $(dbfile)`
