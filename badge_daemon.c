@@ -81,8 +81,8 @@ void logmessage(char *message){
     pthread_mutex_unlock(&mutex);
 #else
 	printf("%s%s\n",buffer,message);
+	fflush(stdout);
 #endif
-	
 }
 
 void rotate(){
