@@ -1,47 +1,28 @@
 #define _GNU_SOURCE
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include <errno.h>
-#include <unistd.h>
-#include <sys/wait.h>
-#include <time.h>
-#include <signal.h>
+#include "common.h"
 #include <pthread.h>
 
+/* Default configuration directory path (if not specified with -f)*/
 #ifndef CONFPATH
     #define CONFPATH "conf"
 #endif
 
-#ifndef confline
-    #define confline 255
-#endif
-
-#ifndef confdef
-    #define confdef 55
-#endif
-
-#ifndef confval
-    #define confval 200
-#endif
-
-#ifndef keylen
-    #define keylen 20
-#endif
-
+/* Max length of log line */
 #ifndef loglen
     #define loglen 150
 #endif
 
-char *source, *helper, separator[2], *logfile, *pidfile;
+char *source, *helper, separator[2], *pidfile;
 short verbose=0;
 short debounce=1;
 
 pthread_t thr_source, thr_helper;
 int psource[2], phelperIN[2], phelperOUT[2];
 int spid,hpid;
+#ifndef NO_LOGFILE
+char *logfile;
 FILE* flog;
+#endif
 /* Mutex */
 pthread_mutex_t mutex;
 
@@ -80,16 +61,22 @@ void logmessage(char *message){
     timeinfo = localtime (&rawtime);
     strftime(buffer,22,"%d/%m/%y %H:%M:%S - ",timeinfo);
 
-    /* Assicurati che nessuno scriva sul log contemporaneamente */
+#ifndef NO_LOGFILE
+    /* Other threads shouldn't write logfile concurrently */
     pthread_mutex_lock(&mutex);
     fputs(buffer,flog);
     fputs(message,flog);
     fputs("\n",flog);
     fflush(flog);
     pthread_mutex_unlock(&mutex);
+#else
+	printf("%s%s\n",buffer,message);
+#endif
+	
 }
 
 void rotate(){
+#ifndef NO_LOGFILE
     pthread_mutex_lock(&mutex);
     fclose(flog);
     while(access(logfile,F_OK)==0){
@@ -100,14 +87,18 @@ void rotate(){
     pthread_mutex_unlock(&mutex);
 	fprintf(stderr,"Logfile rotated.");
     logmessage("Logfile rotated.");
+#else
+	logmessage("rotate failed - this program was compiled without logfile support.");
+#endif
 }
 
 void clean(){
+#ifndef NO_LOGFILE
     if (flog)
         fclose(flog);
-    
+	free(logfile);
+#endif
 	unlink(pidfile);
-    free(logfile);
 	free(pidfile);
     free(source);
     free(helper);
@@ -126,7 +117,7 @@ void fatal(char* message){
 
 void loadConf(char *conffile){
     FILE* fp;
-    char *line,*def,*val;
+    char line[confline+1], def[confdef], val[confval];
 
     fp=fopen(conffile,"r");
     if (!fp){
@@ -135,44 +126,47 @@ void loadConf(char *conffile){
         exit(1);
     }
     
-    line=calloc(1,confline*sizeof(char));
-    def=calloc(1,confdef*sizeof(char));
-    val=calloc(1,confval*sizeof(char));
-    
-    while(fgets(line,255,fp)){
+    while(fgets(line,confline,fp)){
+		/* Delete previous value */
+		def[0]='\0';
+		val[0]='\0';
+
         sscanf(line,"%s %[^\n]",def,val);
         if (strcmp(def,"source")==0){
             /* must be large enough to contain "val" */
             source=calloc(1,strlen(val)+1);
             strcpy(source,val);
+			continue;
         }
         if (strcmp(def,"helper")==0){
             /* must be large enough to contain "val" */
             helper=calloc(1,strlen(val)+1);
             strcpy(helper,val);
+			continue;
         }
+		#ifndef NO_LOGFILE
         if (strcmp(def,"logfile")==0){
             /* must be large enough to contain "val" */
             logfile=calloc(1,strlen(val)+1);
             strcpy(logfile,val);
+			continue;
         }
+		#endif
 		if (strcmp(def,"pidfile")==0){
             /* must be large enough to contain "val" */
             pidfile=calloc(1,strlen(val)+1);
             strcpy(pidfile,val);
+			continue;
         }
         if (strcmp(def,"verbose")==0){
             verbose=atoi(val);
+			continue;
         }
         if (strcmp(def,"debounce")==0){
             debounce=atoi(val);
+			continue;
         }
-        memset(val,0,confdef*sizeof(char));
-        memset(def,0,confdef*sizeof(char));
     }
-    free(val);
-    free(def);
-    free(line);
     fclose(fp);
 
     if (verbose > 1){
@@ -359,6 +353,7 @@ void signal_handler(int signum){
         waitpid(hpid,NULL,0);
     }
     else if (signum==SIGUSR1){
+		#ifndef NO_LOGFILE
         if (asprintf(&buf,"Caught signal %d, rotating log file...",signum) < 0){
             perror("asprintf: ");
             clean();
@@ -369,6 +364,7 @@ void signal_handler(int signum){
             logmessage(buf);
             free(buf);
         }
+		#endif
         rotate();
     }
 }
@@ -416,12 +412,14 @@ int main (int argc, char *argv[]){
 	fprintf(pidf,"%d\n",getpid());
 	fclose(pidf);
 	
+	#ifndef NO_LOGFILE
     flog=fopen(logfile,"a");
     if (!flog){
         perror("logfile: fopen: ");
         clean();
         exit(1);
     }
+	#endif
 
     logmessage("Daemon started.");
     
