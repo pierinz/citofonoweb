@@ -1,6 +1,3 @@
 This project runs nicely, but has still some rough edges:
-- it needs good docs
-- it needs a gui to edit acls (the "phpliteadmin" interface is just a workaround)
-- now it depends on lighttpd configuration files, i should implement an internal auth system
-- the daemon should be coded in C, to allow users to remove the web interface and all the php stuff
-- the paths need some tuning: installing in /var/www is wrong in a non-Debian setup, conf should be in /etc/
+- it still needs good docs
+- database management interface under heavy developement (different package)
