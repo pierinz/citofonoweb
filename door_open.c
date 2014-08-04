@@ -235,7 +235,7 @@ void loadConf(char* conffile){
 	}
 }
 
-void pin_on(short item){
+int pin_on(short item){
 	char* command;
 	
 	switch (item){
@@ -259,10 +259,10 @@ void pin_on(short item){
 		exit(1);
 	}
 	
-	system(command);
+	return system(command);
 }
 
-void pin_off(short item){
+int pin_off(short item){
 	char* command;
 	
 	switch (item){
@@ -286,7 +286,7 @@ void pin_off(short item){
 		exit(1);
 	}
 	
-	system(command);
+	return system(command);
 }
 
 
@@ -382,8 +382,15 @@ void db_open(){
 	}
 
 	// select rows from the table
-	asprintf(&query, "SELECT %s, %s, trim(%s) from %s where %s = ?",
-			user_colname, allowed_colname, sched_colname, acl_table, code_colname);
+	if (asprintf(&query, "SELECT %s, %s, trim(%s) from %s where %s = ?",
+			user_colname, allowed_colname, sched_colname, acl_table, code_colname)){
+		perror("Cannot allocate memory");
+		printf("Internal error. Program terminated.\n");
+		fflush(stdout);
+		if (strlen(led_off_command)>2)
+			pin_off(Statusled);
+		exit(1);
+	}
 	retval = sqlite3_prepare_v2(handle,query,-1,&stmt,0);
 	free(query);
 	if(retval){
