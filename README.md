@@ -46,6 +46,7 @@ You should also choose a BACKEND as described before.
 
 When you are ready, launch:
 - make BACKEND=(yourbackend) DOOR_TOOLS=(toolsyouchoose)
+
 If you are confortable with default values (BACKEND="sqlite" DOOR_TOOLS="gpio piface"),
 just run "make".
 
