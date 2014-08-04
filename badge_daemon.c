@@ -12,13 +12,23 @@
     #define loglen 150
 #endif
 
-char *source, *helper, separator[2], *pidfile;
+char *source, *helper, separator[2];
 short verbose=0;
 short debounce=1;
 
 pthread_t thr_source, thr_helper;
 int psource[2], phelperIN[2], phelperOUT[2];
 int spid,hpid;
+
+#ifdef SYSTEMD_ONLY
+#define NO_PIDFILE
+#define NO_LOGFILE
+#endif
+
+#ifndef NO_PIDFILE
+char *pidfile;
+#endif
+
 #ifndef NO_LOGFILE
 char *logfile;
 FILE* flog;
@@ -36,7 +46,7 @@ char** argv_from_string(char *args) {
         if (isspace(args[i]))
             spaces++;
 
-    // add 1 for cmd, 1 for NULL and 1 as spaces will be one short
+    /* add 1 for cmd, 1 for NULL and 1 as spaces will be one short */
     argv = (char**) malloc ( (spaces + 3) * sizeof(char*) );
     argv[argc++] = args;
     
@@ -98,8 +108,10 @@ void clean(){
         fclose(flog);
 	free(logfile);
 #endif
+#ifndef NO_PIDFILE
 	unlink(pidfile);
 	free(pidfile);
+#endif
     free(source);
     free(helper);
 }
@@ -152,12 +164,14 @@ void loadConf(char *conffile){
 			continue;
         }
 		#endif
+		#ifndef NO_PIDFILE
 		if (strcmp(def,"pidfile")==0){
             /* must be large enough to contain "val" */
             pidfile=calloc(1,strlen(val)+1);
             strcpy(pidfile,val);
 			continue;
         }
+		#endif
         if (strcmp(def,"verbose")==0){
             verbose=atoi(val);
 			continue;
@@ -372,7 +386,9 @@ void signal_handler(int signum){
 int main (int argc, char *argv[]){
     struct sigaction sig_h;
 	int c;
+	#ifndef NO_PIDFILE
 	FILE* pidf;
+	#endif
 	char *conffile=NULL;
 	
 	/* Load settings from commandline */
@@ -403,6 +419,7 @@ int main (int argc, char *argv[]){
     loadConf(conffile);
 	free(conffile);
 
+	#ifndef NO_PIDFILE
 	pidf=fopen(pidfile,"w");
 	if (!pidf){
 		perror("pidfile: fopen: ");
@@ -411,6 +428,7 @@ int main (int argc, char *argv[]){
 	}
 	fprintf(pidf,"%d\n",getpid());
 	fclose(pidf);
+	#endif
 	
 	#ifndef NO_LOGFILE
     flog=fopen(logfile,"a");
