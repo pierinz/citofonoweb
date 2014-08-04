@@ -52,15 +52,11 @@ just run "make".
 Installation
 ====================
 When "make" has terminated, you can install with "make install".
-If you need the web interface, run "make webinstall" after.
-If you are very lazy, you can configure lighttpd with "make lighttpd-config".
 
 Configuration
 ====================
-You can find the configuration file in /etc/badge_daemon, the documentation is inside it.
-
-- badge_daemon.conf: main daemon settings.
-    They are pretty much self-explanatory.
+The default configuration file is /etc/badge_daemon/badge_daemon.conf, the documentation is inside it.
+You can split the configuration for "door_open" or the other modules if you like it.
 
 HID device tuning
 ====================
@@ -75,11 +71,13 @@ If you have a cheap and buggy device, you can tune "timeout" (-t) and
 Usage
 ====================
 - Edit configuration file
+- Be sure to create folders with correct privileges (if needed)
 - Launch "badge_daemon" to test if it is working
 - Configure badge_daemon to be run at startup
 
 You can find a SysV initscript and a systemd unit in the "resources" folder.
 The initscript has the LSB header, so you can simply use "insserv" to enable it
 in the right runlevels.
+For convenience, "make install" will enable the daemon at startup for you.
 
 If you need other infos contact me and i'll add more documentation.
