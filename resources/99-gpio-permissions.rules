@@ -1,0 +1,4 @@
+#Badge_daemon usually needs r/w access on gpios
+#(source: Raspbian /lib/udev/rules.d/60-python-pifacecommon.rules)
+KERNEL=="spidev*", GROUP="spi", MODE="0660"
+SUBSYSTEM=="gpio*", PROGRAM="/bin/sh -c 'chown -R root:gpio /sys/class/gpio && chmod -R 770 /sys/class/gpio; chown -R root:gpio /sys/devices/virtual/gpio && chmod -R 770 /sys/devices/virtual/gpio'"

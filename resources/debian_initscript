@@ -16,6 +16,8 @@ PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin:/usr/local/sbin
 . /lib/init/vars.sh
 . /lib/lsb/init-functions
 
+DUSER='badge_daemon'
+DGROUP='badge_daemon'
 CONFDIR="conf"
 DAEMON="badge_daemon"
 
@@ -34,34 +36,16 @@ else
 fi
 
 do_start() {
-    if [ -z "$pid" ]; then
-        if [ "$VERBOSE" != no ]; then
-            log_begin_msg "Starting badge_daemon..."
-            echo
-        fi
-        rm -f "/var/log/"$CONFIGURATION"_lastrun.log.1"
-        if [ -e "/var/log/"$CONFIGURATION"_lastrun.log" ]; then
-            mv "/var/log/"$CONFIGURATION"_lastrun.log" "/var/log/"$CONFIGURATION"_lastrun.log.1"
-        fi
-        $DAEMON $OPTIONS > "/var/log/"$CONFIGURATION"_lastrun.log" 2>&1 &
-        ES=$?
-    else
-        if `kill -0 $pid 2>/dev/null`; then
-            echo 'The daemon is already running.'
-            exit 3
-        else
-            if [ "$VERBOSE" != no ]; then
-                log_begin_msg "Starting badge_daemon..."
-                echo
-            fi
-            rm -f "/var/log/"$CONFIGURATION"_lastrun.log.1"
-        if [ -e "/var/log/"$CONFIGURATION"_lastrun.log" ]; then
-            mv "/var/log/"$CONFIGURATION"_lastrun.log" "/var/log/"$CONFIGURATION"_lastrun.log.1"
-        fi
-            $DAEMON $OPTIONS > "/var/log/"$CONFIGURATION"_lastrun.log" 2>&1 &
-            ES=$?
-        fi
-    fi
+	if [ "$VERBOSE" != no ]; then
+		log_begin_msg "Starting badge_daemon..."
+		echo
+	fi
+	rm -f "/var/log/"$CONFIGURATION"_lastrun.log.1"
+	if [ -e "/var/log/"$CONFIGURATION"_lastrun.log" ]; then
+		mv "/var/log/"$CONFIGURATION"_lastrun.log" "/var/log/"$CONFIGURATION"_lastrun.log.1"
+	fi
+	start-stop-daemon --start --pidfile $pidfile --quiet -u $DUSER -g $DGROUP --exec $DAEMON -- $OPTIONS > "/var/log/"$CONFIGURATION"_lastrun.log" 2>&1
+	ES=$
     [ "$VERBOSE" != no ] && log_end_msg $ES
     return $ES
 }

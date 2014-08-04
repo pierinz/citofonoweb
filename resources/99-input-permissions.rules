@@ -1,0 +1,2 @@
+#Badge_daemon usually needs read access on input devices
+SUBSYSTEM=="input", KERNEL=="event[0-9]*", MODE="0644"
