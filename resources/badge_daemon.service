@@ -1,10 +1,11 @@
 [Unit]
 Description=badge_daemon
-Wants=mysqld.service
-After=mysqld.service
+Wants=mysqld.service ntp.service
+After=mysqld.service ntp.service
 
 [Service]
 Type=simple
+User=badge_daemon
 ExecStart=badge_daemon -f conf/badge_daemon.conf
 
 [Install]
