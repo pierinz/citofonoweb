@@ -88,7 +88,7 @@ install: $(PROGRAMS)
 	chmod 755 $(confdir)
 	chown -R badge_daemon:badge_daemon $(confdir)/badge_daemon.conf
 	
-	if [ -n "`echo $(OPTIONS) | grep '(NO_LOGFILE|SYSTEMD_ONLY)'`" ]; then \
+	if [ -z "`echo $(OPTIONS) | grep '(NO_LOGFILE|SYSTEMD_ONLY)'`" ]; then \
 	    install -m 0644 conf/badge_daemon.logrotate /etc/logrotate.d/badge_daemon ; \
 	    mkdir -p /var/log/badge_daemon/ ; \
 	    chown -R badge_daemon:badge_daemon /var/log/badge_daemon ; \
