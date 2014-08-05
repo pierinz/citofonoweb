@@ -1,4 +1,4 @@
-/var/log/badge_daemon.log {
+/var/log/badge_daemon/badge_daemon.log {
 	monthly
 	missingok
 	rotate 12
