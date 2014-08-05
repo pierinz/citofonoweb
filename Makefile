@@ -87,8 +87,14 @@ install: $(PROGRAMS)
 	chown -R badge_daemon:badge_daemon $(confdir)
 	chmod 755 $(confdir)
 	chown -R badge_daemon:badge_daemon $(confdir)/badge_daemon.conf
-
-	install -m 0644 conf/badge_daemon.logrotate /etc/logrotate.d/badge_daemon
+	
+	if [ -n "`echo $(OPTIONS) | grep '(NO_LOGFILE|SYSTEMD_ONLY)'`" ]; then \
+	    install -m 0644 conf/badge_daemon.logrotate /etc/logrotate.d/badge_daemon ; \
+	    mkdir -p /var/log/badge_daemon/ ; \
+	    chown -R badge_daemon:badge_daemon /var/log/badge_daemon ; \
+	    chmod -R 755 /var/log/badge_daemon ; \
+	fi
+	
 	if [ -e '/usr/bin/systemctl' ]; then \
 	    install -m 0644 resources/badge_daemon.service /etc/systemd/system/badge_daemon.service ; \
 	    sed -i s:'^ExecStart=badge_daemon':'ExecStart=$(prefix)/sbin/badge_daemon': /etc/systemd/system/badge_daemon.service ; \
