@@ -20,7 +20,7 @@ short loop=1;
 
 void loadConf(char *conffile){
     FILE* fp;
-    char line[confline+1], def[confdef], val[confval];
+    char line[confline], def[confdef], val[confval];
 
     fp=fopen(conffile,"r");
     if (!fp){
@@ -29,7 +29,7 @@ void loadConf(char *conffile){
         exit(1);
     }
 
-    while(fgets(line,confline,fp)){
+    while(fgets(line,(confline-1),fp)){
 		/* Delete previous value */
 		def[0]='\0';
 		val[0]='\0';
