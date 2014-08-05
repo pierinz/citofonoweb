@@ -5,7 +5,7 @@ prefix:=/usr/local
 confdir:=/etc/badge_daemon
 
 BACKEND:=sqlite
-PROGRAMS:=hid_read serial_read door_open badge_daemon badge_logger
+PROGRAMS:=hid_read serial_read door_open badge_daemon
 DOOR_TOOLS:=gpio piface
 OPTIONS:=
 
