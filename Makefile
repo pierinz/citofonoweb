@@ -12,19 +12,24 @@ OPTIONS:=
 ifeq ("$(BACKEND)","mysql")
     override LIBS+=-DMYSQL_B `mysql_config --cflags --libs` -lpthread
 else
-    override LIBS+=-DSQLITE_B -lsqlite3 -lpthread
+    override LIBS+=-DSQLITE_B -lsqlite3 -lpthread 
 endif
 
-all: checklibs
+ifneq ("$(wildcard /usr/include/json-c)","")
+    override LIBS+=-ljson-c
+endif
+ifneq ("$(wildcard /usr/local/include/json-c)","")
+    override LIBS+=-ljson-c
+endif
+ifneq ("$(wildcard /usr/include/json)","")
+    override LIBS+=-Dljson -ljson
+endif
+ifneq ("$(wildcard /usr/local/include/json)","")
+    override LIBS+=-Dljson -ljson
+endif
+
+all: $(PROGRAMS)
 .PHONY: all
-	
-checklibs:
-	if [ -e '/usr/include/json-c' ] || [ -e '/usr/local/include/json-c' ]; then \
-	   make LIBS+=" -ljson-c" $(PROGRAMS) $(DOOR_TOOLS) ; \
-	else \
-	   make LIBS+=" -Dljson -ljson" $(PROGRAMS) $(DOOR_TOOLS) ; \
-	fi
-.PHONY: checklibs
 
 door_open.o: door_open.c
 	$(CC) $(CFLAGS) $(LIBS) $(OPTIONS) -std=gnu99 -DCONFPATH='"$(confdir)"' $< -c ; \
