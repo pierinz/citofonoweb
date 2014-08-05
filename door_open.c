@@ -2,6 +2,8 @@
 #include "common.h"
 #include <pthread.h>
 
+#define VERSION "0.3"
+
 //Debian and Gentoo (and maybe other distros) use different path for the same library
 #ifdef json
 	#include <json/json.h>
@@ -50,6 +52,25 @@ sqlite3 *handle;
 MYSQL *con;
 char *dbhost, *dbuser, *dbpassword, *dbname, *id;
 #endif
+
+void version(){
+	printf("door_open, version %s (compiled %s, %s)\n", VERSION, __TIME__, __DATE__);
+    printf("(C) 2012-2014 Gabriele Martino\n");
+    printf("Website: https://github.com/pierinz/citofonoweb\n");
+    printf("\nCompiled options:\n");
+#ifdef json
+	printf("-Djson ");
+#endif
+#ifdef MYSQL_B
+	printf("-DMYSQL_B ");
+#endif
+#ifdef SQLITE_B
+	printf("-DSQLITE_B ");
+#endif
+	printf("-DCONFPATH %s -Dconfline %d -Dconfdef %d -Dconfval %d -Dkeylen %d\n",
+			CONFPATH, confline, confdef, confval, keylen);
+	fflush(stdout);
+}
 
 void loadConf(char* conffile){
 	FILE* fp;
@@ -712,7 +733,7 @@ int main(int argc, char **argv){
 	char *conffile=NULL;
 	
 	/* Load settings from commandline */
-	while ((c = getopt (argc, argv, "f:dh")) != -1){
+	while ((c = getopt (argc, argv, "f:dhv")) != -1){
 		switch (c){
 			case 'f':
 				if (asprintf(&conffile,"%s",optarg)<0){
@@ -730,10 +751,14 @@ int main(int argc, char **argv){
 					"\n"
 					"-f FILE\t\tLoad configuration from FILE (badge_daemon.conf if not specified)\n"
 					"-d\t\tShow debug messages\n\n"
-					"-h\t\tShow this message\n\n"
+					"-h\t\tPrint this message and exit \n"
+					"-v\t\tPrint version information and exit\n\n"
 				);
 				exit (1);
-			break;
+			
+			case 'v':
+				version();
+				exit (1);
 		}
 	}
 	if (!conffile){

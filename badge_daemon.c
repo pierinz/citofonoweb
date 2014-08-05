@@ -2,6 +2,8 @@
 #include "common.h"
 #include <pthread.h>
 
+#define VERSION "0.3"
+
 /* Default configuration directory path (if not specified with -f)*/
 #ifndef CONFPATH
     #define CONFPATH "conf"
@@ -19,6 +21,8 @@ short debounce=1;
 pthread_t thr_source, thr_helper;
 int psource[2], phelperIN[2], phelperOUT[2];
 int spid,hpid;
+/* Set to 0 if someone requested the process to terminate */
+int errorstatus=1;
 
 #ifdef SYSTEMD_ONLY
 #define NO_PIDFILE
@@ -37,6 +41,25 @@ FILE* flog;
 pthread_mutex_t mutex;
 
 int loop=1;
+
+void version(){
+	printf("badge_daemon, version %s (compiled %s, %s)\n", VERSION, __TIME__, __DATE__);
+    printf("(C) 2012-2014 Gabriele Martino\n");
+    printf("Website: https://github.com/pierinz/citofonoweb\n");
+    printf("\nCompiled options:\n");
+#ifdef SYSTEMD_ONLY
+	printf("-DSYSTEMD_ONLY ");
+#endif
+#ifdef NO_PIDFILE
+	printf("-DNO_PIDFILE ");
+#endif
+#ifdef NO_LOGFILE
+	printf("-DNO_LOGFILE ");
+#endif
+	printf("-DCONFPATH %s -Dloglen %d -Dconfline %d -Dconfdef %d -Dconfval %d -Dkeylen %d\n",
+			CONFPATH, loglen, confline, confdef, confval, keylen);
+	fflush(stdout);
+}
 
 char** argv_from_string(char *args) {
     int i, spaces = 0, argc = 0, len = strlen(args);
@@ -347,6 +370,7 @@ void *tHelper(){
 void signal_handler(int signum){
     char *buf;
     if ((signum==SIGTERM) || (signum==SIGINT) || (signum==SIGQUIT)){
+		errorstatus=0;
         if (asprintf(&buf,"Caught signal %d, shutting down...",signum) < 0){
             perror("asprintf: ");
         }
@@ -392,7 +416,7 @@ int main (int argc, char *argv[]){
 	char *conffile=NULL;
 	
 	/* Load settings from commandline */
-    while ((c = getopt (argc, argv, "f:h")) != -1){
+    while ((c = getopt (argc, argv, "f:hv")) != -1){
         switch (c){
             case 'f':
                 if (asprintf(&conffile,"%s",optarg)<0){
@@ -401,12 +425,16 @@ int main (int argc, char *argv[]){
 				}
                 break;
             case 'h':
-                printf("Usage: badge_daemon [ -f configuration file ] [ -h ]\n"
+                printf("Usage: badge_daemon [ -f configuration file ] [ -h ] [ -v ]\n"
                     "\n"
                     "-f FILE\t\tLoad configuration from FILE (badge_daemon.conf if not specified)\n"
-                    "-h\t\tShow this message\n\n"
+                    "-h\t\tPrint this message and exit \n"
+					"-v\t\tPrint version information and exit\n\n"
                 );
                 exit (1);
+			case 'v':
+				version();
+				exit (1);
         }
     }
 	if (!conffile){
@@ -496,5 +524,5 @@ int main (int argc, char *argv[]){
     logmessage("Program terminated.");
     clean();
 
-    return EXIT_SUCCESS;
+    return errorstatus;
 }
