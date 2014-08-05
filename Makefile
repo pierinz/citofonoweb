@@ -1,5 +1,5 @@
 CC:=gcc
-CFLAGS:=-g -pipe -Wall -D_FORTIFY_SOURCE=2 -fstack-protector
+CFLAGS:=-O2 -pipe -Wall -D_FORTIFY_SOURCE=2 -fstack-protector
 
 prefix:=/usr/local
 confdir:=/etc/badge_daemon
@@ -8,6 +8,11 @@ BACKEND:=sqlite
 PROGRAMS:=hid_read serial_read door_open badge_daemon
 DOOR_TOOLS:=gpio piface
 OPTIONS:=
+
+ifneq ($(filter arm%,$(shell uname -m)),)
+    override CFLAGS+= -fno-stack-protector
+endif
+
 
 ifeq ("$(BACKEND)","mysql")
     override LIBS+=-DMYSQL_B `mysql_config --cflags --libs` -lpthread
