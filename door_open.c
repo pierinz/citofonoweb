@@ -5,7 +5,7 @@
 #define VERSION "0.3"
 
 //Debian and Gentoo (and maybe other distros) use different path for the same library
-#ifdef json
+#ifdef ljson
 	#include <json/json.h>
 #else
 	#include <json-c/json.h>
