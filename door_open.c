@@ -89,150 +89,126 @@ void loadConf(char* conffile){
 		sscanf(line,"%s %[^\n]",def,val);
 		if (strcmp(def,"led_on_command")==0){
 			/* must be large enough to contain "val" */
-			led_on_command=calloc(1,strlen(val)+1);
-			sprintf(led_on_command, "%s", val);
+			asprintf(&led_on_command, "%s", val);
 			continue;
 		}
 		if (strcmp(def,"led_off_command")==0){
 			/* must be large enough to contain "val" */
-			led_off_command=calloc(1,strlen(val)+1);
-			sprintf(led_off_command, "%s", val);
+			asprintf(&led_off_command, "%s", val);
 			continue;
 		}
 		if (strcmp(def,"door_open_command")==0){
 			/* must be large enough to contain "val" */
-			door_open_command=calloc(1,strlen(val)+1);
-			sprintf(door_open_command, "%s", val);
+			asprintf(&door_open_command, "%s", val);
 			continue;
 		}
 		if (strcmp(def,"door_close_command")==0){
 			/* must be large enough to contain "val" */
-			door_close_command=calloc(1,strlen(val)+1);
-			sprintf(door_close_command, "%s", val);
+			asprintf(&door_close_command, "%s", val);
 			continue;
 		}
 		if (strcmp(def,"alarm_on_command")==0){
 			/* must be large enough to contain "val" */
-			alarm_on_command=calloc(1,strlen(val)+1);
-			sprintf(alarm_on_command, "%s", val);
+			asprintf(&alarm_on_command, "%s", val);
 			continue;
 		}
 		if (strcmp(def,"alarm_off_command")==0){
 			/* must be large enough to contain "val" */
-			alarm_off_command=calloc(1,strlen(val)+1);
-			sprintf(alarm_off_command, "%s", val);
+			asprintf(&alarm_off_command, "%s", val);
 			continue;
 		}
 		#ifdef SQLITE_B
 		if (strcmp(def,"dbfile")==0){
 			/* must be large enough to contain "val" */
-			dbfile=calloc(1,strlen(val)+1);
-			strcpy(dbfile,val);
+			asprintf(&dbfile,"%s",val);
 		}
 		#endif
 		#ifdef MYSQL_B
 		if (strcmp(def,"dbhost")==0){
 			/* must be large enough to contain "val" */
-			dbhost=calloc(1,strlen(val)+1);
-			strcpy(dbhost,val);
+			asprintf(&dbhost,"%s",val);
 			continue;
 		}
 		if (strcmp(def,"dbname")==0){
 			/* must be large enough to contain "val" */
-			dbname=calloc(1,strlen(val)+1);
-			strcpy(dbname,val);
+			asprintf(&dbname,"%s",val);
 			continue;
 		}
 		if (strcmp(def,"dbuser")==0){
 			/* must be large enough to contain "val" */
-			dbuser=calloc(1,strlen(val)+1);
-			strcpy(dbuser,val);
+			asprintf(&dbuser,"%s",val);
 			continue;
 		}
 		if (strcmp(def,"dbpassword")==0){
 			/* must be large enough to contain "val" */
-			dbpassword=calloc(1,strlen(val)+1);
-			strcpy(dbpassword,val);
+			asprintf(&dbpassword,"%s",val);
 			continue;
 		}
 		if (strcmp(def,"id_device")==0){
 			/* must be large enough to contain "val" */
-			id=calloc(1,strlen(val)+1);
-			strcpy(id,val);
+			asprintf(&id,"%s",val);
 			continue;
 		}
 		#endif
 
 		if (strcmp(def,"badge_table")==0){
 			/* must be large enough to contain "val" */
-			badge_table=calloc(1,strlen(val)+1);
-			strcpy(badge_table,val);
+			asprintf(&badge_table,"%s",val);
 			continue;
 		}
 		if (strcmp(def,"user_colname")==0){
 			/* must be large enough to contain "val" */
-			user_colname=calloc(1,strlen(val)+1);
-			strcpy(user_colname,val);
+			asprintf(&user_colname,"%s",val);
 			continue;
 		}
 		if (strcmp(def,"allowed_colname")==0){
 			/* must be large enough to contain "val" */
-			allowed_colname=calloc(1,strlen(val)+1);
-			strcpy(allowed_colname,val);
+			asprintf(&allowed_colname,"%s",val);
 			continue;
 		}
 		if (strcmp(def,"code_colname")==0){
 			/* must be large enough to contain "val" */
-			code_colname=calloc(1,strlen(val)+1);
-			strcpy(code_colname,val);
+			asprintf(&code_colname,"%s",val);
 			continue;
 		}
 		if (strcmp(def,"acl_table")==0){
 			/* must be large enough to contain "val" */
-			acl_table=calloc(1,strlen(val)+1);
-			strcpy(acl_table,val);
+			asprintf(&acl_table,"%s",val);
 			continue;
 		}
 		if (strcmp(def,"id_device_colname")==0){
 			/* must be large enough to contain "val" */
-			id_device_colname=calloc(1,strlen(val)+1);
-			strcpy(id_device_colname,val);
+			asprintf(&id_device_colname,"%s",val);
 			continue;
 		}
 		if (strcmp(def,"user_acl_colname")==0){
 			/* must be large enough to contain "val" */
-			user_acl_colname=calloc(1,strlen(val)+1);
-			strcpy(user_acl_colname,val);
+			asprintf(&user_acl_colname,"%s",val);
 			continue;
 		}
 		if (strcmp(def,"sched_colname")==0){
 			/* must be large enough to contain "val" */
-			sched_colname=calloc(1,strlen(val)+1);
-			strcpy(sched_colname,val);
+			asprintf(&sched_colname,"%s",val);
 			continue;
 		}
 		if (strcmp(def,"userdata_table")==0){
 			/* must be large enough to contain "val" */
-			userdata_table=calloc(1,strlen(val)+1);
-			strcpy(userdata_table,val);
+			asprintf(&userdata_table,"%s",val);
 			continue;
 		}
 		if (strcmp(def,"user_userdata_colname")==0){
 			/* must be large enough to contain "val" */
-			user_userdata_colname=calloc(1,strlen(val)+1);
-			strcpy(user_userdata_colname,val);
+			asprintf(&user_userdata_colname,"%s",val);
 			continue;
 		}
 		if (strcmp(def,"name_userdata_colname")==0){
 			/* must be large enough to contain "val" */
-			name_userdata_colname=calloc(1,strlen(val)+1);
-			strcpy(name_userdata_colname,val);
+			asprintf(&name_userdata_colname,"%s",val);
 			continue;
 		}
 		if (strcmp(def,"notes_userdata_colname")==0){
 			/* must be large enough to contain "val" */
-			notes_userdata_colname=calloc(1,strlen(val)+1);
-			strcpy(notes_userdata_colname,val);
+			asprintf(&notes_userdata_colname,"%s",val);
 			continue;
 		}
 		
@@ -573,7 +549,7 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched, char** name_u,
 	}
 
 	free(query);
-	result = mysql_use_result(con);
+	result = mysql_store_result(con);
 
 	if (result == NULL){
 		printf("Error: %s\n", mysql_error(con));
@@ -585,24 +561,23 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched, char** name_u,
 		exit(1);
 	}
 
+	
 	if ((row = mysql_fetch_row(result))){
 		if (debug > 0){
 			fprintf(stderr,"Query returned a row\n");
 			fprintf(stderr,"Result\n");
 		}
 	
+		asprintf(&desc,"%s",row[0]);
+		if (debug > 0)
+			fprintf(stderr,"-> desc: %s\n",*desc);
+
 		*allowed=atoi(row[1]);
 		if (debug > 0)
 			fprintf(stderr,"-> allowed: %d\n",*allowed);
 
-		*desc=calloc(sizeof(char), strlen(row[0]));
-		sprintf(*desc,"%s",row[0]);
-		if (debug > 0)
-			fprintf(stderr,"-> desc: %s\n",*desc);
-
 		if (row[2]){
-			*sched=calloc(sizeof(char), strlen(row[2]));
-			sprintf(*sched,"%s",row[2]);
+			asprintf(&sched,"%s",row[2]);
 		}
 		else{
 			*sched=calloc(sizeof(char), 2);
@@ -610,16 +585,14 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched, char** name_u,
 		}
 		
 		if (row[3]){
-			*name_u=calloc(sizeof(char), strlen(row[3]));
-			sprintf(*name_u,"%s",row[3]);
+			asprintf(&name_u,"%s",row[3]);
 		}
 		else{
 			*name_u=calloc(sizeof(char), 2);
 			sprintf(*name_u," ");
 		}
 		if (row[4]){
-			*note_u=calloc(sizeof(char), strlen(row[4]));
-			sprintf(*note_u,"%s",row[4]);
+			asprintf(&note_u,"%s",row[4]);
 		}
 		else{
 			*note_u=calloc(sizeof(char), 2);
