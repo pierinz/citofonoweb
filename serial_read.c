@@ -74,7 +74,7 @@ void set_blocking (int fd, int should_block){
 int main(int argc, char* argv[]){
     FILE* port;
     int c;
-    int speed, parity;
+    int speed, parity=0;
 
     /* Load settings from commandline */        
     while ((c = getopt (argc, argv, "s:p:vh")) != -1){
