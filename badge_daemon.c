@@ -215,6 +215,7 @@ void *tSource(){
     char *buffer,*oldbuffer, *msg;
     time_t now,before;
     FILE* pipesource;
+	char** args;
 
     spid=fork();
     if(spid==0){
@@ -224,8 +225,7 @@ void *tSource(){
         dup2(psource[1], STDOUT_FILENO);
         close(psource[0]);
         close(psource[1]);
-        
-        char** args;
+
         args=argv_from_string(source);
         if (execvp(args[0],args)<0){
             perror("Source -> execvp: ");
@@ -304,6 +304,7 @@ void *tHelper(){
     char *buffer;
     time_t now;
     FILE* pipehelper;
+	char** args;
 
     hpid=fork();
     if(hpid==0){
@@ -318,7 +319,6 @@ void *tHelper(){
         close(phelperIN[1]);
         close(phelperOUT[0]);
 
-        char** args;
         args=argv_from_string(helper);
         if (execvp(args[0],args)<0){
             perror("Source -> execvp: ");
