@@ -21,7 +21,7 @@
 
 int verbose;
 float doortime, alarmtime;
-int loop=1;
+int loop=0;
 
 char *led_on_command, *led_off_command, *door_open_command, *door_close_command, *alarm_on_command, *alarm_off_command;
 #define Statusled 0
@@ -70,166 +70,6 @@ void version(){
 	printf("-DCONFPATH %s -Dconfline %d -Dconfdef %d -Dconfval %d -Dkeylen %d\n",
 			CONFPATH, confline, confdef, confval, keylen);
 	fflush(stdout);
-}
-
-void loadConf(char* conffile){
-	FILE* fp;
-	char line[confline], def[confdef], val[confval];
-
-	fp=fopen(conffile, "r");
-	if (!fp){
-		fprintf(stderr,"File %s:\n",conffile);
-		perror("Error opening configuration: ");
-		exit(1);
-	}
-	while(fgets(line,confline-1,fp)){
-		/* Delete previous value */
-		def[0]='\0';
-		val[0]='\0';
-		sscanf(line,"%s %[^\n]",def,val);
-		if (strcmp(def,"led_on_command")==0){
-			/* must be large enough to contain "val" */
-			asprintf(&led_on_command, "%s", val);
-			continue;
-		}
-		if (strcmp(def,"led_off_command")==0){
-			/* must be large enough to contain "val" */
-			asprintf(&led_off_command, "%s", val);
-			continue;
-		}
-		if (strcmp(def,"door_open_command")==0){
-			/* must be large enough to contain "val" */
-			asprintf(&door_open_command, "%s", val);
-			continue;
-		}
-		if (strcmp(def,"door_close_command")==0){
-			/* must be large enough to contain "val" */
-			asprintf(&door_close_command, "%s", val);
-			continue;
-		}
-		if (strcmp(def,"alarm_on_command")==0){
-			/* must be large enough to contain "val" */
-			asprintf(&alarm_on_command, "%s", val);
-			continue;
-		}
-		if (strcmp(def,"alarm_off_command")==0){
-			/* must be large enough to contain "val" */
-			asprintf(&alarm_off_command, "%s", val);
-			continue;
-		}
-		#ifdef SQLITE_B
-		if (strcmp(def,"dbfile")==0){
-			/* must be large enough to contain "val" */
-			asprintf(&dbfile,"%s",val);
-		}
-		#endif
-		#ifdef MYSQL_B
-		if (strcmp(def,"dbhost")==0){
-			/* must be large enough to contain "val" */
-			asprintf(&dbhost,"%s",val);
-			continue;
-		}
-		if (strcmp(def,"dbname")==0){
-			/* must be large enough to contain "val" */
-			asprintf(&dbname,"%s",val);
-			continue;
-		}
-		if (strcmp(def,"dbuser")==0){
-			/* must be large enough to contain "val" */
-			asprintf(&dbuser,"%s",val);
-			continue;
-		}
-		if (strcmp(def,"dbpassword")==0){
-			/* must be large enough to contain "val" */
-			asprintf(&dbpassword,"%s",val);
-			continue;
-		}
-		if (strcmp(def,"id_device")==0){
-			/* must be large enough to contain "val" */
-			asprintf(&id,"%s",val);
-			continue;
-		}
-		#endif
-
-		if (strcmp(def,"badge_table")==0){
-			/* must be large enough to contain "val" */
-			asprintf(&badge_table,"%s",val);
-			continue;
-		}
-		if (strcmp(def,"user_colname")==0){
-			/* must be large enough to contain "val" */
-			asprintf(&user_colname,"%s",val);
-			continue;
-		}
-		if (strcmp(def,"allowed_colname")==0){
-			/* must be large enough to contain "val" */
-			asprintf(&allowed_colname,"%s",val);
-			continue;
-		}
-		if (strcmp(def,"code_colname")==0){
-			/* must be large enough to contain "val" */
-			asprintf(&code_colname,"%s",val);
-			continue;
-		}
-		if (strcmp(def,"acl_table")==0){
-			/* must be large enough to contain "val" */
-			asprintf(&acl_table,"%s",val);
-			continue;
-		}
-		if (strcmp(def,"id_device_colname")==0){
-			/* must be large enough to contain "val" */
-			asprintf(&id_device_colname,"%s",val);
-			continue;
-		}
-		if (strcmp(def,"user_acl_colname")==0){
-			/* must be large enough to contain "val" */
-			asprintf(&user_acl_colname,"%s",val);
-			continue;
-		}
-		if (strcmp(def,"sched_colname")==0){
-			/* must be large enough to contain "val" */
-			asprintf(&sched_colname,"%s",val);
-			continue;
-		}
-		if (strcmp(def,"userdata_table")==0){
-			/* must be large enough to contain "val" */
-			asprintf(&userdata_table,"%s",val);
-			continue;
-		}
-		if (strcmp(def,"user_userdata_colname")==0){
-			/* must be large enough to contain "val" */
-			asprintf(&user_userdata_colname,"%s",val);
-			continue;
-		}
-		if (strcmp(def,"name_userdata_colname")==0){
-			/* must be large enough to contain "val" */
-			asprintf(&name_userdata_colname,"%s",val);
-			continue;
-		}
-		if (strcmp(def,"notes_userdata_colname")==0){
-			/* must be large enough to contain "val" */
-			asprintf(&notes_userdata_colname,"%s",val);
-			continue;
-		}
-		
-		if (strcmp(def,"verbose")==0){
-			verbose=atoi(val);
-			continue;
-		}
-		if (strcmp(def,"doortime")==0){
-			doortime=atof(val);
-			continue;
-		}
-		if (strcmp(def,"alarmtime")==0){
-			alarmtime=atof(val);
-			continue;
-		}
-	}
-	fclose(fp);
-
-	if (verbose > 1){
-		fprintf(stderr,"Configuration loaded.\n");
-	}
 }
 
 int pin_on(short item){
@@ -286,6 +126,222 @@ int pin_off(short item){
 	return system(command);
 }
 
+void memfail(){
+	perror("Cannot allocate memory");
+	printf("Internal error. Program terminated.\n");
+	fflush(stdout);
+	if (strlen(led_off_command)>2)
+		pin_off(Statusled);
+	exit(1);
+}
+
+void loadConf(char* conffile){
+	FILE* fp;
+	char line[confline], def[confdef], val[confval];
+
+	fp=fopen(conffile, "r");
+	if (!fp){
+		fprintf(stderr,"File %s:\n",conffile);
+		perror("Error opening configuration: ");
+		exit(1);
+	}
+	while(fgets(line,confline-1,fp)){
+		/* Delete previous value */
+		def[0]='\0';
+		val[0]='\0';
+		sscanf(line,"%s %[^\n]",def,val);
+		if (strcmp(def,"led_on_command")==0){
+			/* must be large enough to contain "val" */
+			if (asprintf(&led_on_command, "%s", val)==-1){
+				memfail();
+			}
+			continue;
+		}
+		if (strcmp(def,"led_off_command")==0){
+			/* must be large enough to contain "val" */
+			if (asprintf(&led_off_command, "%s", val)==-1){
+				memfail();
+			}
+			continue;
+		}
+		if (strcmp(def,"door_open_command")==0){
+			/* must be large enough to contain "val" */
+			if (asprintf(&door_open_command, "%s", val)==-1){
+				memfail();
+			}
+			continue;
+		}
+		if (strcmp(def,"door_close_command")==0){
+			/* must be large enough to contain "val" */
+			if (asprintf(&door_close_command, "%s", val)==-1){
+				memfail();
+			}
+			continue;
+		}
+		if (strcmp(def,"alarm_on_command")==0){
+			/* must be large enough to contain "val" */
+			if (asprintf(&alarm_on_command, "%s", val)==-1){
+				memfail();
+			}
+			continue;
+		}
+		if (strcmp(def,"alarm_off_command")==0){
+			/* must be large enough to contain "val" */
+			if (asprintf(&alarm_off_command, "%s", val)==-1){
+				memfail();
+			}
+			continue;
+		}
+		#ifdef SQLITE_B
+		if (strcmp(def,"dbfile")==0){
+			/* must be large enough to contain "val" */
+			if (asprintf(&dbfile,"%s",val){
+				memfail();
+			}
+		}
+		#endif
+		#ifdef MYSQL_B
+		if (strcmp(def,"dbhost")==0){
+			/* must be large enough to contain "val" */
+			if (asprintf(&dbhost,"%s",val)==-1){
+				memfail();
+			}
+			continue;
+		}
+		if (strcmp(def,"dbname")==0){
+			/* must be large enough to contain "val" */
+			if (asprintf(&dbname,"%s",val)==-1){
+				memfail();
+			}
+			continue;
+		}
+		if (strcmp(def,"dbuser")==0){
+			/* must be large enough to contain "val" */
+			if (asprintf(&dbuser,"%s",val)==-1){
+				memfail();
+			}
+			continue;
+		}
+		if (strcmp(def,"dbpassword")==0){
+			/* must be large enough to contain "val" */
+			if (asprintf(&dbpassword,"%s",val)==-1){
+				memfail();
+			}
+			continue;
+		}
+		if (strcmp(def,"id_device")==0){
+			/* must be large enough to contain "val" */
+			if (asprintf(&id,"%s",val)==-1){
+				memfail();
+			}
+			continue;
+		}
+		#endif
+
+		if (strcmp(def,"badge_table")==0){
+			/* must be large enough to contain "val" */
+			if (asprintf(&badge_table,"%s",val)==-1){
+				memfail();
+			}
+			continue;
+		}
+		if (strcmp(def,"user_colname")==0){
+			/* must be large enough to contain "val" */
+			if (asprintf(&user_colname,"%s",val)==-1){
+				memfail();
+			}
+			continue;
+		}
+		if (strcmp(def,"allowed_colname")==0){
+			/* must be large enough to contain "val" */
+			if (asprintf(&allowed_colname,"%s",val)==-1){
+				memfail();
+			}
+			continue;
+		}
+		if (strcmp(def,"code_colname")==0){
+			/* must be large enough to contain "val" */
+			if (asprintf(&code_colname,"%s",val)==-1){
+				memfail();
+			}
+			continue;
+		}
+		if (strcmp(def,"acl_table")==0){
+			/* must be large enough to contain "val" */
+			if (asprintf(&acl_table,"%s",val)==-1){
+				memfail();
+			}
+			continue;
+		}
+		if (strcmp(def,"id_device_colname")==0){
+			/* must be large enough to contain "val" */
+			if (asprintf(&id_device_colname,"%s",val)==-1){
+				memfail();
+			}
+			continue;
+		}
+		if (strcmp(def,"user_acl_colname")==0){
+			/* must be large enough to contain "val" */
+			if (asprintf(&user_acl_colname,"%s",val)==-1){
+				memfail();
+			}
+			continue;
+		}
+		if (strcmp(def,"sched_colname")==0){
+			/* must be large enough to contain "val" */
+			if (asprintf(&sched_colname,"%s",val)==-1){
+				memfail();
+			}
+			continue;
+		}
+		if (strcmp(def,"userdata_table")==0){
+			/* must be large enough to contain "val" */
+			if (asprintf(&userdata_table,"%s",val)==-1){
+				memfail();
+			}
+			continue;
+		}
+		if (strcmp(def,"user_userdata_colname")==0){
+			/* must be large enough to contain "val" */
+			if (asprintf(&user_userdata_colname,"%s",val)==-1){
+				memfail();
+			}
+			continue;
+		}
+		if (strcmp(def,"name_userdata_colname")==0){
+			/* must be large enough to contain "val" */
+			if (asprintf(&name_userdata_colname,"%s",val)==-1){
+				memfail();
+			}
+			continue;
+		}
+		if (strcmp(def,"notes_userdata_colname")==0){
+			/* must be large enough to contain "val" */
+			if (asprintf(&notes_userdata_colname,"%s",val)==-1){
+				memfail();
+			}
+			continue;
+		}
+		
+		if (strcmp(def,"verbose")==0){
+			verbose=atoi(val);
+			continue;
+		}
+		if (strcmp(def,"doortime")==0){
+			doortime=atof(val);
+			continue;
+		}
+		if (strcmp(def,"alarmtime")==0){
+			alarmtime=atof(val);
+			continue;
+		}
+	}
+	fclose(fp);
+
+	if (verbose > 1){
+		fprintf(stderr,"Configuration loaded.\n");
+	}
+}
 
 void jsonparse(const char* sched, int day, int* start, int* end){
 	json_object *jarray, *jobj;
@@ -496,12 +552,7 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched, char** name_u,
 	if (userdata_table != NULL){
 		if (asprintf(&ujoin, "LEFT JOIN `%s` on `%s`.`%s`=`%s`.`%s`",
 				userdata_table, userdata_table, user_userdata_colname, badge_table, user_colname)==-1){
-			perror("Cannot allocate memory");
-			printf("Internal error. Program terminated.\n");
-			fflush(stdout);
-			if (strlen(led_off_command)>2)
-				pin_off(Statusled);
-			exit(1);
+			memfail();
 		}
 	}
 	else{
@@ -518,12 +569,7 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched, char** name_u,
 			acl_table, badge_table, user_colname, acl_table, user_acl_colname, id_device_colname,id,
 			ujoin,
 			code_colname,code_e)==-1){
-		perror("Cannot allocate memory");
-		printf("Internal error. Program terminated.\n");
-		fflush(stdout);
-		if (strlen(led_off_command)>2)
-			pin_off(Statusled);
-		exit(1);
+		memfail();
 	}
 	free(code_e);
 	free(ujoin);
@@ -568,7 +614,9 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched, char** name_u,
 			fprintf(stderr,"Result\n");
 		}
 	
-		asprintf(desc,"%s",row[0]);
+		if (asprintf(desc,"%s",row[0])==-1){
+			memfail();
+		}
 		if (debug > 0)
 			fprintf(stderr,"-> desc: %s\n",*desc);
 
@@ -577,7 +625,9 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched, char** name_u,
 			fprintf(stderr,"-> allowed: %d\n",*allowed);
 
 		if (row[2]){
-			asprintf(sched,"%s",row[2]);
+			if (asprintf(sched,"%s",row[2])==-1){
+				memfail();
+			}
 		}
 		else{
 			*sched=calloc(sizeof(char), 2);
@@ -585,14 +635,18 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched, char** name_u,
 		}
 		
 		if (row[3]){
-			asprintf(name_u,"%s",row[3]);
+			if (asprintf(name_u,"%s",row[3])==-1){
+				memfail();
+			}
 		}
 		else{
 			*name_u=calloc(sizeof(char), 2);
 			sprintf(*name_u," ");
 		}
 		if (row[4]){
-			asprintf(note_u,"%s",row[4]);
+			if (asprintf(note_u,"%s",row[4])==-1){
+				memfail();
+			}
 		}
 		else{
 			*note_u=calloc(sizeof(char), 2);
@@ -770,6 +824,10 @@ int main(int argc, char **argv){
 
 	if (debug > 0)
 		fprintf(stderr,"Starting main loop\n");
+
+	//There we go
+	loop=1;
+
 	while (loop && fgets(param,keylen,stdin)){
 		//Remove trailing \n
 		strtok(param,"\n");
