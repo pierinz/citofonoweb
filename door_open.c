@@ -568,7 +568,7 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched, char** name_u,
 			fprintf(stderr,"Result\n");
 		}
 	
-		asprintf(&desc,"%s",row[0]);
+		asprintf(desc,"%s",row[0]);
 		if (debug > 0)
 			fprintf(stderr,"-> desc: %s\n",*desc);
 
@@ -577,7 +577,7 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched, char** name_u,
 			fprintf(stderr,"-> allowed: %d\n",*allowed);
 
 		if (row[2]){
-			asprintf(&sched,"%s",row[2]);
+			asprintf(sched,"%s",row[2]);
 		}
 		else{
 			*sched=calloc(sizeof(char), 2);
@@ -585,14 +585,14 @@ int fetchRow(char* code, char** desc, int* allowed, char** sched, char** name_u,
 		}
 		
 		if (row[3]){
-			asprintf(&name_u,"%s",row[3]);
+			asprintf(name_u,"%s",row[3]);
 		}
 		else{
 			*name_u=calloc(sizeof(char), 2);
 			sprintf(*name_u," ");
 		}
 		if (row[4]){
-			asprintf(&note_u,"%s",row[4]);
+			asprintf(note_u,"%s",row[4]);
 		}
 		else{
 			*note_u=calloc(sizeof(char), 2);
