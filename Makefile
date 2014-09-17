@@ -9,8 +9,14 @@ PROGRAMS:=hid_read serial_read door_open badge_daemon
 DOOR_TOOLS:=gpio piface
 OPTIONS:=
 
+GCCVERSION = $(shell gcc --version | grep ^gcc | sed 's/^.* //g')
 ifneq ($(filter arm%,$(shell uname -m)),)
-    override CFLAGS+= -fno-stack-protector
+    ifeq "$(GCCVERSION)" "4.6.3"
+	override CFLAGS+= -fno-stack-protector
+    endif
+    ifeq "$(GCCVERSION)" "4.8.2"
+	override CFLAGS+= -march=native
+    endif
 endif
 
 
