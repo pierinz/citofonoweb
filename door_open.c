@@ -514,6 +514,7 @@ void db_open(){
 	int reconnect=1;
 	//Retry count
 	int i = 1;
+	int s = 0;
 
 	if (con == NULL){
 		printf("mysql_init() failed\n");
@@ -524,7 +525,12 @@ void db_open(){
 		if (i < 6){
 			printf("Connection failed #%d: %s - retry in 5s\n",i,mysql_error(con));
 			i++;
-			sleep(5);
+			s=sleep(5);
+			while (s>0){
+				printf("Caught signal - wait %i seconds before reconnect\n",s);
+				//If interrupted by signal, sleep for the remaining time
+				s=sleep(s);
+			}
 		}
 		else{
 			printf("Fatal error: %s\n", mysql_error(con));
