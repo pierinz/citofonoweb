@@ -2,7 +2,7 @@
 #include "common.h"
 #include <pthread.h>
 
-#define VERSION "0.3"
+#define VERSION "0.3-r1"
 
 //Debian and Gentoo (and maybe other distros) use different path for the same library
 #ifdef ljson
