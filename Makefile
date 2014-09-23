@@ -124,6 +124,7 @@ install: $(PROGRAMS)
 	    install -m 0755 resources/debian_initscript /etc/init.d/badge_daemon ; \
 	    sed -i s:'^DAEMON="badge_daemon"':'DAEMON="$(prefix)/sbin/badge_daemon"': /etc/init.d/badge_daemon ; \
 	    sed -i s:'^CONFDIR="conf"':'CONFDIR="$(confdir)"': /etc/init.d/badge_daemon ; \
+	    insserv badge_daemon ; \
 	fi
 .PHONY: install
 
