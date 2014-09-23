@@ -44,7 +44,7 @@ do_start() {
 	if [ -e "/var/log/"$CONFIGURATION"_lastrun.log" ]; then
 		mv "/var/log/"$CONFIGURATION"_lastrun.log" "/var/log/"$CONFIGURATION"_lastrun.log.1"
 	fi
-	start-stop-daemon --start -b --pidfile $pidfile --quiet -u $DUSER -g $DGROUP --exec $DAEMON -- $OPTIONS > "/var/log/"$CONFIGURATION"_lastrun.log" 2>&1
+	start-stop-daemon --start -b --pidfile $pidfile --quiet -c $DUSER -g $DGROUP --exec $DAEMON -- $OPTIONS > "/var/log/"$CONFIGURATION"_lastrun.log" 2>&1
 	ES=$?
     [ "$VERBOSE" != no ] && log_end_msg $ES
     return $ES
