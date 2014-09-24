@@ -42,7 +42,7 @@ ifneq ("$(wildcard /usr/local/include/json)","")
     override LIBS+=-Dljson -ljson
 endif
 
-all: $(PROGRAMS)
+all: $(PROGRAMS) $(DOOR_TOOLS)
 .PHONY: all
 
 door_open.o: door_open.c
