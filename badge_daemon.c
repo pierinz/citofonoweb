@@ -25,11 +25,10 @@ int spid,hpid;
 int errorstatus=1;
 
 #ifdef SYSTEMD_ONLY
-#define NO_PIDFILE
 #define NO_LOGFILE
 #endif
 
-#ifndef NO_PIDFILE
+#ifdef MK_PIDFILE
 char *pidfile;
 #endif
 
@@ -50,8 +49,8 @@ void version(){
 #ifdef SYSTEMD_ONLY
 	printf("-DSYSTEMD_ONLY ");
 #endif
-#ifdef NO_PIDFILE
-	printf("-DNO_PIDFILE ");
+#ifdef MK_PIDFILE
+	printf("-DMK_PIDFILE ");
 #endif
 #ifdef NO_LOGFILE
 	printf("-DNO_LOGFILE ");
@@ -131,7 +130,7 @@ void clean(){
         fclose(flog);
 	free(logfile);
 #endif
-#ifndef NO_PIDFILE
+#ifdef MK_PIDFILE
 	unlink(pidfile);
 	free(pidfile);
 #endif
@@ -187,7 +186,7 @@ void loadConf(char *conffile){
 			continue;
         }
 		#endif
-		#ifndef NO_PIDFILE
+		#ifdef MK_PIDFILE
 		if (strcmp(def,"pidfile")==0){
             /* must be large enough to contain "val" */
             pidfile=calloc(1,strlen(val)+1);
@@ -410,7 +409,7 @@ void signal_handler(int signum){
 int main (int argc, char *argv[]){
     struct sigaction sig_h;
 	int c;
-	#ifndef NO_PIDFILE
+	#ifdef MK_PIDFILE
 	FILE* pidf;
 	#endif
 	char *conffile=NULL;
@@ -447,7 +446,7 @@ int main (int argc, char *argv[]){
     loadConf(conffile);
 	free(conffile);
 
-	#ifndef NO_PIDFILE
+	#ifdef MK_PIDFILE
 	pidf=fopen(pidfile,"w");
 	if (!pidf){
 		perror("pidfile: fopen: ");
