@@ -1,21 +1,20 @@
 CitofonoWeb
-====================
-
+===============================
 CitofonoWeb is a low-cost system to control doors with some hardware authentication
 module (MSR, RFID reader, keyboard, etc...) developed for the Raspberry Pi.
 It has some modules to perform various actions and/or support more devices.
 It should work with any pc with some GPIOs and at least an USB port with some tuning.
 
 How It Works
-====================
+-------------------------------
 The basic workflow is simple: it monitors a HID device, and if an allowed sequence
 is received, it opens the door (you should configure how).
 You can change the configuration to read from serial device instead of HID,
 to switch from GPIO output to PiFace output and many more.
 
 Database
-====================
-The default CitofonoWeb module needs a database to store users and keys data.
+-------------------------------
+The default CitofonoWeb module needs a database to store users and keys.
 You can choose at compile time the database with the BACKEND directive:
 "mysql" or "sqlite".
 - Sqlite is the best choice for a single unit with rare changes: it is a local 
@@ -23,8 +22,13 @@ You can choose at compile time the database with the BACKEND directive:
 - MySql is the best choice for a large number of units: you can connect them to
 	a remote database and manage the configuration from a single place.
 
+I got it, where's the tutorial?
+-------------------------------
+There is a step-by-step guide for Raspbian and the PiFace:
+https://github.com/pierinz/citofonoweb/wiki/Installation-step-by-step-on-Raspbian-with-PiFace
+
 Dependencies
-====================
+-------------------------------
 Before you start dowloading, make sure you have all needed hardware & software.
 - Hardware: a Raspberry Pi (or any board you like), a HID device, a board with
 	relay (PiFace is a good choice)
@@ -36,7 +40,7 @@ On Debian you need those packages:
 - build-essential
 
 Building from source
-====================
+-------------------------------
 You should choose which tools you need to open your door at compile time.
 By default you will get both gpio and piface tools, but you can exclude one
 with the DOOR_TOOLS directive.
@@ -50,17 +54,24 @@ When you are ready, launch:
 If you are confortable with default values (BACKEND="sqlite" DOOR_TOOLS="gpio piface"),
 just run "make".
 
+Advanced options
+-------------------------------
+From version 0.3 the daemon aims to run as simple user instead of root. So it won't create the pidfile anymore
+(the initscript will create it).
+To get the previous behaviour add OPTIONS=-DMK_PIDFILE, so the daemon will create the pidfile. Ensure to have write access, or it will crash.
+If you are using systemd or you don't like the logfile, you can disabe and redirect all messages to stdout with OPTIONS=-DNO_LOGFILE.
+
 Installation
-====================
+-------------------------------
 When "make" has terminated, you can install with "make install".
 
 Configuration
-====================
+-------------------------------
 The default configuration file is /etc/badge_daemon/badge_daemon.conf, the documentation is inside it.
 You can split the configuration for "door_open" or the other modules if you like it.
 
 HID device tuning
-====================
+-------------------------------
 The "source" directive in the configuration file by default use the hid_read program.
 You can tune various parameters, run "hid_read -h" to get an extended explanation.
 
@@ -68,13 +79,15 @@ Briefly, you have to change the device path (look in /dev/input/by-id/ for your 
 If you have a cheap and buggy device, you can tune "timeout" (-t) and 
 "max_retry" (-r) parameters to get better results.
 
+Multiple instances
+-------------------------------
+You can use different configuration files to get different instances of the same service.
+
 
 Usage
-====================
+-------------------------------
 - Edit configuration file
-- Be sure to create folders with correct privileges (if needed)
-- Launch "badge_daemon" to test if it is working
-- Configure badge_daemon to be run at startup
+- Start badge_daemon
 
 You can find a SysV initscript and a systemd unit in the "resources" folder.
 The initscript has the LSB header, so you can simply use "insserv" to enable it
