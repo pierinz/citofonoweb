@@ -166,11 +166,15 @@ int main(int argc, char* argv[]){
         fprintf(stderr,"Waiting data...\n");
     }
     while(1){
-        fgets(buf, 100, port);  // read up to 100 characters if ready to read
-        if (strlen(buf)>1){
-            printf("%s", buf);
-            memset(buf,'\0',100);
-        }
+        if (fgets(buf, 100, port)!=NULL){  // read up to 100 characters if ready to read
+			if (strlen(buf)>1){
+				printf("%s", buf);
+				memset(buf,'\0',100);
+			}
+		}
+		else{
+			perror("fgets: ");
+		}
     }
     return 0;
 }
