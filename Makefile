@@ -82,6 +82,7 @@ install: $(PROGRAMS)
 	gpasswd -a badge_daemon gpio || ( groupadd -r gpio && gpasswd -a badge_daemon gpio && install -m 644 resources/99-gpio-permissions.rules /etc/udev/rules.d/ )
 	gpasswd -a badge_daemon input || install -m 644 resources/99-input-permissions.rules /etc/udev/rules.d/
 	udevadm control --reload-rules
+	udevadm trigger
 
 	mkdir -p $(prefix)/sbin
 	install -m 0755 -t $(prefix)/sbin $^
