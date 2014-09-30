@@ -76,7 +76,7 @@ piface:
 .PHONY: piface
 
 
-install: $(PROGRAMS)
+install: $(PROGRAMS) $(DOOR_TOOLS)
 	useradd -r badge_daemon || echo "User already present"
 	gpasswd -a badge_daemon spi || ( groupadd -r spi && gpasswd -a badge_daemon spi )
 	gpasswd -a badge_daemon gpio || ( groupadd -r gpio && gpasswd -a badge_daemon gpio && install -m 644 resources/99-gpio-permissions.rules /etc/udev/rules.d/ )
