@@ -85,7 +85,7 @@ install: $(PROGRAMS) $(DOOR_TOOLS)
 	udevadm trigger
 
 	mkdir -p $(prefix)/sbin
-	install -m 0755 -t $(prefix)/sbin $^
+	install -m 0755 -t $(prefix)/sbin $(PROGRAMS)
 
 	if [ -n "`echo $(DOOR_TOOLS) | grep gpio`" ]; then \
 	    install -m 0755 -t $(prefix)/sbin resources/gpio.sh ; \
