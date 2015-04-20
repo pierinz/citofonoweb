@@ -149,6 +149,8 @@ install: $(PROGRAMS) $(DOOR_TOOLS) $(LOGGER_TOOLS)
 
 	if [ -n "`echo $(PROGRAMS) | grep badge_logger`" ]; then \
 	    mkdir -p /var/lib/badge_daemon/ ; \
+	    chown -R badge_daemon:badge_daemon /var/lib/badge_daemon ; \
+	    chmod -R 755 /var/lib/badge_daemon ; \
 	fi
 
 	mkdir -p $(confdir)
