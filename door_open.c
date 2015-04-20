@@ -195,7 +195,7 @@ void loadConf(char* conffile){
 		#ifdef SQLITE_B
 		if (strcmp(def,"dbfile")==0){
 			/* must be large enough to contain "val" */
-			if (asprintf(&dbfile,"%s",val){
+			if (asprintf(&dbfile,"%s",val)==-1){
 				memfail();
 			}
 		}
