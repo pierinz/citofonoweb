@@ -2,21 +2,25 @@
 #include "common.h"
 #include <sys/mman.h>
 #include <sys/fcntl.h>
-#include <curl/curl.h>
+#include "f_lock.h"
 
 #ifndef elsize
 #define elsize 64
 #endif
 
-char* url;
-char* params;
-char *tmpf;
+char *datahandler, *params;
+char *reporthandler;
+char *tmpf, *queue;
 
-char* queue;
 int qsize=1500;
 int start, current, msize;
+int interval=30;
 short verbose=0;
 short loop=1;
+short getseconds=0;
+
+int fd=0;
+int hpid=0, fpid=0;
 
 void loadConf(char *conffile){
     FILE* fp;
@@ -36,26 +40,37 @@ void loadConf(char *conffile){
 
         sscanf(line,"%s %[^\n]",def,val);
 
-        if (strcmp(def,"url")==0){
-            /* must be large enough to contain "val" */
-            url=calloc(1,strlen(val)+1);
-            strcpy(url,val);
+		if (strcmp(def,"verbose")==0){
+            verbose=atoi(val);
+			continue;
+        }
+        if (strcmp(def,"datahandler")==0){
+            asprintf(&datahandler,"%s",val);
 			continue;
         }
         if (strcmp(def,"params")==0){
             /* must be large enough to contain "val" */
-            params=calloc(1,strlen(val)+1);
-            strcpy(params,val);
+            asprintf(&params,"%s",val);
 			continue;
         }
         if (strcmp(def,"queuefile")==0){
-            /* must be large enough to contain "val" */
-            tmpf=calloc(1,strlen(val)+1);
-            strcpy(tmpf,val);
+            asprintf(&tmpf,"%s",val);
 			continue;
         }
 		if (strcmp(def,"queuesize")==0){
             qsize=atoi(val);
+			continue;
+        }
+		if (strcmp(def,"getseconds")==0){
+            getseconds=atoi(val);
+			continue;
+        }
+		if (strcmp(def,"interval")==0){
+            interval=atoi(val);
+			continue;
+        }
+		if (strcmp(def,"reporthandler")==0){
+            asprintf(&reporthandler,"%s",val);
 			continue;
         }
     }
@@ -66,6 +81,24 @@ void loadConf(char *conffile){
     }
 }
 
+void feedback(char* param){
+	char *command;
+
+	if (strlen(reporthandler) < 2){
+		return;
+	}
+
+	if (asprintf(&command, "%s %s", reporthandler, param) < 0){
+		perror("asprintf: ");
+	}
+
+	if (system(command) != 0){
+		printf("Unexpected error while reporting feedback\n");
+		fflush(stdout);
+	}
+	free(command);
+}
+
 int pushData(char* param){
 	int qfree;
 
@@ -73,6 +106,7 @@ int pushData(char* param){
 		return -1;
 	}
 
+	f_elock(fd);
 	sprintf(queue+current,"%s",param);
 	current=(current+elsize) % (qsize*elsize);
 
@@ -83,86 +117,164 @@ int pushData(char* param){
 	if (qfree == qsize*elsize){
 		qfree=0;
 	}
+	f_unlock(fd);
 	return qfree;
 }
 
+/* Copy the last element to result and removes from queue */
 int popData(char** result){
-	sprintf(*result,"%s",queue+start);
+	if (abs(current-start) == 0){
+		return 0;
+	}
+
+	f_elock(fd);
+	if (result != NULL){
+		sprintf(*result,"%s", queue+start);
+	}
 
 	start=(start+elsize) % (qsize*elsize);
 	sprintf(queue+((qsize+1)*elsize),"%d|%d",start,current);
 	msync(queue,msize,MS_SYNC);
-
+	f_unlock(fd);
 	return abs(current - start);
 }
+
+/* Copy the last element to result without removing from the queue */
+int pickData(char** result){
+	if (abs(current-start) == 0){
+		return 0;
+	}
+
+	f_elock(fd);
+	sprintf(*result,"%s", queue+start);
+
+	f_unlock(fd);
+	return abs(current - start);
+}
+
 int sendData(char param[keylen]){
-	char* remoteurl;
-	CURL *curl;
-	CURLcode res;
+	char* command;
 	int success=-1;
-	long http_code=0;
-	CURLcode curl_code;
 
-	remoteurl=malloc((strlen(param)+strlen(url))*sizeof(char));
-	sprintf(remoteurl,"%s%s",url,param);
+	asprintf(&command,"%s %s",datahandler,param);
+	if (verbose > 0){
+		printf("Running save command: %s\n", command);
+		fflush(stdout);
+	}
+	success=system(command);	
+	free(command);
 
-	curl = curl_easy_init();
-	if(curl) {
-		curl_easy_setopt(curl, CURLOPT_URL, remoteurl);
+	if (success == 0){
+		return 1;
+	}
+	else{
+		printf("Error: the datahandler exited with status %d. Will retry later.\n", success);
+		fflush(stdout);
+		return -1;
+	}
+}
 
-		/* Perform the request, res will get the return code */ 
-		res = curl_easy_perform(curl);
-		/* Check for errors */ 
-		if(res != CURLE_OK){
-			fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
-			success=-1;
-		}
-		else{
-			curl_code=curl_easy_getinfo (curl, CURLINFO_RESPONSE_CODE, &http_code);
-			if (http_code == 200 && curl_code != CURLE_ABORTED_BY_CALLBACK){
-				success=1;
+int emptyQueue(){
+	char* element;
+	int i=0, total, queued;
+
+	total=abs(current-start);
+	queued=total;
+	if (total > 0){
+		element=malloc(sizeof(char)*elsize);
+		while (pickData(&element) > 0){
+			if (verbose){
+				printf("Got element %s from queue\n",element);
+				fflush(stdout);
+			}
+			if (sendData(element) < 1){
+				/* Stop on first error and retry in the future */
+				printf("%d elements sent before server vanished.\n",i);
+				fflush(stdout);
+				break;
 			}
 			else{
-				fprintf(stderr, "The server returned an error: %li\n", http_code);
-				success=-1;
+				queued=popData(NULL);
 			}
+			i++;
 		}
-
-		/* always cleanup */ 
-		curl_easy_cleanup(curl);
+		free(element);
 	}
-	free(remoteurl);
-	return success;
+
+	printf("Queued elements: %d/%d elements sent.\n", i, total / elsize);
+	fflush(stdout);
+	return queued;
 }
 
-void emptyQueue(){
-	char* element;
-	int i=1;
-	
-	element=malloc(sizeof(char) * keylen);
-	while (popData(&element) > 0){
-		if (sendData(element) < 1){
-			/* Stop on first error and retry in the future */
-			fprintf(stderr,"%d elements sent before server vanished.\n",i);
-			free(element);
-			return;
+void runHelper(){
+	int retry=0;
+
+	if (hpid)
+		return;
+
+	hpid=fork();
+
+	if (hpid == 0){
+		retry=1;
+		printf("Parsing all queued elements in %d seconds\n", interval);
+		fflush(stdout);
+		sleep(interval);
+		while (emptyQueue() > 0){
+			printf("An error occurred. Attempt %d to parse data in %d seconds\n", retry, interval*retry);
+			retry++;
+			sleep(interval*retry);
+
+			if (!loop){
+				_exit(0);
+			}
+			fflush(stdout);
 		}
-		i++;
+		printf("All elements parsed\n");
+		_exit(0);
 	}
-	free(element);
-	printf("%d elements sent.\n",i);
+	else if(hpid > 0){
+		return;
+	}
+	else{
+		perror("fork:");
+	}
 }
 
+void signal_handler(int signum){
+	int pid;
+
+    if ((signum==SIGTERM) || (signum==SIGINT) || (signum==SIGQUIT)){
+		printf("Caught signal %d, shutting down...\n", signum);
+        loop=0;
+		if (getpid()==hpid){
+			kill(hpid, SIGTERM);
+		}
+		fclose(stdin);
+    }
+    else if (signum==SIGCHLD){
+        pid=wait(NULL);
+		if (pid == hpid){
+			printf("background data loader %d has terminated.\n", pid);
+			hpid=0;
+		}
+
+		else if (pid > 0){
+			printf("helper %d has terminated.\n", pid);
+		}
+	}
+	fflush(stdout);
+}
 
 int main (int argc, char *argv[]){
-    //struct sigaction sig_h;
-	int c,pages,fd,retry;
+    struct sigaction sig_h;
+	int c,pages,retry;
 	char *conffile=NULL;
 	char param[keylen],elem[elsize], buftime[22];
+
 	short new=0;
 	time_t rawtime;
 	struct tm * timeinfo;
-	
+
 	/* Load settings from commandline */
     while ((c = getopt (argc, argv, "f:h")) != -1){
         switch (c){
@@ -182,13 +294,13 @@ int main (int argc, char *argv[]){
         }
     }
 	if (!conffile){
-		fprintf(stderr,"Configuration file missing.");
+		fprintf(stderr,"Configuration file missing.\n");
 		exit(1);
 	}
 
 	loadConf(conffile);
 	free(conffile);
-	
+
 	fd=open(tmpf, O_RDWR);
 	if (fd < 0 && errno==ENOENT){
 		/* First run: create file and set flag */
@@ -211,7 +323,6 @@ int main (int argc, char *argv[]){
 	}
 	/* Allocate the "shared memory" */
 	queue=(char*) mmap(NULL, msize, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
-	
 
 	if (queue==MAP_FAILED){
 		perror("mmap");
@@ -227,41 +338,88 @@ int main (int argc, char *argv[]){
 		sscanf(queue+((qsize+1)*elsize),"%d|%d",&start,&current);
 	}
 
+	/* Cattura segnali di uscita */
+    sig_h.sa_handler=signal_handler;
+    sig_h.sa_flags=0;
+    /* Signals blocked during the execution of the handler. */
+    sigemptyset(&sig_h.sa_mask);
+    sigaddset(&sig_h.sa_mask, SIGINT);
+    sigaddset(&sig_h.sa_mask, SIGTERM);
+    sigaddset(&sig_h.sa_mask, SIGQUIT);
+    sigaddset(&sig_h.sa_mask, SIGUSR1);
+
+    sigaction(SIGQUIT,&sig_h,NULL);
+    sigaction(SIGINT,&sig_h,NULL);
+    sigaction(SIGTERM,&sig_h,NULL);
+    sigaction(SIGUSR1,&sig_h,NULL);
+
+    /* Cattura segnale child process concluso */
+    sig_h.sa_handler=signal_handler;
+    sig_h.sa_flags=SA_NODEFER | SA_RESTART;
+    sigaction(SIGCHLD,&sig_h,NULL);
+
+	if (verbose){
+		printf("Queued elements: %d\n", abs(current-start) / elsize);
+	}
+	if (abs(current-start) > 0){
+		runHelper();
+	}
+
 	printf("Ready to accept data.\n");
+	fflush(stdout);
 	while (loop && fgets(param,keylen,stdin)){
-		//Remove trailing \n
+		/* Remove trailing \n */
 		strtok(param,"\n");
-		
+
 		time (&rawtime);
 		timeinfo = localtime (&rawtime);
-		strftime(buftime,22,"%y%m%d%H%M%S",timeinfo);
-		
-		sprintf(elem,params,buftime,param);
-		
-		//if (verbose > 1)
-			fprintf(stderr,"Got param: %s, index: %d %d\n",param, start, current);
+		if (getseconds){
+			strftime(buftime,22,"%Y%m%d%H%M%S",timeinfo);
+		}
+		else{
+			strftime(buftime,22,"%Y%m%d%H%M00",timeinfo);
+		}
+
+		sprintf(elem, params, buftime, param);
+
+		if (verbose > 1){
+			printf("Got param: %s, index: %d %d\n",param, start, current);
+			fflush(stdout);
+		}
+
+		/* Report to user (if configured) */
+		feedback(param);
 		
 		if (sendData(elem) < 0){
 			if (pushData(elem) < 0){
-				fprintf(stderr,"Too many queued elements. Waiting the server. Do not stop this program or all further elements will be lost.\n");
+				printf("Too many queued elements. Waiting the parser. Do not stop this program or all further elements will be lost.\n");
+				fflush(stdout);
 				retry=1;
 				while (sendData(elem) < 0){
-					printf("Attempt %d to contact server\n",retry);
+					printf("Attempt %d\n",retry);
+					fflush(stdout);
 					retry++;
-					sleep(5);
+					sleep(interval);
 				}
-				printf("The server is alive! Sending all queued elements\n");
+				printf("The parser is working! Sending all queued elements\n");
+				fflush(stdout);
 				emptyQueue();
+			}
+			else{
+				runHelper();
 			}
 		}
 		else{
 			emptyQueue();
 		}
-		fprintf(stderr,"%d %d\n",start, current);
+		if (verbose){
+			fprintf(stderr,"%d %d\n",start, current);
+		}
 	}
-	
+
 	free(tmpf);
-	free(url);
+	free(datahandler);
+	free(reporthandler);
 	free(params);
 	exit(0);
 }
