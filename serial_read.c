@@ -30,21 +30,21 @@ int set_interface_attribs (int fd, int speed, int parity){
     cfsetospeed (&tty, speed);
     cfsetispeed (&tty, speed);
 
-    tty.c_cflag = (tty.c_cflag & ~CSIZE) | CS8;     // 8-bit chars
-    // disable IGNBRK for mismatched speed tests; otherwise receive break
-    // as \000 chars
-    tty.c_iflag &= ~IGNBRK;         // ignore break signal
-    tty.c_lflag = 0;                // no signaling chars, no echo,
-                                    // no canonical processing
-    tty.c_oflag = 0;                // no remapping, no delays
-    tty.c_cc[VMIN]  = 0;            // read doesn't block
-    tty.c_cc[VTIME] = 5;            // 0.5 seconds read timeout
+    tty.c_cflag = (tty.c_cflag & ~CSIZE) | CS8;     /* 8-bit chars */
+    /* disable IGNBRK for mismatched speed tests; otherwise receive break
+     * as \000 chars */
+    tty.c_iflag &= ~IGNBRK;         /* ignore break signal */
+    tty.c_lflag = 0;                /* no signaling chars, no echo, */
+                                    /* no canonical processing */
+    tty.c_oflag = 0;                /* no remapping, no delays */
+    tty.c_cc[VMIN]  = 0;            /* read doesn't block */
+    tty.c_cc[VTIME] = 5;            /* 0.5 seconds read timeout */
 
-    tty.c_iflag &= ~(IXON | IXOFF | IXANY); // shut off xon/xoff ctrl
+    tty.c_iflag &= ~(IXON | IXOFF | IXANY); /* shut off xon/xoff ctrl */
 
-    tty.c_cflag |= (CLOCAL | CREAD);// ignore modem controls,
-                                    // enable reading
-    tty.c_cflag &= ~(PARENB | PARODD);      // shut off parity
+    tty.c_cflag |= (CLOCAL | CREAD); /* ignore modem controls, */
+                                    /* enable reading  */
+    tty.c_cflag &= ~(PARENB | PARODD);      /* shut off parity */
     tty.c_cflag |= parity;
     tty.c_cflag &= ~CSTOPB;
     tty.c_cflag &= ~CRTSCTS;
@@ -65,7 +65,7 @@ void set_blocking (int fd, int should_block){
     }
 
     tty.c_cc[VMIN]  = should_block ? 1 : 0;
-    tty.c_cc[VTIME] = 5;            // 0.5 seconds read timeout
+    tty.c_cc[VTIME] = 5;            /* 0.5 seconds read timeout */
 
     if (tcsetattr (fd, TCSANOW, &tty) != 0)
         printf ("error %d setting term attributes\n", errno);
@@ -73,8 +73,9 @@ void set_blocking (int fd, int should_block){
 
 int main(int argc, char* argv[]){
     FILE* port;
-    int c;
+    int c, fd;
     int speed, parity=0;
+	char buf [100];
 
     /* Load settings from commandline */        
     while ((c = getopt (argc, argv, "s:p:vh")) != -1){
@@ -145,7 +146,7 @@ int main(int argc, char* argv[]){
         exit(1);
     }
     
-    int fd = open (devname, O_RDWR | O_NOCTTY | O_SYNC);
+    fd = open (devname, O_RDWR | O_NOCTTY | O_SYNC);
     if (fd < 0){
         fprintf (stderr, "error %d opening %s: %s\n", errno, devname, strerror (errno));
         exit(1);
@@ -155,18 +156,17 @@ int main(int argc, char* argv[]){
         fprintf(stderr,"Device %s opened.\n",devname);
     }
     set_interface_attribs (fd, speed, parity);
-    set_blocking (fd, 0);   // set no blocking
+    set_blocking (fd, 0);   /* set no blocking */
 
     if (verbose){
         fprintf(stderr,"Set attribs: s: %d p: %d\n",speed,parity);
     }
     port=fdopen(fd,"r");
-    char buf [100];
     if (verbose){
         fprintf(stderr,"Waiting data...\n");
     }
     while(1){
-        if (fgets(buf, 100, port)!=NULL){  // read up to 100 characters if ready to read
+        if (fgets(buf, 100, port)!=NULL){  /* read up to 100 characters if ready to read */
 			if (strlen(buf)>1){
 				printf("%s", buf);
 				memset(buf,'\0',100);
