@@ -1,12 +1,19 @@
 CC:=gcc
-CFLAGS:=-O2 -pipe -Wall -D_FORTIFY_SOURCE=2 -fstack-protector
+#CFLAGS:=-O2 -pipe -Wall -D_FORTIFY_SOURCE=2 -fstack-protector
+CFLAGS:=-g -pipe -Wall -pedantic
 
 prefix:=/usr/local
 confdir:=/etc/badge_daemon
 
 BACKEND:=sqlite
-PROGRAMS:=hid_read serial_read door_open badge_daemon
+#Choose: hid_read serial_read door_open badge_daemon badge_logger
+PROGRAMS:=hid_read serial_read door_open badge_daemon badge_logger
+#Door tools - choose: gpio piface
 DOOR_TOOLS:=gpio piface
+#Logger tools - choose: buzzer lcdscreen
+LOGGER_TOOLS:=buzzer lcdscreen
+#Install examples - choose: text_feedback lcd_feedback remote_save_ssh
+EXAMPLES:=
 OPTIONS:=
 
 GCCVERSION = $(shell $(CC) --version | grep ^gcc | sed -e 's/^.* //g' -e 's/\.[0-9]$$//g')
@@ -24,9 +31,9 @@ endif
 
 
 ifeq ("$(BACKEND)","mysql")
-    override LIBS+=-DMYSQL_B `mysql_config --cflags --libs` -lpthread
+    override LIBS+=-DMYSQL_B `mysql_config --cflags --libs`
 else
-    override LIBS+=-DSQLITE_B -lsqlite3 -lpthread 
+    override LIBS+=-DSQLITE_B -lsqlite3
 endif
 
 ifneq ("$(wildcard /usr/include/json-c)","")
@@ -42,26 +49,47 @@ ifneq ("$(wildcard /usr/local/include/json)","")
     override LIBS+=-Dljson -ljson
 endif
 
-all: $(PROGRAMS) $(DOOR_TOOLS)
+all: $(PROGRAMS) $(DOOR_TOOLS) $(LOGGER_TOOLS)
 .PHONY: all
 
 door_open.o: door_open.c
-	$(CC) $(CFLAGS) $(LIBS) $(OPTIONS) -std=gnu99 -DCONFPATH='"$(confdir)"' $< -c ; \
+	$(CC) $(CFLAGS) $(LIBS) $(OPTIONS) -std=gnu99 -DCONFPATH='"$(confdir)"' $< -c
 
 door_open: door_open.o
-	$(CC) $(CFLAGS) $(LIBS) $(OPTIONS) -std=gnu99 -DCONFPATH='"$(confdir)"' $< -o $@ ; \
+	$(CC) $(CFLAGS) $(LIBS) $(OPTIONS) -std=gnu99 -DCONFPATH='"$(confdir)"' $< -o $@
 
 badge_daemon.o: badge_daemon.c
-	$(CC) $(CFLAGS) $(LIBS) $(OPTIONS) -DCONFPATH='"$(confdir)"' $< -c
+	$(CC) $(CFLAGS) $(OPTIONS) -DCONFPATH='"$(confdir)"' $< -c
 
 badge_daemon: badge_daemon.o
-	$(CC) $(CFLAGS) $(LIBS) $(OPTIONS) -DCONFPATH='"$(confdir)"' $< -o $@
+	$(CC) $(CFLAGS) $(OPTIONS) -lpthread -DCONFPATH='"$(confdir)"' $< -o $@
 
-badge_logger: badge_logger.c
-	$(CC) $(CFLAGS) $(OPTIONS) `curl-config --libs` $< -o $@
+f_lock.o: f_lock.c
+	$(CC) $(CFLAGS) $(OPTIONS) $< -o $@ -c
+
+gpio.o: gpio.c
+	$(CC) $(CFLAGS) $(OPTIONS) $< -o $@ -c
+
+badge_logger: badge_logger.c f_lock.o
+	$(CC) $(CFLAGS) $(OPTIONS) $^ -o $@
+
+buzzer: buzzer.c gpio.o
+	$(CC) $(CFLAGS) $(OPTIONS) -std=gnu99 $^ -o $@
+
+lcdscreen: lcdscreen.c gpio.o f_lock.o
+	$(CC) $(CFLAGS) $(OPTIONS) -std=gnu99 $^ -o $@
 
 gpio:
 .PHONY: gpio
+
+remote_save_ssh:
+.PHONY: remote_save_ssh
+
+text_feedback:
+.PHONY: remote_save_ssh
+
+lcd_feedback:
+.PHONY: remote_save_ssh
 
 piface:
 	if [ ! -e ./piface_tool ]; then \
@@ -76,7 +104,7 @@ piface:
 .PHONY: piface
 
 
-install: $(PROGRAMS) $(DOOR_TOOLS)
+install: $(PROGRAMS) $(DOOR_TOOLS) $(LOGGER_TOOLS)
 	useradd -r badge_daemon || echo "User already present"
 	gpasswd -a badge_daemon spi || ( groupadd -r spi && gpasswd -a badge_daemon spi )
 	gpasswd -a badge_daemon gpio || ( groupadd -r gpio && gpasswd -a badge_daemon gpio && install -m 644 resources/99-gpio-permissions.rules /etc/udev/rules.d/ )
@@ -95,8 +123,36 @@ install: $(PROGRAMS) $(DOOR_TOOLS)
 	    make -C piface_tool/ prefix=$(prefix) install ; \
 	fi
 
+	if [ -n "`echo $(EXAMPLES) | grep remote_save_ssh`" ]; then \
+	    install -m 0755 -t $(prefix)/sbin examples/remote_save_ssh.sh ; \
+	    if [ ! -e $(confdir)/.ssh/id_rsa ]; then \
+		mkdir -p $(confdir)/.ssh/ ; \
+		ssh-keygen -q -N "" -f $(confdir)/.ssh/id_rsa; \
+	    fi ; \
+	fi
+
+	if [ -n "`echo $(EXAMPLES) | grep text_feedback`" ]; then \
+	    install -m 0755 -t $(prefix)/sbin examples/text_feedback.sh ; \
+	fi
+
+	if [ -n "`echo $(EXAMPLES) | grep lcd_feedback`" ]; then \
+	    install -m 0755 -t $(prefix)/sbin examples/lcd_feedback.sh ; \
+	fi
+
+	if [ -n "`echo $(LOGGER_TOOLS) | grep buzzer`" ]; then \
+	    install -m 4755 -t $(prefix)/sbin buzzer ; \
+	fi
+
+	if [ -n "`echo $(LOGGER_TOOLS) | grep lcdscreen`" ]; then \
+	    install -m 0755 -t $(prefix)/sbin lcdscreen ; \
+	fi
+
+	if [ -n "`echo $(PROGRAMS) | grep badge_logger`" ]; then \
+	    mkdir -p /var/lib/badge_daemon/ ; \
+	fi
+
 	mkdir -p $(confdir)
-	
+
 	if [ -e $(confdir)/badge_daemon.conf ]; then \
 	    echo "badge_daemon.conf found - skipping" ; \
 	    echo "Run 'make conf' to overwrite" ; \
@@ -104,18 +160,18 @@ install: $(PROGRAMS) $(DOOR_TOOLS)
 	    install -m 0640 conf/badge_daemon.conf $(confdir) ; \
 	    sed -i -e s:' ./':' $(prefix)/sbin/': $(confdir)/badge_daemon.conf -e s:' conf/':' $(confdir)/': $(confdir)/badge_daemon.conf ; \
 	fi
-	
+
 	chown -R badge_daemon:badge_daemon $(confdir)
 	chmod 755 $(confdir)
 	chown -R badge_daemon:badge_daemon $(confdir)/badge_daemon.conf
-	
+
 	if [ -z "`echo $(OPTIONS) | grep '(NO_LOGFILE|SYSTEMD_ONLY)'`" ]; then \
 	    install -m 0644 conf/badge_daemon.logrotate /etc/logrotate.d/badge_daemon ; \
 	    mkdir -p /var/log/badge_daemon/ ; \
 	    chown -R badge_daemon:badge_daemon /var/log/badge_daemon ; \
 	    chmod -R 755 /var/log/badge_daemon ; \
 	fi
-	
+
 	if [ -e '/usr/bin/systemctl' ]; then \
 	    install -m 0644 resources/badge_daemon.service /etc/systemd/system/badge_daemon.service ; \
 	    sed -i s:'^ExecStart=badge_daemon':'ExecStart=$(prefix)/sbin/badge_daemon': /etc/systemd/system/badge_daemon.service ; \
@@ -140,6 +196,12 @@ uninstall:
 	rm -f $(prefix)/sbin/serial_read
 	rm -f $(prefix)/sbin/door_open
 	rm -f $(prefix)/sbin/badge_logger
+	rm -f $(prefix)/sbin/buzzer
+	rm -f $(prefix)/sbin/lcdscreen
+
+	rm -f $(prefix)/sbin/remote_save_ssh.sh
+	rm -f $(prefix)/sbin/text_feedback.sh
+	rm -f $(prefix)/sbin/lcd_feedback.sh
 	#rm -f $(prefix)/sbin/piface_tool
 	#rm -f $(prefix)/sbin/gpio.sh
 
@@ -149,6 +211,6 @@ uninstall:
 .PHONY: uninstall
 
 clean:
-	rm -f $(PROGRAMS)
+	rm -f $(PROGRAMS) $(LOGGER_TOOLS) $(DOOR_TOOLS)
 	rm -f *.o
 .PHONY: clean
