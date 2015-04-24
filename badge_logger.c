@@ -222,7 +222,12 @@ void runHelper(){
 		while (emptyQueue() > 0){
 			printf("An error occurred. Attempt %d to parse data in %d seconds\n", retry, interval*retry);
 			retry++;
-			sleep(interval*retry);
+			if (interval*retry < 900){
+				sleep(interval*retry);
+			}
+			else{
+				sleep(900);
+			}
 
 			if (!loop){
 				_exit(0);
