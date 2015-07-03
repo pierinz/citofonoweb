@@ -468,7 +468,7 @@ int main (int argc, char *argv[]){
 
     logmessage("Daemon started.");
     
-    /* Cattura segnali di uscita */
+    /* Catch exit signals */
     sig_h.sa_handler=signal_handler;
     sig_h.sa_flags=0;
     /* Signals blocked during the execution of the handler. */
@@ -483,7 +483,7 @@ int main (int argc, char *argv[]){
     sigaction(SIGTERM,&sig_h,NULL);
     sigaction(SIGUSR1,&sig_h,NULL);
     
-    /* Cattura segnale child process concluso */
+    /* Catch child termination signal */
     sig_h.sa_handler=signal_handler;
     sig_h.sa_flags=SA_NODEFER;
     sigaction(SIGCHLD,&sig_h,NULL);
@@ -516,7 +516,7 @@ int main (int argc, char *argv[]){
     }
     logmessage("Helper thread started.");
 
-    /* Attendi che i threads terminino */
+    /* Wait threads */
     pthread_join(thr_source,NULL);
     pthread_join(thr_helper,NULL);
     
