@@ -38,7 +38,6 @@
 #define LCD_D5 24
 #define LCD_D6 23
 #define LCD_D7 18
-#define LED_ON 15
 
 // Define some device constants
 #define LCD_WIDTH 20    // Maximum characters per line
@@ -51,8 +50,8 @@
 #define LCD_LINE_4 0xD4 // LCD RAM address for the 4th line
 
 // Timing constants (µs)
-#define E_PULSE 80
-#define E_DELAY 80
+#define E_PULSE 50
+#define E_DELAY 50
 
 void lcd_byte(int bits, int mode){
 	// Send byte to data pins
@@ -61,21 +60,29 @@ void lcd_byte(int bits, int mode){
 	//        0 for command
 
 	GPIOWrite(LCD_RS, mode); // RS
+	if (mode == 0)
+		usleep(2000);
 
 	// High bits
-	GPIOWrite(LCD_D4, 0);
-	GPIOWrite(LCD_D5, 0);
-	GPIOWrite(LCD_D6, 0);
-	GPIOWrite(LCD_D7, 0);
-
 	if ((bits&0x10) == 0x10)
 		GPIOWrite(LCD_D4, 1);
+	else
+		GPIOWrite(LCD_D4, 0);
+
 	if ((bits&0x20) == 0x20)
 		GPIOWrite(LCD_D5, 1);
+	else
+		GPIOWrite(LCD_D5, 0);
+
 	if ((bits&0x40) == 0x40)
 		GPIOWrite(LCD_D6, 1);
+	else
+		GPIOWrite(LCD_D6, 0);
+
 	if ((bits&0x80) == 0x80)
 		GPIOWrite(LCD_D7, 1);
+	else
+		GPIOWrite(LCD_D7, 0);
 
 	// Toggle 'Enable' pin
 	usleep(E_DELAY);
@@ -85,19 +92,25 @@ void lcd_byte(int bits, int mode){
 	usleep(E_DELAY);
 
 	// Low bits
-	GPIOWrite(LCD_D4, 0);
-	GPIOWrite(LCD_D5, 0);
-	GPIOWrite(LCD_D6, 0);
-	GPIOWrite(LCD_D7, 0);
-
 	if ((bits&0x01) == 0x01)
 		GPIOWrite(LCD_D4, 1);
+	else
+		GPIOWrite(LCD_D4, 0);
+
 	if ((bits&0x02) == 0x02)
 		GPIOWrite(LCD_D5, 1);
+	else
+		GPIOWrite(LCD_D5, 0);
+
 	if ((bits&0x04) == 0x04)
 		GPIOWrite(LCD_D6, 1);
+	else
+		GPIOWrite(LCD_D6, 0);
+
 	if ((bits&0x08) == 0x08)
 		GPIOWrite(LCD_D7, 1);
+	else
+		GPIOWrite(LCD_D7, 0);
 
 	// Toggle 'Enable' pin
 	usleep(E_DELAY);
@@ -118,15 +131,13 @@ void lcd_init(){
 }
 
 void lcd_string(char *message){
-	int len=0, i=0;
-	
-	len=strlen(message);
-	
-	for (i=0; i<LCD_WIDTH; i++){
-		if (i < len-1){ /* Strip EOL */
+	int i=0;
+	for (i=0; i < LCD_WIDTH; i++){
+		if (i < strlen(message)){
 			lcd_byte(message[i],LCD_CHR);
 		}
 		else{
+			// Fill row with empty spaces
 			lcd_byte(' ',LCD_CHR);
 		}
 	}
@@ -134,21 +145,14 @@ void lcd_string(char *message){
 
 void lcd_empty(){
 	// Blank display
-	lcd_byte(LCD_LINE_1, LCD_CMD);
-	lcd_string(" ");
-	lcd_byte(LCD_LINE_2, LCD_CMD);
-	lcd_string(" ");
-	lcd_byte(LCD_LINE_3, LCD_CMD);
-	lcd_string(" ");
-	lcd_byte(LCD_LINE_4, LCD_CMD);
-	lcd_string(" ");
+	lcd_byte(0x01, LCD_CMD);
 }
 
 int main(int argc, char *argv[]){
 	char *line;
-	char *lines[4];
-	int i=0, z=0, n=0;
-	size_t bytes=40;
+	char lines[4][LCD_WIDTH + 1];
+	int i=0, n=0;
+	size_t bytes=LCD_WIDTH;
 	int fd;
 
 	fd=open(LOCKFILE, O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
@@ -156,17 +160,24 @@ int main(int argc, char *argv[]){
 		fd=creat(LOCKFILE, O_RDWR | S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
 		if (fd < 0){
 			perror("creat");
+			fprintf(stderr, "Couldn't create lockfile. Execution aborted.\n");
+			exit(1);
 		}
 	}
 	f_elock(fd);
 
-	line=(char*) malloc(bytes+1);
+	line=calloc(bytes+1, sizeof(char));
 	while( (n=getline(&line, &bytes, stdin)) != -1 ){
-		if (n > LCD_WIDTH+1){
-			fprintf(stderr,"Too many characters!\n");
-			exit(1);
+		// The \n is 1 byte more
+		if (n > LCD_WIDTH + 1){
+			fprintf(stderr,"Too many characters. The line will be truncated.\n");
+			line[LCD_WIDTH + 1]='\0';
 		}
-		asprintf(&lines[i], "%s", line);
+		else{
+			// Strip \n
+			line[strlen(line)-1]='\0';
+		}
+		snprintf(lines[i], LCD_WIDTH+1, "%s", line);
 		i++;
 		if (i>4){
 			fprintf(stderr,"Too many lines!\n");
@@ -188,7 +199,7 @@ int main(int argc, char *argv[]){
 	GPIODirection(LCD_D5, OUT);
 	GPIODirection(LCD_D6, OUT);
 	GPIODirection(LCD_D7, OUT);
-	
+
 	// Initialise display
 	lcd_init();
 
@@ -210,11 +221,6 @@ int main(int argc, char *argv[]){
 	if (i > 3){
 		lcd_byte(LCD_LINE_4, LCD_CMD);
 		lcd_string(lines[3]);
-	}
-
-	// Cleanup
-	for (z=0; z<i; z++){
-		free(lines[z]);
 	}
 
 	f_unlock(fd);
