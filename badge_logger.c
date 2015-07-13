@@ -185,6 +185,7 @@ int main (int argc, char *argv[]){
 	int c,pages,retry;
 	char *conffile=NULL;
 	char *param, elem[elsize], buftime[22];
+	size_t *n;
 
 	short new=0;
 	time_t rawtime;
@@ -278,10 +279,13 @@ int main (int argc, char *argv[]){
 	/* Start uploader */
 	if (strlen(uploader) > 2)
 		runUploader();
-	
+
+	n=malloc(sizeof(int));
+	*n=0;
+
 	printf("Ready to accept data.\n");
 	fflush(stdout);
-	while (loop && getline(&param, NULL, stdin)){
+	while (loop && getline(&param, n, stdin)){
 		/* Remove trailing \n */
 		strtok(param,"\n");
 
@@ -327,6 +331,7 @@ int main (int argc, char *argv[]){
 		free(param);
 	}
 
+	free(n);
 	free(tmpf);
 	free(reporthandler);
 	free(uploader);
