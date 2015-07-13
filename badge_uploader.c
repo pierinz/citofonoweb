@@ -2,19 +2,16 @@
 #include "common.h"
 #include "badge_logger_common.h"
 
+char *datahandler;
 char *tmpf, *queue;
-char *reporthandler, *params;
-char *uploader;
 
 int qsize=1500;
 int start, current, msize;
 int interval=30;
 short verbose=0;
 short loop=1;
-short getseconds=0;
 
 int fd=0;
-int hpid=0;
 
 void loadConf(char *conffile){
     FILE* fp;
@@ -39,6 +36,10 @@ void loadConf(char *conffile){
             verbose=atoi(val);
 			continue;
         }
+        if (strcmp(def,"datahandler")==0){
+            asprintf(&datahandler,"%s",val);
+			continue;
+        }
         if (strcmp(def,"queuefile")==0){
             asprintf(&tmpf,"%s",val);
 			continue;
@@ -51,42 +52,20 @@ void loadConf(char *conffile){
             qsize=atoi(val);
 			continue;
         }
-		if (strcmp(def,"getseconds")==0){
-            getseconds=atoi(val);
-			continue;
-        }
 		if (strcmp(def,"interval")==0){
             interval=atoi(val);
-			continue;
-        }
-		if (strcmp(def,"reporthandler")==0){
-            asprintf(&reporthandler,"%s",val);
-			continue;
-        }
-		if (strcmp(def,"params")==0){
-            asprintf(&params,"%s",val);
-			continue;
-        }
-		if (strcmp(def,"uploader")==0){
-            asprintf(&uploader,"%s",val);
 			continue;
         }
     }
     fclose(fp);
 
-	if (params == NULL){
-		fprintf(stderr, "Error: 'params' not found in configuration.\n");
+	if (datahandler == NULL){
+		fprintf(stderr, "Error: datahandler not found in configuration.\n");
 		exit(1);
 	}
 	if (tmpf == NULL){
 		fprintf(stderr, "Error: queue file not found in configuration.\n");
 		exit(1);
-	}
-	if (uploader == NULL){
-		asprintf(&uploader, " ");
-	}
-	if (reporthandler == NULL){
-		asprintf(&uploader, " ");
 	}
 
     if (verbose > 1){
@@ -94,101 +73,77 @@ void loadConf(char *conffile){
     }
 }
 
-void feedback(char* param){
-	char *command;
+int sendData(char param[keylen]){
+	char* command;
+	int success=-1;
 
-	if (strlen(reporthandler) < 2){
-		return;
-	}
-
-	if (asprintf(&command, "%s %s", reporthandler, param) < 0){
-		perror("asprintf: ");
-	}
-
-	if (system(command) != 0){
-		printf("Unexpected error while reporting feedback\n");
+	asprintf(&command,"%s %s",datahandler,param);
+	if (verbose > 0){
+		printf("Running save command: %s\n", command);
 		fflush(stdout);
 	}
+	success=system(command);	
 	free(command);
-}
 
-char** argv_from_string(char *args) {
-    int i, spaces = 0, argc = 0, len = strlen(args);
-    char **argv;
-
-    for (i = 0; i < len; i++)
-        if (isspace(args[i]))
-            spaces++;
-
-    /* add 1 for cmd, 1 for NULL and 1 as spaces will be one short */
-    argv = (char**) malloc ( (spaces + 3) * sizeof(char*) );
-    argv[argc++] = args;
-    
-    for ( i = 0; i < len; i++ ) {
-        if ( isspace(args[i]) ) {
-            args[i] = '\0';
-            if ( i + 1 < len )
-              argv[argc++] = args + i + 1;
-        }
-    }
-
-    argv[argc] = (char*)NULL;
-    return argv;
-}
-
-void runUploader(){
-	char **args;
-
-	hpid=fork();
-	if (hpid == 0){
-		args=argv_from_string(uploader);
-        if (execvp(args[0],args) < 0){
-            perror("Source -> execvp: ");
-            _exit(1);
-        }
-	}
-	else if(hpid > 0){
-		return;
+	if (success == 0){
+		return 1;
 	}
 	else{
-		perror("fork:");
+		printf("Error: the datahandler exited with status %d. Will retry later.\n", success);
+		fflush(stdout);
+		return -1;
 	}
+}
+
+int emptyQueue(){
+	char* element;
+	int i=0, total, queued;
+
+	total=abs(current-start);
+	queued=total;
+	if (total > 0){
+		element=malloc(sizeof(char)*elsize);
+		while (pickData(&element) > 0){
+			if (verbose){
+				printf("Got element %s from queue\n",element);
+				fflush(stdout);
+			}
+			if (sendData(element) < 1){
+				/* Stop on first error and retry in the future */
+				printf("%d elements sent before server vanished.\n",i);
+				fflush(stdout);
+				break;
+			}
+			else{
+				queued=popData(NULL);
+			}
+			i++;
+		}
+		free(element);
+	}
+
+	printf("Queued elements: %d/%d elements sent.\n", i, total / elsize);
+	fflush(stdout);
+	return queued;
 }
 
 void signal_handler(int signum){
-	int pid;
-
-    if ((signum==SIGTERM) || (signum==SIGINT) || (signum==SIGQUIT)){
+	if ((signum==SIGTERM) || (signum==SIGINT) || (signum==SIGQUIT)){
 		printf("Caught signal %d, shutting down...\n", signum);
         loop=0;
-		if (getpid()==hpid){
-			kill(hpid, SIGTERM);
-		}
-		fclose(stdin);
     }
-    else if (signum==SIGCHLD){
-        pid=wait(NULL);
-		if (pid == hpid){
-			printf("background data loader %d has terminated.\n", pid);
-			hpid=0;
-		}
-
-		else if (pid > 0){
-			printf("helper %d has terminated.\n", pid);
-		}
+	else if (signum==SIGUSR1){
+		printf("Caught signal %d, sending elements to server...\n", signum);
 	}
 	fflush(stdout);
 }
 
 int main (int argc, char *argv[]){
     struct sigaction sig_h;
-	int c,pages,retry;
+	int c,pages;
 	char *conffile=NULL;
-	char param[keylen],elem[elsize], buftime[22];
 
 	short new=0;
-	time_t rawtime;
-	struct tm * timeinfo;
 
 	/* Load settings from commandline */
     while ((c = getopt (argc, argv, "f:h")) != -1){
@@ -200,7 +155,7 @@ int main (int argc, char *argv[]){
 				}
                 break;
             case 'h':
-				printf("Usage: badge_logger [ -f configuration file ] [ -h ]\n"
+				printf("Usage: badge_uploader [ -f configuration file ] [ -h ]\n"
                     "\n"
                     "-f FILE\t\tLoad configuration from FILE\n"
                     "-h\t\tShow this message\n\n"
@@ -252,7 +207,7 @@ int main (int argc, char *argv[]){
 		sscanf(queue+((qsize+1)*elsize),"%d|%d",&start,&current);
 	}
 
-	/* Catch exit signals */
+	/* Cattura segnali di uscita */
     sig_h.sa_handler=signal_handler;
     sig_h.sa_flags=0;
     /* Signals blocked during the execution of the handler. */
@@ -267,67 +222,21 @@ int main (int argc, char *argv[]){
     sigaction(SIGTERM,&sig_h,NULL);
     sigaction(SIGUSR1,&sig_h,NULL);
 
-    /* Catch child termination signal */
-    sig_h.sa_handler=signal_handler;
-    sig_h.sa_flags=SA_NODEFER | SA_RESTART;
-    sigaction(SIGCHLD,&sig_h,NULL);
-
 	if (verbose){
 		printf("Queued elements: %d\n", abs(current-start) / elsize);
 	}
-	/* Start uploader */
-	if (strlen(uploader) > 2)
-		runUploader();
-	
+
 	printf("Ready to accept data.\n");
 	fflush(stdout);
-	while (loop && fgets(param,keylen,stdin)){
-		/* Remove trailing \n */
-		strtok(param,"\n");
-
-		time (&rawtime);
-		timeinfo = localtime (&rawtime);
-		if (getseconds){
-			strftime(buftime,22,"%Y%m%d%H%M%S",timeinfo);
-		}
-		else{
-			strftime(buftime,22,"%Y%m%d%H%M00",timeinfo);
-		}
-
-		sprintf(elem, params, buftime, param);
-
-		if (verbose > 1){
-			printf("Got param: %s, index: %d %d\n",param, start, current);
-			fflush(stdout);
-		}
-
-		/* Report to user (if configured) */
-		feedback(param);
-
-		if (pushData(elem) < 0){
-			printf("Too many queued elements. Waiting the parser. Do not stop this program or all further elements will be lost.\n");
-			fflush(stdout);
-			retry=1;
-			while (pushData(elem) < 0){
-				printf("Attempt %d\n",retry);
-				fflush(stdout);
-				retry++;
-				sleep(interval);
-			}
-			fflush(stdout);
-		}
-		else{
-			printf("%s has been registered.\n", elem);
-		}
-
+	while (loop){
+		emptyQueue();
 		if (verbose){
 			fprintf(stderr,"%d %d\n",start, current);
 		}
+		sleep(interval);
 	}
 
 	free(tmpf);
-	free(reporthandler);
-	free(uploader);
-	free(params);
+	free(datahandler);
 	exit(0);
 }
