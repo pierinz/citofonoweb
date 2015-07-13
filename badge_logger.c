@@ -318,6 +318,7 @@ int main (int argc, char *argv[]){
 		}
 		else{
 			printf("%s has been registered.\n", elem);
+			fflush(stdout);
 		}
 
 		if (verbose){
