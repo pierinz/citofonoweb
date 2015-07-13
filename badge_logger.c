@@ -184,7 +184,7 @@ int main (int argc, char *argv[]){
     struct sigaction sig_h;
 	int c,pages,retry;
 	char *conffile=NULL;
-	char param[keylen],elem[elsize], buftime[22];
+	char *param, elem[elsize], buftime[22];
 
 	short new=0;
 	time_t rawtime;
@@ -281,7 +281,7 @@ int main (int argc, char *argv[]){
 	
 	printf("Ready to accept data.\n");
 	fflush(stdout);
-	while (loop && fgets(param,keylen,stdin)){
+	while (loop && getline(&param, NULL, stdin)){
 		/* Remove trailing \n */
 		strtok(param,"\n");
 
@@ -323,6 +323,7 @@ int main (int argc, char *argv[]){
 		if (verbose){
 			fprintf(stderr,"%d %d\n",start, current);
 		}
+		free(param);
 	}
 
 	free(tmpf);
