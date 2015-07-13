@@ -341,6 +341,7 @@ int main (int argc, char *argv[]){
 			fprintf(stderr,"%d %d\n",start, current);
 		}
 		free(param);
+		param=NULL;
 	}
 
 	free(n);
