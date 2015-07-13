@@ -6,8 +6,8 @@ prefix:=/usr/local
 confdir:=/etc/badge_daemon
 
 BACKEND:=sqlite
-#Choose: hid_read serial_read door_open badge_daemon badge_logger
-PROGRAMS:=hid_read serial_read door_open badge_daemon badge_logger
+#Choose: hid_read serial_read door_open badge_daemon badge_logger badge_uploader
+PROGRAMS:=hid_read serial_read door_open badge_daemon badge_logger badge_uploader
 #Door tools - choose: gpio piface
 DOOR_TOOLS:=gpio piface
 #Logger tools - choose: buzzer lcdscreen
@@ -64,14 +64,20 @@ badge_daemon.o: badge_daemon.c
 badge_daemon: badge_daemon.o
 	$(CC) $(CFLAGS) $(OPTIONS) -lpthread -DCONFPATH='"$(confdir)"' $< -o $@
 
+badge_logger: badge_logger.c badge_logger_common.o f_lock.o
+	$(CC) $(CFLAGS) $(OPTIONS) $^ -o $@
+
+badge_uploader: badge_uploader.c badge_logger_common.o f_lock.o
+	$(CC) $(CFLAGS) $(OPTIONS) $^ -o $@
+
+badge_logger_common.o: badge_logger_common.c
+	$(CC) $(CFLAGS) $(OPTIONS) $< -o $@ -c
+
 f_lock.o: f_lock.c
 	$(CC) $(CFLAGS) $(OPTIONS) $< -o $@ -c
 
 gpio.o: gpio.c
 	$(CC) $(CFLAGS) $(OPTIONS) $< -o $@ -c
-
-badge_logger: badge_logger.c f_lock.o
-	$(CC) $(CFLAGS) $(OPTIONS) $^ -o $@
 
 buzzer: buzzer.c gpio.o
 	$(CC) $(CFLAGS) $(OPTIONS) -std=gnu99 $^ -o $@
