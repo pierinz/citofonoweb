@@ -94,24 +94,6 @@ void loadConf(char *conffile){
     }
 }
 
-void feedback(char* param){
-	char *command;
-
-	if (strlen(reporthandler) < 2){
-		return;
-	}
-
-	if (asprintf(&command, "%s %s", reporthandler, param) < 0){
-		perror("asprintf: ");
-	}
-
-	if (system(command) != 0){
-		printf("Unexpected error while reporting feedback\n");
-		fflush(stdout);
-	}
-	free(command);
-}
-
 char** argv_from_string(char *args) {
     int i, spaces = 0, argc = 0, len = strlen(args);
     char **argv;
@@ -136,13 +118,43 @@ char** argv_from_string(char *args) {
     return argv;
 }
 
+void feedback(char* param){
+	char *command;
+	char **args;
+	int pid=0;
+
+	pid=fork();
+	if (pid == 0){
+		if (strlen(reporthandler) < 2){
+			return;
+		}
+
+		if (asprintf(&command, "%s %s", reporthandler, param) < 0){
+			perror("asprintf: ");
+		}
+
+		args=argv_from_string(command);
+        if (execvp(args[0], args) < 0){
+            perror("Source -> execvp: ");
+            _exit(1);
+        }
+		free(command);
+	}
+	else if (pid > 0){
+		return;
+	}
+	else{
+		perror("fork");
+	}
+}
+
 void runUploader(){
 	char **args;
 
 	hpid=fork();
 	if (hpid == 0){
 		args=argv_from_string(uploader);
-        if (execvp(args[0],args) < 0){
+        if (execvp(args[0], args) < 0){
             perror("Source -> execvp: ");
             _exit(1);
         }
