@@ -6,8 +6,8 @@ char *tmpf, *queue;
 char *reporthandler, *params;
 char *uploader;
 
-int qsize=1500;
-int start, current, msize;
+int qsize=1500, msize;
+uint16_t *start, *current;
 int interval=30;
 short verbose=0;
 short loop=1;
@@ -44,11 +44,11 @@ void loadConf(char *conffile){
 			continue;
         }
 		if (strcmp(def,"queuesize")==0){
-			if ((strlen(val) * 3) + 2 > elsize){
-				fprintf(stderr, "Your queue size has too many digits. It can't be stored with default element size. Chosen size: %i, max queue digits %i", elsize, (elsize - 3)/3 );
+			if (atoi(val) > 65535){
+				fprintf(stderr, "Your queue size is too long. Max queue size: 65535\n");
 				exit(1);
 			}
-            qsize=atoi(val);
+			qsize=atoi(val);
 			continue;
         }
 		if (strcmp(def,"getseconds")==0){
@@ -240,8 +240,8 @@ int main (int argc, char *argv[]){
 	}
 
 	/* Mmapped memory must be aligned to page size */
-	pages=1+(((sizeof(char)*(qsize+1)*elsize)-1)/sysconf(_SC_PAGE_SIZE));
-	msize=pages*sysconf(_SC_PAGE_SIZE);
+	pages=((sizeof(char) * (qsize + 1) * elsize) + (sysconf(_SC_PAGE_SIZE) - 1) ) / sysconf(_SC_PAGE_SIZE);
+	msize=pages * sysconf(_SC_PAGE_SIZE);
 
 	/* Enlarge the file to the defined size */
 	if (ftruncate(fd,msize)<0){
@@ -256,13 +256,13 @@ int main (int argc, char *argv[]){
 		exit(1);
 	}
 
+	start = (uint16_t*) (queue + ((qsize) * elsize * sizeof(char)));
+	current = (uint16_t*) (queue + ((qsize) * elsize * sizeof(char))) + sizeof(uint16_t);
+
 	if (new > 0){
-		start=0;
-		current=0;
-	}
-	else{
-		fprintf(stderr,"%s\n",queue+((qsize+1)*elsize));
-		sscanf(queue+((qsize+1)*elsize),"%d|%d",&start,&current);
+		*start=0;
+		*current=0;
+		msync(queue, msize, MS_SYNC);
 	}
 
 	/* Catch exit signals */
@@ -286,7 +286,7 @@ int main (int argc, char *argv[]){
     sigaction(SIGCHLD,&sig_h,NULL);
 
 	if (verbose){
-		printf("Queued elements: %d\n", abs(current-start) / elsize);
+		printf("Queued elements: %d\n", abs(*current - *start) / elsize);
 	}
 	/* Start uploader */
 	if (strlen(uploader) > 2)
@@ -313,7 +313,7 @@ int main (int argc, char *argv[]){
 		sprintf(elem, params, buftime, param);
 
 		if (verbose > 1){
-			printf("Got param: %s, index: %d %d\n",param, start, current);
+			printf("Got param: %s, index: %d %d\n", param, *start, *current);
 			fflush(stdout);
 		}
 
@@ -338,7 +338,7 @@ int main (int argc, char *argv[]){
 		}
 
 		if (verbose){
-			fprintf(stderr,"%d %d\n",start, current);
+			fprintf(stderr,"%d %d\n", *start, *current);
 		}
 		free(param);
 		param=NULL;

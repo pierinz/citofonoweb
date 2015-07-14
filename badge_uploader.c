@@ -5,8 +5,8 @@
 char *datahandler;
 char *tmpf, *queue;
 
-int qsize=1500;
-int start, current, msize;
+int qsize=1500, msize;
+uint16_t *start, *current;
 int interval=30;
 short verbose=0;
 short loop=1;
@@ -45,10 +45,6 @@ void loadConf(char *conffile){
 			continue;
         }
 		if (strcmp(def,"queuesize")==0){
-			if ((strlen(val) * 3) + 2 > elsize){
-				fprintf(stderr, "Your queue size has too many digits. It can't be stored with default element size. Chosen size: %i, max queue digits %i", elsize, (elsize - 3)/3 );
-				exit(1);
-			}
             qsize=atoi(val);
 			continue;
         }
@@ -182,7 +178,7 @@ int main (int argc, char *argv[]){
 	}
 
 	/* Mmapped memory must be aligned to page size */
-	pages=1+(((sizeof(char)*(qsize+1)*elsize)-1)/sysconf(_SC_PAGE_SIZE));
+	pages=((sizeof(char) * (qsize + 1) * elsize) + (sysconf(_SC_PAGE_SIZE) - 1) ) / sysconf(_SC_PAGE_SIZE);
 	msize=pages*sysconf(_SC_PAGE_SIZE);
 
 	/* Enlarge the file to the defined size */
@@ -198,13 +194,13 @@ int main (int argc, char *argv[]){
 		exit(1);
 	}
 
+	start = (uint16_t*) (queue + ((qsize) * elsize * sizeof(char)));
+	current = (uint16_t*) (queue + ((qsize) * elsize * sizeof(char))) + sizeof(uint16_t);
+
 	if (new > 0){
-		start=0;
-		current=0;
-	}
-	else{
-		fprintf(stderr,"%s\n",queue+((qsize+1)*elsize));
-		sscanf(queue+((qsize+1)*elsize),"%d|%d",&start,&current);
+		*start=0;
+		*current=0;
+		msync(queue, msize, MS_SYNC);
 	}
 
 	/* Cattura segnali di uscita */
@@ -223,7 +219,7 @@ int main (int argc, char *argv[]){
     sigaction(SIGUSR1,&sig_h,NULL);
 
 	if (verbose){
-		printf("Queued elements: %d\n", abs(current-start) / elsize);
+		printf("Queued elements: %d\n", abs(*current - *start) / elsize);
 	}
 
 	printf("Ready to accept data.\n");
@@ -231,7 +227,7 @@ int main (int argc, char *argv[]){
 	while (loop){
 		emptyQueue();
 		if (verbose){
-			fprintf(stderr,"%d %d\n",start, current);
+			fprintf(stderr,"%d %d\n", *start, *current);
 		}
 		sleep(interval);
 	}

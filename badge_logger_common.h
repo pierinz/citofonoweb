@@ -8,6 +8,7 @@ extern "C" {
 
 #include <sys/mman.h>
 #include <sys/fcntl.h>
+#include <stdint.h>
 #include "f_lock.h"
 
 #ifndef elsize
