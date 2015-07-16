@@ -297,7 +297,7 @@ int main (int argc, char *argv[]){
 
 	printf("Ready to accept data.\n");
 	fflush(stdout);
-	while (loop && getline(&param, n, stdin)){
+	while (loop && (getline(&param, n, stdin) > 0)){
 		/* Remove trailing \n */
 		strtok(param,"\n");
 
@@ -343,6 +343,10 @@ int main (int argc, char *argv[]){
 		free(param);
 		param=NULL;
 	}
+
+	/* Free param on getline error */
+	if (param != NULL)
+		free(param);
 
 	free(n);
 	free(tmpf);
