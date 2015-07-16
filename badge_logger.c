@@ -335,6 +335,9 @@ int main (int argc, char *argv[]){
 		else{
 			printf("%s has been registered.\n", elem);
 			fflush(stdout);
+			/* Notify uploader */
+			if (hpid > 0)
+				kill(hpid, SIGUSR1);
 		}
 
 		if (verbose){
