@@ -1,6 +1,7 @@
 #include "gpio.h"
 
 int GPIOValid(int pin) {
+#ifdef BOARD
 	int i;
 
 	for (i = 0; i < 23; i++) {
@@ -8,7 +9,10 @@ int GPIOValid(int pin) {
 			return 1;
 		}
 	}
-	return 0;
+	return ;
+#else
+	return 1;
+#endif
 }
 
 int GPIOExport(int pin) {
@@ -34,6 +38,9 @@ int GPIOExport(int pin) {
 		return (-1);
 	}
 	close(fd);
+
+	// Wait udev-related things
+	usleep(200000);
 	return (0);
 }
 

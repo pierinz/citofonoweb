@@ -14,7 +14,8 @@ DOOR_TOOLS:=gpio piface
 LOGGER_TOOLS:=buzzer lcdscreen
 #Install examples - choose: text_feedback lcd_feedback remote_save_ssh
 EXAMPLES:=
-OPTIONS:=
+
+BOARD:="RASPBERRY"
 
 GCCVERSION = $(shell $(CC) --version | grep ^gcc | sed -e 's/^.* //g' -e 's/\.[0-9]$$//g')
 ifneq ($(filter arm%,$(shell uname -m)),)
@@ -48,6 +49,16 @@ endif
 ifneq ("$(wildcard /usr/local/include/json)","")
     override LIBS+=-Dljson -ljson
 endif
+
+ifeq "$(BOARD)" "RASPBERRY"
+    override BOARD=1
+endif
+ifeq "$(BOARD)" "BEAGLEBONE"
+    override BOARD=1
+endif
+
+OPTIONS:= -D_BOARD=$(BOARD)
+
 
 all: $(PROGRAMS) $(DOOR_TOOLS) $(LOGGER_TOOLS)
 .PHONY: all
