@@ -2,6 +2,8 @@
 #include "common.h"
 #include "badge_logger_common.h"
 
+#define VERSION "0.3-r2"
+
 char *datahandler;
 char *tmpf, *queue;
 
@@ -15,44 +17,42 @@ int fd = 0;
 
 void loadConf(char *conffile) {
 	FILE* fp;
-	char line[confline], def[confdef], val[confval];
+	char *line = NULL, *def = NULL, *val = NULL;
+	size_t n = 1;
 
 	fp = fopen(conffile, "r");
-	free(conffile);
 	if (!fp) {
 		fprintf(stderr, "File %s:\n", conffile);
 		perror("Error opening configuration: ");
 		exit(1);
 	}
 
-	while (fgets(line, (confline - 1), fp)) {
-		/* Delete previous value */
-		def[0] = '\0';
-		val[0] = '\0';
-
-		sscanf(line, "%s %[^\n]", def, val);
+	line = calloc(n, sizeof (char));
+	while (getline(&line, &n, fp) > 0) {
+		sscanf(line, "%ms %m[^\n]", &def, &val);
+		if (def == NULL)
+			asprintf(&def, " ");
+		if (val == NULL)
+			asprintf(&val, " ");
 
 		if (strcmp(def, "verbose") == 0) {
 			verbose = atoi(val);
-			continue;
-		}
-		if (strcmp(def, "datahandler") == 0) {
+		} else if (strcmp(def, "datahandler") == 0) {
 			asprintf(&datahandler, "%s", val);
-			continue;
-		}
-		if (strcmp(def, "queuefile") == 0) {
+		} else if (strcmp(def, "queuefile") == 0) {
 			asprintf(&tmpf, "%s", val);
-			continue;
-		}
-		if (strcmp(def, "queuesize") == 0) {
+		} else if (strcmp(def, "queuesize") == 0) {
 			qsize = atoi(val);
-			continue;
-		}
-		if (strcmp(def, "interval") == 0) {
+		} else if (strcmp(def, "interval") == 0) {
 			interval = atoi(val);
-			continue;
 		}
+
+		/* Free current values */
+		free(def);
+		free(val);
+		def = val = NULL;
 	}
+	free(line);
 	fclose(fp);
 
 	if (datahandler == NULL) {
@@ -69,7 +69,7 @@ void loadConf(char *conffile) {
 	}
 }
 
-int sendData(char param[keylen]) {
+int sendData(char param[elsize]) {
 	char* command;
 	int success = -1;
 
@@ -162,6 +162,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	loadConf(conffile);
+	free(conffile);
 
 	fd = open(tmpf, O_RDWR);
 	if (fd < 0 && errno == ENOENT) {

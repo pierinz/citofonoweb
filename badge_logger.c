@@ -18,60 +18,52 @@ int hpid = 0;
 
 void loadConf(char *conffile) {
 	FILE* fp;
-	char line[confline], def[confdef], val[confval];
+	char *line = NULL, *def = NULL, *val = NULL;
+	size_t n = 1;
 
 	fp = fopen(conffile, "r");
-	free(conffile);
 	if (!fp) {
 		fprintf(stderr, "File %s:\n", conffile);
 		perror("Error opening configuration: ");
 		exit(1);
 	}
 
-	while (fgets(line, (confline - 1), fp)) {
-		/* Delete previous value */
-		def[0] = '\0';
-		val[0] = '\0';
-
-		sscanf(line, "%s %[^\n]", def, val);
+	line = calloc(n, sizeof (char));
+	while (getline(&line, &n, fp) > 0) {
+		sscanf(line, "%ms %m[^\n]", &def, &val);
+		if (def == NULL)
+			asprintf(&def, " ");
+		if (val == NULL)
+			asprintf(&val, " ");
 
 		if (strcmp(def, "verbose") == 0) {
 			verbose = atoi(val);
-			continue;
-		}
-		if (strcmp(def, "queuefile") == 0) {
+		} else if (strcmp(def, "queuefile") == 0) {
 			asprintf(&tmpf, "%s", val);
-			continue;
-		}
-		if (strcmp(def, "queuesize") == 0) {
+		} else if (strcmp(def, "queuesize") == 0) {
 			if (atoi(val) > 65535) {
 				fprintf(stderr, "Your queue size is too long. Max queue size: 65535\n");
 				exit(1);
 			}
 			qsize = atoi(val);
-			continue;
-		}
-		if (strcmp(def, "getseconds") == 0) {
+		} else if (strcmp(def, "getseconds") == 0) {
 			getseconds = atoi(val);
-			continue;
-		}
-		if (strcmp(def, "interval") == 0) {
+		} else if (strcmp(def, "interval") == 0) {
 			interval = atoi(val);
-			continue;
-		}
-		if (strcmp(def, "reporthandler") == 0) {
+		} else if (strcmp(def, "reporthandler") == 0) {
 			asprintf(&reporthandler, "%s", val);
-			continue;
-		}
-		if (strcmp(def, "params") == 0) {
+		} else if (strcmp(def, "params") == 0) {
 			asprintf(&params, "%s", val);
-			continue;
-		}
-		if (strcmp(def, "uploader") == 0) {
+		} else if (strcmp(def, "uploader") == 0) {
 			asprintf(&uploader, "%s", val);
-			continue;
 		}
+
+		/* Free current values */
+		free(def);
+		free(val);
+		def = val = NULL;
 	}
+	free(line);
 	fclose(fp);
 
 	if (params == NULL) {
@@ -178,8 +170,7 @@ void signal_handler(int signum) {
 		if (pid == hpid) {
 			printf("background data loader %d has terminated.\n", pid);
 			hpid = 0;
-		}
-		else if (pid > 0) {
+		} else if (pid > 0) {
 			printf("helper %d has terminated.\n", pid);
 		}
 	}
@@ -191,7 +182,7 @@ int main(int argc, char *argv[]) {
 	int c, pages, retry;
 	char *conffile = NULL;
 	char *param, elem[elsize], buftime[22];
-	size_t *n;
+	size_t n = 1;
 
 	short new = 0;
 	time_t rawtime;
@@ -221,6 +212,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	loadConf(conffile);
+	free(conffile);
 
 	fd = open(tmpf, O_RDWR);
 	if (fd < 0 && errno == ENOENT) {
@@ -286,12 +278,11 @@ int main(int argc, char *argv[]) {
 	if (strlen(uploader) > 2)
 		runUploader();
 
-	n = malloc(sizeof (int));
-	*n = 0;
-
 	printf("Ready to accept data.\n");
 	fflush(stdout);
-	while (loop && (getline(&param, n, stdin) > 0)) {
+
+	param = calloc(n, sizeof (char));
+	while (loop && (getline(&param, &n, stdin) > 0)) {
 		/* Remove trailing \n */
 		strtok(param, "\n");
 
@@ -335,15 +326,9 @@ int main(int argc, char *argv[]) {
 		if (verbose) {
 			fprintf(stderr, "%d %d\n", *start, *current);
 		}
-		free(param);
-		param = NULL;
 	}
+	free(param);
 
-	/* Free param on getline error */
-	if (param != NULL)
-		free(param);
-
-	free(n);
 	free(tmpf);
 	free(reporthandler);
 	free(uploader);

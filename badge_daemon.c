@@ -2,16 +2,11 @@
 #include "common.h"
 #include <pthread.h>
 
-#define VERSION "0.3"
+#define VERSION "0.3-r2"
 
 /* Default configuration directory path (if not specified with -f)*/
 #ifndef CONFPATH
 #define CONFPATH "conf"
-#endif
-
-/* Max length of log line */
-#ifndef loglen
-#define loglen 150
 #endif
 
 char *source, *helper, separator[2];
@@ -55,8 +50,8 @@ void version() {
 #ifdef NO_LOGFILE
 	printf("-DNO_LOGFILE ");
 #endif
-	printf("-DCONFPATH %s -Dloglen %d -Dconfline %d -Dconfdef %d -Dconfval %d -Dkeylen %d\n",
-			CONFPATH, loglen, confline, confdef, confval, keylen);
+	printf("-DCONFPATH %s\n",
+			CONFPATH);
 	fflush(stdout);
 }
 
@@ -151,7 +146,8 @@ void fatal(char* message) {
 
 void loadConf(char *conffile) {
 	FILE* fp;
-	char line[confline], def[confdef], val[confval];
+	size_t n = 1;
+	char *line = NULL, *def = NULL, *val = NULL;
 
 	fp = fopen(conffile, "r");
 	if (!fp) {
@@ -160,49 +156,46 @@ void loadConf(char *conffile) {
 		exit(1);
 	}
 
-	while (fgets(line, (confline - 1), fp)) {
-		/* Delete previous value */
-		def[0] = '\0';
-		val[0] = '\0';
+	line = calloc(n, sizeof (char));
+	while (getline(&line, &n, fp) > 0) {
+		/* Parse line and allocate space for the parameters */
+		sscanf(line, "%ms %m[^\n]", &def, &val);
+		if (def == NULL)
+			asprintf(&def, " ");
+		if (val == NULL)
+			asprintf(&val, " ");
 
-		sscanf(line, "%s %[^\n]", def, val);
 		if (strcmp(def, "source") == 0) {
 			/* must be large enough to contain "val" */
-			source = calloc(1, strlen(val) + 1);
-			strcpy(source, val);
-			continue;
-		}
-		if (strcmp(def, "helper") == 0) {
+			asprintf(&source, "%s", val);
+		} else if (strcmp(def, "helper") == 0) {
 			/* must be large enough to contain "val" */
-			helper = calloc(1, strlen(val) + 1);
-			strcpy(helper, val);
-			continue;
+			asprintf(&helper, "%s", val);
 		}
 #ifndef NO_LOGFILE
-		if (strcmp(def, "logfile") == 0) {
+		else if (strcmp(def, "logfile") == 0) {
 			/* must be large enough to contain "val" */
-			logfile = calloc(1, strlen(val) + 1);
-			strcpy(logfile, val);
-			continue;
+			asprintf(&logfile, "%s", val);
 		}
 #endif
 #ifdef MK_PIDFILE
-		if (strcmp(def, "pidfile") == 0) {
+		else if (strcmp(def, "pidfile") == 0) {
 			/* must be large enough to contain "val" */
-			pidfile = calloc(1, strlen(val) + 1);
-			strcpy(pidfile, val);
-			continue;
+			asprintf(&pidfile, "%s", val);
 		}
 #endif
-		if (strcmp(def, "verbose") == 0) {
+		else if (strcmp(def, "verbose") == 0) {
 			verbose = atoi(val);
-			continue;
-		}
-		if (strcmp(def, "debounce") == 0) {
+		} else if (strcmp(def, "debounce") == 0) {
 			debounce = atoi(val);
-			continue;
 		}
+
+		/* Free current values */
+		free(def);
+		free(val);
+		def = val = NULL;
 	}
+	free(line);
 	fclose(fp);
 
 	if (verbose > 1) {
@@ -215,6 +208,7 @@ void *tSource() {
 	time_t now, before;
 	FILE* pipesource;
 	char** args;
+	size_t n = 1;
 
 	spid = fork();
 	if (spid == 0) {
@@ -237,9 +231,7 @@ void *tSource() {
 
 		close(psource[1]); /* These are being used by the child */
 
-		buffer = calloc(1, sizeof (char)*keylen);
-		oldbuffer = calloc(1, sizeof (char)*keylen);
-		oldbuffer = strcpy(oldbuffer, "\0");
+		asprintf(&oldbuffer, " ");
 		before = 0;
 		time(&now);
 
@@ -250,7 +242,8 @@ void *tSource() {
 		}
 		logmessage("Source -> ready.");
 
-		while (loop && fgets(buffer, keylen, pipesource)) {
+		buffer = calloc(n, sizeof (char));
+		while (loop && getline(&buffer, &n, pipesource) > 0) {
 			strtok(buffer, "\n");
 
 			if (verbose > 1) {
@@ -263,8 +256,7 @@ void *tSource() {
 					fprintf(stderr, "Got badge %s from source\n", buffer);
 				}
 
-				msg = calloc(1, sizeof (char)*(strlen(buffer) + 1 + 22));
-				sprintf(msg, "Got badge %s from source", buffer);
+				asprintf(&msg, "Got badge %s from source", buffer);
 				logmessage(msg);
 				free(msg);
 
@@ -275,14 +267,16 @@ void *tSource() {
 					break;
 				}
 
-				strcpy(buffer, oldbuffer);
+				free(oldbuffer);
+				asprintf(&oldbuffer, "%s", buffer);
 				before = now;
 			}
 		}
-		fclose(pipesource);
-		close(phelperOUT[1]);
 		free(buffer);
 		free(oldbuffer);
+
+		fclose(pipesource);
+		close(phelperOUT[1]);
 		/* Pipe closed by signal handler */
 
 		if (verbose > 0) {
@@ -301,6 +295,7 @@ void *tHelper() {
 	time_t now;
 	FILE* pipehelper;
 	char** args;
+	size_t n = 1;
 
 	hpid = fork();
 	if (hpid == 0) {
@@ -329,7 +324,6 @@ void *tHelper() {
 		close(phelperIN[1]);
 		close(phelperOUT[0]);
 
-		buffer = calloc(1, sizeof (char)*loglen);
 		time(&now);
 
 		pipehelper = fdopen(phelperIN[0], "r");
@@ -339,7 +333,8 @@ void *tHelper() {
 		}
 		logmessage("Helper -> ready to parse data.");
 
-		while (loop && fgets(buffer, loglen, pipehelper)) {
+		buffer = calloc(n, sizeof (char));
+		while (loop && getline(&buffer, &n, pipehelper) > 0) {
 			strtok(buffer, "\n");
 			time(&now);
 			if (verbose > 1) {
@@ -347,9 +342,11 @@ void *tHelper() {
 			}
 			logmessage(buffer);
 		}
-		fclose(pipehelper);
 		free(buffer);
+
+		fclose(pipehelper);
 		/* Pipe closed by signal handler */
+
 		if (verbose > 0) {
 			fprintf(stderr, "Helper -> process terminated.\n");
 		}
