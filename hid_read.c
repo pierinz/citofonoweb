@@ -126,7 +126,7 @@ int prepareDev(char* devname) {
 		fprintf(stderr, "Reading From : %s (%s)\n", devname, name);
 	}
 
-	/* Uso esclusivo */
+	/* Exclusive access */
 	ioctl(fd, EVIOCGRAB, 1);
 
 	if (retry > -1) {
