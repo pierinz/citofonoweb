@@ -59,7 +59,7 @@ Advanced options
 From version 0.3 the daemon aims to run as simple user instead of root. So it won't create the pidfile anymore
 (the initscript will create it).
 To get the previous behaviour add OPTIONS=-DMK_PIDFILE, so the daemon will create the pidfile. Ensure to have write access, or it will crash.
-If you are using systemd or you don't like the logfile, you can disabe and redirect all messages to stdout with OPTIONS=-DNO_LOGFILE.
+If you are using systemd or you don't like the logfile, you can disable and redirect all messages to stdout with OPTIONS=-DNO_LOGFILE.
 
 Installation
 -------------------------------
