@@ -141,7 +141,7 @@ install: $(PROGRAMS) $(DOOR_TOOLS) $(LOGGER_TOOLS)
 	fi
 
 	if [ -n "`echo $(EXAMPLES) | grep remote_save_ssh`" ]; then \
-	    install -m 0755 -t $(prefix)/sbin examples/remote_save_ssh.sh ; \
+	    install -m 0755 -t $(prefix)/sbin examples/badge_logger/remote_save_ssh.sh ; \
 	    if [ ! -e $(confdir)/.ssh/id_rsa ]; then \
 		mkdir -p $(confdir)/.ssh/ ; \
 		ssh-keygen -q -N "" -f $(confdir)/.ssh/id_rsa; \
@@ -149,11 +149,11 @@ install: $(PROGRAMS) $(DOOR_TOOLS) $(LOGGER_TOOLS)
 	fi
 
 	if [ -n "`echo $(EXAMPLES) | grep text_feedback`" ]; then \
-	    install -m 0755 -t $(prefix)/sbin examples/text_feedback.sh ; \
+	    install -m 0755 -t $(prefix)/sbin examples/badge_logger/text_feedback.sh ; \
 	fi
 
 	if [ -n "`echo $(EXAMPLES) | grep lcd_feedback`" ]; then \
-	    install -m 0755 -t $(prefix)/sbin examples/lcd_feedback.sh ; \
+	    install -m 0755 -t $(prefix)/sbin examples/badge_logger/lcd_feedback.sh ; \
 	fi
 
 	if [ -n "`echo $(LOGGER_TOOLS) | grep buzzer`" ]; then \
