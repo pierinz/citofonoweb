@@ -39,7 +39,7 @@ int GPIOExport(int pin) {
 	}
 	close(fd);
 
-	// Wait udev-related things
+	/* Wait udev-related things */
 	usleep(200000);
 	return (0);
 }
