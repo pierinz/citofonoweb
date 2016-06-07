@@ -201,7 +201,7 @@ int main(int argc, char *argv[]) {
 		msync(queue, msize, MS_SYNC);
 	}
 
-	/* Cattura segnali di uscita */
+	/* Catch exit signals */
 	sig_h.sa_handler = signal_handler;
 	sig_h.sa_flags = 0;
 	/* Signals blocked during the execution of the handler. */
