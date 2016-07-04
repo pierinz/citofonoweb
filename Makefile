@@ -125,6 +125,7 @@ install: $(PROGRAMS) $(DOOR_TOOLS) $(LOGGER_TOOLS)
 	getent passwd badge_daemon >/dev/null || useradd -r badge_daemon
 	gpasswd -a badge_daemon spi || ( groupadd -r spi && gpasswd -a badge_daemon spi )
 	gpasswd -a badge_daemon gpio || ( groupadd -r gpio && gpasswd -a badge_daemon gpio )
+	gpasswd -a badge_daemon dialout || echo "Serial access already granted"
 	install -m 644 resources/99-gpio-permissions.rules /etc/udev/rules.d/
 	gpasswd -a badge_daemon input || ( groupadd -r input && gpasswd -a badge_daemon input )
 	install -m 644 resources/99-input-permissions.rules /etc/udev/rules.d/
