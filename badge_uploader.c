@@ -94,7 +94,7 @@ int emptyQueue() {
 	char* element;
 	int i = 0, total, queued;
 
-	total = abs(current - start);
+	total = abs(*current - *start);
 	queued = total;
 	if (total > 0) {
 		element = malloc(sizeof (char)*elsize);
@@ -116,7 +116,7 @@ int emptyQueue() {
 		free(element);
 	}
 
-	printf("Queued elements: %d/%d elements sent.\n", i, total / elsize);
+	printf("Queued elements: %d/%d elements sent.\n", total / elsize, i);
 	fflush(stdout);
 	return queued;
 }
