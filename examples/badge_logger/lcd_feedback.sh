@@ -11,17 +11,27 @@ touch $LOCKFILE
 # Get the badge owner
 badge_user=`echo "SELECT user FROM citofonoweb.users WHERE rfid_code = '$badge'; " | mysql -u root -bN`
 
-msg=`mktemp`
-echo "`date +%d/%m/%Y`     `date +%H:%M`" > $msg
-echo >> $msg
-echo "     $badge_user" >> $msg
-echo "  BADGE REGISTERED" >> $msg
-cat $msg | lcdscreen
+if [ x"$badge_user" == 'x' ]; then
+	msg=`mktemp`
+	echo "`date +%d/%m/%Y`     `date +%H:%M`" > $msg
+	echo >> $msg
+	echo "     NO DATA" >> $msg
+	echo "  BADGE UNKNOWN" >> $msg
+	cat $msg | lcdscreen
+	# Do you need some noise?
+    #buzzer -g 26 -d 2 ; sleep 0.1 ; buzzer -g 26 -d 0.2 ; sleep 0.1 ; buzzer -g 26 -d 0.2
+else
+	msg=`mktemp`
+	echo "`date +%d/%m/%Y`     `date +%H:%M`" > $msg
+	echo >> $msg
+	echo "     $badge_user" >> $msg
+	echo "  BADGE REGISTERED" >> $msg
+	cat $msg | lcdscreen
+	# Do you need some noise?
+	#buzzer -g 26 -f 1400 -d 1
 
-# Do you need some noise?
-#buzzer -g 26 -f 1400 -d 1
-
-sleep 2
+	sleep 2
+fi
 
 echo "`date +%d/%m/%Y`     `date +%H:%M`" > $msg
 echo >> $msg

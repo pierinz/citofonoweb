@@ -13,8 +13,12 @@ badge="$2"
 #Get the badge owner
 badge_user=`echo "SELECT user FROM citofonoweb.users WHERE rfid_code = '$badge'; " | mysql -u root -bN`
 
-if [ -z "$badge_user" ]; then
+if [ x"$badge_user" == 'x' ]; then
+	# Choose one:
+	# 1 - die and wait for manual resolution
 	exit 1
+	# 2 - skip gracefully and save the failed command somewhere
+	#echo "$0 $@" >> /var/log/badge_daemon/badge_daemon_failed.log ; echo "User not found, skipping" ; exit 0
 fi
 
 #Get the swipe way
