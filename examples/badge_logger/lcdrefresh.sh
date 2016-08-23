@@ -11,6 +11,15 @@ echo >> $msg
 echo "    SWIPE BADGE" >> $msg
 echo >> $msg
 
+# Test if server is offline
+#REMOTE=http://test.loc
+if [ x"$REMOTE" != 'x' ]; then
+	wget -q --tries=1 --timeout=0.1 --spider $REMOTE
+	if [ $? -ne 0 ]; then
+			echo "     (OFF-LINE)" >> $msg
+	fi
+fi
+
 # Ensure nobody is writing
 if [ ! -e "$LOCKFILE" ]; then
 	cat  $msg | lcdscreen
