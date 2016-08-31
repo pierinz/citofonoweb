@@ -196,6 +196,7 @@ install: $(PROGRAMS) $(DOOR_TOOLS) $(LOGGER_TOOLS)
 
 	if which systemctl >/dev/null 2>&1 ; then \
 	    install -m 0644 resources/badge_daemon.service /etc/systemd/system/badge_daemon.service ; \
+	    install -m 0644 resources/badge_daemon@.service /etc/systemd/system/badge_daemon.service ; \
 	    sed -i s:'^ExecStart=badge_daemon':'ExecStart=$(prefix)/sbin/badge_daemon': /etc/systemd/system/badge_daemon.service ; \
 	    sed -i s:'-f conf/badge_daemon.conf':'-f $(confdir)/badge_daemon.conf': /etc/systemd/system/badge_daemon.service ; \
 	    sed -i s:'-f conf/':'-f $(confdir)/': '/etc/systemd/system/badge_daemon@.service' ; \
