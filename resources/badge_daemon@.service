@@ -1,0 +1,12 @@
+[Unit]
+Description=badge_daemon special instance (%i)
+Wants=mysqld.service ntp.service
+After=mysqld.service ntp.service
+
+[Service]
+Type=simple
+User=badge_daemon
+ExecStart=badge_daemon -f conf/%i.conf
+
+[Install]
+WantedBy=multi-user.target

@@ -198,6 +198,7 @@ install: $(PROGRAMS) $(DOOR_TOOLS) $(LOGGER_TOOLS)
 	    install -m 0644 resources/badge_daemon.service /etc/systemd/system/badge_daemon.service ; \
 	    sed -i s:'^ExecStart=badge_daemon':'ExecStart=$(prefix)/sbin/badge_daemon': /etc/systemd/system/badge_daemon.service ; \
 	    sed -i s:'-f conf/badge_daemon.conf':'-f $(confdir)/badge_daemon.conf': /etc/systemd/system/badge_daemon.service ; \
+	    sed -i s:'-f conf/':'-f $(confdir)/': '/etc/systemd/system/badge_daemon@.service' ; \
 	    systemctl enable badge_daemon ; \
 	elif [ "`lsb_release -is`" = 'Debian' ]; then \
 	    install -m 0755 resources/debian_initscript /etc/init.d/badge_daemon ; \
