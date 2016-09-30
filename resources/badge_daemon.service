@@ -1,7 +1,7 @@
 [Unit]
 Description=badge_daemon
-Wants=mysqld.service ntp.service
-After=mysqld.service ntp.service
+Wants=mysql.service ntp.service
+After=mysql.service ntp.service
 
 [Service]
 Type=simple
