@@ -4,7 +4,7 @@
 
 #define VERSION "0.3-r2"
 
-char *datahandler;
+char *datahandler, *params;
 char *tmpf, *queue;
 
 int qsize = 1500, msize;
@@ -39,6 +39,8 @@ void loadConf(char *conffile) {
 			verbose = atoi(val);
 		} else if (strcmp(def, "datahandler") == 0) {
 			asprintf(&datahandler, "%s", val);
+		} else if (strcmp(def, "params") == 0) {
+			asprintf(&params, "%s", val);
 		} else if (strcmp(def, "queuefile") == 0) {
 			asprintf(&tmpf, "%s", val);
 		} else if (strcmp(def, "queuesize") == 0) {
@@ -90,8 +92,23 @@ int sendData(char param[elsize]) {
 	}
 }
 
+int formatData(char* element, char** f_element) {
+	char data[elsize];
+	char dt[15];
+	if (sscanf(element, "%s %s", dt, data) == 2) {
+		/* prepare the string as defined in configuration */
+		if (asprintf(f_element, params, dt, data) > 0) {
+			return 1;
+		} else {
+			return -1;
+		}
+	} else {
+		return -1;
+	}
+}
+
 int emptyQueue() {
-	char* element;
+	char *element, *f_element;
 	int i = 0, total, queued;
 
 	total = abs(*current - *start);
@@ -103,7 +120,16 @@ int emptyQueue() {
 				printf("Got element %s from queue\n", element);
 				fflush(stdout);
 			}
-			if (sendData(element) < 1) {
+			if (formatData(element, &f_element) < 1) {
+				/* Stop on first error and retry in the future */
+				printf("Cannot format data.\n");
+				break;
+			}
+			if (verbose) {
+				printf("Formatted data: %s \n", f_element);
+				fflush(stdout);
+			}
+			if (sendData(f_element) < 1) {
 				/* Stop on first error and retry in the future */
 				printf("%d elements sent before server vanished.\n", i);
 				fflush(stdout);
@@ -114,6 +140,7 @@ int emptyQueue() {
 			i++;
 		}
 		free(element);
+		free(f_element);
 	}
 
 	printf("Queued elements: %d/%d elements sent.\n", total / elsize, i);
@@ -232,5 +259,6 @@ int main(int argc, char *argv[]) {
 
 	free(tmpf);
 	free(datahandler);
+	free(params);
 	exit(0);
 }
