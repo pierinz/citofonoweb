@@ -232,8 +232,9 @@ void *tSource() {
 		close(psource[1]); /* These are being used by the child */
 
 		asprintf(&oldbuffer, " ");
-		before = 0;
+
 		time(&now);
+		before = now;
 
 		pipesource = fdopen(psource[0], "r");
 
@@ -251,14 +252,20 @@ void *tSource() {
 			}
 
 			time(&now);
-			if (strcmp(buffer, oldbuffer) != 0 && (before + debounce) <= now) {
+			if (strcmp(buffer, oldbuffer) != 0 || (strcmp(buffer, oldbuffer) == 0 && difftime(now, before) >= debounce)) {
 				if (verbose > 1) {
 					fprintf(stderr, "Got badge %s from source\n", buffer);
+					fprintf(stderr, "Buffer compare: %s, %s = %i\n", buffer, oldbuffer, strcmp(buffer, oldbuffer));
+					fprintf(stderr, "Min debounce %d, got %f\n", debounce, difftime(now, before));
 				}
 
 				asprintf(&msg, "Got badge %s from source", buffer);
 				logmessage(msg);
 				free(msg);
+
+				/* Save buffer to compare later */
+				free(oldbuffer);
+				asprintf(&oldbuffer, "%s", buffer);
 
 				strcat(buffer, "\n");
 				/* Send key to helper via pipe */
@@ -267,9 +274,11 @@ void *tSource() {
 					break;
 				}
 
-				free(oldbuffer);
-				asprintf(&oldbuffer, "%s", buffer);
 				before = now;
+			} else {
+				if (verbose > 1) {
+					fprintf(stderr, "Badge %s from source ignored by debounce (%i): %f s diff.\n", buffer, debounce, difftime(now, before));
+				}
 			}
 		}
 		free(buffer);
