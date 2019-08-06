@@ -81,11 +81,11 @@ int main(int argc, char* argv[]) {
 	int c, fd, i;
 	int speed, parity = 0;
 	char buf [100];
-	uint8_t outmode = 0;
+	uint8_t outmode = 0, blocking = 0;
 	struct sigaction sig_h;
 
 	/* Load settings from commandline */
-	while ((c = getopt(argc, argv, "s:p:o:vh")) != -1) {
+	while ((c = getopt(argc, argv, "s:p:o:vbh")) != -1) {
 		switch (c) {
 			case 's':
 				switch (atoi(optarg)) {
@@ -135,6 +135,8 @@ int main(int argc, char* argv[]) {
 				else
 					outmode = 1;
 				break;
+			case 'b':
+				blocking = 1;
 			case 'v':
 				verbose++;
 				break;
@@ -144,6 +146,7 @@ int main(int argc, char* argv[]) {
 						"-s X\t\tSerial speed (1200, 2400, 4800, 9600, 19200, 38400, 57600 or 115200)\n"
 						"-p X\t\tParity (8N1, 7E1, 701)\n"
 						"-o X\t\tOutput (char|line)\n"
+						"-b\t\tSet blocking\n"
 						"-v\t\tBe verbose\n"
 						"-h\t\tShow this message\n\n"
 						);
@@ -183,7 +186,7 @@ int main(int argc, char* argv[]) {
 	sigaction(SIGTERM, &sig_h, NULL);
 
 	set_interface_attribs(fd, speed, parity);
-	set_blocking(fd, 0); /* set no blocking */
+	set_blocking(fd, blocking);
 
 	if (verbose) {
 		fprintf(stderr, "Set attribs: s: %d p: %d\n", speed, parity);
