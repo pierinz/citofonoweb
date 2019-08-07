@@ -23,13 +23,16 @@ ifneq ($(filter arm%,$(shell uname -m)),)
 	override CFLAGS+= -fno-stack-protector
     endif
 endif
-ifeq "$(GCCVERSION)" "4.8"
-    override CFLAGS+= -march=native
-endif
-ifeq "$(GCCVERSION)" "4.9"
-    override CFLAGS+= -march=native
-endif
 
+ifneq "$(BOARD)" "RASPBERRY"
+    ifeq "$(GCCVERSION)" "4.9"
+	override CFLAGS+= -mcpu=cortex-a53 -mfpu=neon-fp-armv8
+    else
+	override CFLAGS+= -march=native
+    endif
+else
+    override CFLAGS+= -march=native
+endif
 
 ifeq ("$(BACKEND)","mysql")
     override LIBS+=-DMYSQL_B `mysql_config --cflags --libs`
