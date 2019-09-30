@@ -25,6 +25,10 @@ if [ \( "$2" != "in" \) -a  \( "$2" != "out" \) ] ; then
     exit 255
 fi
 
+while [ ! -w "/sys/class/gpio/gpio$1/direction" ]; do
+	sleep 0.1
+done
+
 echo $2 > /sys/class/gpio/gpio$1/direction
 
 if [  $# -eq 2 ] ; then
