@@ -144,6 +144,7 @@ install: $(PROGRAMS) $(DOOR_TOOLS) $(LOGGER_TOOLS)
 
 	if [ -n "`echo $(DOOR_TOOLS) | grep gpio`" ]; then \
 	    install -m 0755 -t $(prefix)/sbin resources/gpio.sh ; \
+	    install -m 0755 -t $(prefix)/sbin resources/gpiodset.sh ; \
 	fi
 
 	if [ -n "`echo $(DOOR_TOOLS) | grep piface`" ]; then \
