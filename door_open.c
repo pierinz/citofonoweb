@@ -46,8 +46,13 @@ sqlite3 *handle;
 #endif
 
 #ifdef MYSQL_B
+#ifdef MARIADB_B
+#include <mariadb/mysql.h>
+#include <mariadb/errmsg.h>
+#else
 #include <mysql/mysql.h>
 #include <mysql/errmsg.h>
+#endif
 
 MYSQL con;
 char *dbhost, *dbuser, *dbpassword, *dbname, *id;

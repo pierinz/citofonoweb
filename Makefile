@@ -35,7 +35,11 @@ else
 endif
 
 ifeq ("$(BACKEND)","mysql")
-    override LIBS+=-DMYSQL_B `mysql_config --cflags --libs`
+    ifeq ("$(wildcard /usr/bin/mariadb_config)","")
+	override LIBS+=-DMYSQL_B `mysql_config --cflags --libs`
+    else
+	override LIBS+=-DMYSQL_B -DMARIADB_B `mariadb_config --cflags --libs`
+    endif
 else
     override LIBS+=-DSQLITE_B -lsqlite3
 endif
