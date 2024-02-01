@@ -13,6 +13,8 @@ int interval = 30;
 short verbose = 0;
 short loop = 1;
 
+short drop = 0;
+
 int fd = 0;
 
 void loadConf(char *conffile) {
@@ -129,6 +131,13 @@ int emptyQueue() {
 				printf("Formatted data: %s \n", f_element);
 				fflush(stdout);
 			}
+
+			if (drop) {
+				popData(NULL);
+				loop = 0;
+				return 1;
+			}
+
 			if (sendData(f_element) < 1) {
 				/* Stop on first error and retry in the future */
 				printf("%d elements sent before server vanished.\n", i);
@@ -166,7 +175,7 @@ int main(int argc, char *argv[]) {
 	short new = 0;
 
 	/* Load settings from commandline */
-	while ((c = getopt(argc, argv, "f:h")) != -1) {
+	while ((c = getopt(argc, argv, "f:Dh")) != -1) {
 		switch (c) {
 			case 'f':
 				if (asprintf(&conffile, "%s", optarg) < 0) {
@@ -174,10 +183,13 @@ int main(int argc, char *argv[]) {
 					exit(1);
 				}
 				break;
+			case 'D':
+				drop = 1;
 			case 'h':
 				printf("Usage: badge_uploader [ -f configuration file ] [ -h ]\n"
 						"\n"
 						"-f FILE\t\tLoad configuration from FILE\n"
+						"-D\t\tDrops the first element in queue and exits\n"
 						"-h\t\tShow this message\n\n"
 						);
 				exit(1);
@@ -254,7 +266,9 @@ int main(int argc, char *argv[]) {
 		if (verbose) {
 			fprintf(stderr, "%d %d\n", *start, *current);
 		}
-		sleep(interval);
+		if (!drop) {
+			sleep(interval);
+		}
 	}
 
 	free(tmpf);

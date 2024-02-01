@@ -12,6 +12,7 @@
 char *source, *helper, separator[2];
 short verbose = 0;
 short debounce = 1;
+short filterbadge = 1;
 
 pthread_t thr_source, thr_helper;
 int psource[2], phelperIN[2], phelperOUT[2];
@@ -77,6 +78,18 @@ char** argv_from_string(char *args) {
 
 	argv[argc] = (char*) NULL;
 	return argv;
+}
+
+/* Return 1 if the string is alphanumeric, 0 otherwise */
+short badgevalid(char *badge) {
+	int i;
+
+	for (i = 0; i < strlen(badge); i++) {
+		if (!isalpha(badge[i]) && !isdigit(badge[i])) {
+			return 0;
+		}
+	}
+	return 1;
 }
 
 void logmessage(char *message) {
@@ -184,7 +197,9 @@ void loadConf(char *conffile) {
 			asprintf(&pidfile, "%s", val);
 		}
 #endif
-		else if (strcmp(def, "verbose") == 0) {
+		else if (strcmp(def, "filter") == 0) {
+			filterbadge = atoi(val);
+		} else if (strcmp(def, "verbose") == 0) {
 			verbose = atoi(val);
 		} else if (strcmp(def, "debounce") == 0) {
 			debounce = atoi(val);
@@ -268,6 +283,21 @@ void *tSource() {
 				asprintf(&oldbuffer, "%s", buffer);
 
 				strcat(buffer, "\n");
+
+				/* Filter badge if needed */
+				if (filterbadge) {
+					if (badgevalid(buffer)) {
+						if (verbose > 1) {
+							fprintf(stderr, "Badge %s should be valid\n", buffer);
+						}
+					} else {
+						asprintf(&msg, "Badge %s discarded by filter", buffer);
+						logmessage(msg);
+						free(msg);
+						continue;
+					}
+				}
+
 				/* Send key to helper via pipe */
 				if (write(phelperOUT[1], buffer, sizeof (char)*(strlen(buffer))) < 0) {
 					perror("write: ");

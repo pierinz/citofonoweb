@@ -24,7 +24,8 @@ fi
 #Get the swipe way
 # 0: enter
 # 1: exit
-# 2: autodetect
+# 2: autodetect (server side)
+# 3: autodetect (client side)
 badge_way='2'
 
 #Remote command to save data
