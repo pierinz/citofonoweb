@@ -185,6 +185,7 @@ int main(int argc, char *argv[]) {
 				break;
 			case 'D':
 				drop = 1;
+				break;
 			case 'h':
 				printf("Usage: badge_uploader [ -f configuration file ] [ -h ]\n"
 						"\n"
