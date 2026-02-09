@@ -218,7 +218,7 @@ void loadConf(char *conffile) {
 	}
 }
 
-void *tSource() {
+void *tSource(void*) {
 	char *buffer, *oldbuffer, *msg;
 	time_t now, before;
 	FILE* pipesource;
@@ -329,7 +329,7 @@ void *tSource() {
 	return 0;
 }
 
-void *tHelper() {
+void *tHelper(void*) {
 	char *buffer;
 	time_t now;
 	FILE* pipehelper;
@@ -529,14 +529,14 @@ int main(int argc, char *argv[]) {
 		fatal("Error opening helper pipe 1");
 	}
 
-	/* Crea thread di controllo coda */
+	/* Create source thread */
 	pthread_create(&thr_source, NULL, tSource, NULL);
 	if (verbose > 1) {
 		fprintf(stderr, "Source thread started.\n");
 	}
 	logmessage("Source thread started.");
 
-	/* Crea thread autenticazione */
+	/* Create helper thread */
 	pthread_create(&thr_helper, NULL, tHelper, NULL);
 	if (verbose > 1) {
 		fprintf(stderr, "Helper thread started.\n");
