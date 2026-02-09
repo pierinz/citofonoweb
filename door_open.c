@@ -776,11 +776,13 @@ int main(int argc, char **argv) {
 	if (strlen(led_off_command) > 2)
 		pin_off(Statusled);
 
+	#ifdef MYSQL_B
 	free(dbhost);
 	free(dbuser);
 	free(dbpassword);
 	free(dbname);
 	free(id);
+	#endif
 
 	free(badge_table);
 	free(user_colname);
