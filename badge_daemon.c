@@ -86,6 +86,9 @@ short badgevalid(char *badge) {
 
 	for (i = 0; i < strlen(badge); i++) {
 		if (!isalpha(badge[i]) && !isdigit(badge[i])) {
+			if (verbose > 1){
+				fprintf(stderr, "Wrong char: %c - code: %i - position: %i\n", badge[i], badge[i], i);
+			}
 			return 0;
 		}
 	}
@@ -103,28 +106,33 @@ void logmessage(char *message) {
 
 #ifndef NO_LOGFILE
 	/* Other threads shouldn't write logfile concurrently */
-	pthread_mutex_lock(&mutex);
+	assert(pthread_mutex_lock(&mutex) == 0);
 	fputs(buffer, flog);
 	fputs(message, flog);
 	fputs("\n", flog);
 	fflush(flog);
-	pthread_mutex_unlock(&mutex);
+	assert(pthread_mutex_unlock(&mutex) == 0);
 #else
 	printf("%s%s\n", buffer, message);
 	fflush(stdout);
 #endif
+
+	/* If debug is enabled, print all to stderr */
+	if (verbose > 1){
+		fprintf(stderr, "%s%s\n", buffer, message);
+	}
 }
 
 void rotate() {
 #ifndef NO_LOGFILE
-	pthread_mutex_lock(&mutex);
+	assert(pthread_mutex_lock(&mutex) == 0);
 	fclose(flog);
 	while (access(logfile, F_OK) == 0) {
 		/* Wait for file deletion */
 		usleep(20000);
 	}
 	flog = fopen(logfile, "a");
-	pthread_mutex_unlock(&mutex);
+	assert(pthread_mutex_unlock(&mutex) == 0);
 	fprintf(stderr, "Logfile rotated.");
 	logmessage("Logfile rotated.");
 #else
@@ -282,13 +290,11 @@ void *tSource(void*) {
 				free(oldbuffer);
 				asprintf(&oldbuffer, "%s", buffer);
 
-				strcat(buffer, "\n");
-
 				/* Filter badge if needed */
 				if (filterbadge) {
 					if (badgevalid(buffer)) {
 						if (verbose > 1) {
-							fprintf(stderr, "Badge %s should be valid\n", buffer);
+							fprintf(stderr, "Badge %s seeems to be valid\n", buffer);
 						}
 					} else {
 						asprintf(&msg, "Badge %s discarded by filter", buffer);
@@ -297,6 +303,9 @@ void *tSource(void*) {
 						continue;
 					}
 				}
+
+				/* Append newline */
+				strcat(buffer, "\n");
 
 				/* Send key to helper via pipe */
 				if (write(phelperOUT[1], buffer, sizeof (char)*(strlen(buffer))) < 0) {
@@ -493,6 +502,9 @@ int main(int argc, char *argv[]) {
 	}
 #endif
 
+	if (verbose > 1 && filterbadge > 0) {
+		fprintf(stderr, "Badge filter enabled.\n");
+	}
 	logmessage("Daemon started.");
 
 	/* Catch exit signals */
