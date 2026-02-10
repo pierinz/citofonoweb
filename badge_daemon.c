@@ -360,7 +360,7 @@ void *tHelper(void*) {
 
 		args = argv_from_string(helper);
 		if (execvp(args[0], args) < 0) {
-			perror("Source -> execvp: ");
+			perror("Helper -> execvp: ");
 			_exit(1);
 		}
 	} else if (hpid > 0) {
