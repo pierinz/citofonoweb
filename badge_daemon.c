@@ -226,7 +226,8 @@ void loadConf(char *conffile) {
 	}
 }
 
-void *tSource(void*) {
+void *tSource(void* arg) {
+	(void)arg;
 	char *buffer, *oldbuffer, *msg;
 	time_t now, before;
 	FILE* pipesource;
@@ -338,7 +339,8 @@ void *tSource(void*) {
 	return 0;
 }
 
-void *tHelper(void*) {
+void *tHelper(void* arg) {
+	(void)arg;
 	char *buffer;
 	time_t now;
 	FILE* pipehelper;
